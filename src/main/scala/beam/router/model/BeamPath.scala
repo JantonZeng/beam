@@ -4,18 +4,17 @@ import beam.agentsim.events.SpaceTime
 import beam.router.model.RoutingModel.TransitStopsInfo
 
 /**
-  *
-  * @param linkIds      either matsim linkId or R5 edgeIds that describes whole path
-  * @param transitStops start and end stop if this path is transit (partial) route
-  */
+ *
+ * @param linkIds      either matsim linkId or R5 edgeIds that describes whole path
+ * @param transitStops start and end stop if this path is transit (partial) route
+ */
 case class BeamPath(
-  linkIds: IndexedSeq[Int],
-  linkTravelTime: IndexedSeq[Int],
-  transitStops: Option[TransitStopsInfo],
-  startPoint: SpaceTime,
-  endPoint: SpaceTime,
-  distanceInM: Double
-) {
+    linkIds: IndexedSeq[Int],
+    linkTravelTime: IndexedSeq[Int],
+    transitStops: Option[TransitStopsInfo],
+    startPoint: SpaceTime,
+    endPoint: SpaceTime,
+    distanceInM: Double) {
   def duration: Int = endPoint.time - startPoint.time
 
   def toShortString: String =
@@ -28,15 +27,13 @@ case class BeamPath(
   def updateStartTime(newStartTime: Int): BeamPath =
     this.copy(
       startPoint = this.startPoint.copy(time = newStartTime),
-      endPoint = this.endPoint.copy(time = newStartTime + this.duration)
-    )
+      endPoint = this.endPoint.copy(time = newStartTime + this.duration))
 
   def scaleTravelTimes(scaleBy: Double): BeamPath = {
     val newLinkTimes = this.linkTravelTime.map(travelTime => Math.round(travelTime.toDouble * scaleBy).toInt)
     this.copy(
       linkTravelTime = newLinkTimes,
-      endPoint = this.endPoint.copy(time = this.startPoint.time + newLinkTimes.tail.sum)
-    )
+      endPoint = this.endPoint.copy(time = this.startPoint.time + newLinkTimes.tail.sum))
   }
 }
 

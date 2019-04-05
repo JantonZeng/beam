@@ -2,7 +2,7 @@ package beam.utils
 import beam.utils.ProfilingUtils._
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
-import org.matsim.api.core.v01.network.{Link, Network}
+import org.matsim.api.core.v01.network.{ Link, Network }
 
 import scala.collection.JavaConverters._
 
@@ -24,8 +24,7 @@ class NetworkHelperImpl @Inject()(network: Network) extends NetworkHelper with L
   def getLinkUnsafe(linkId: Int): Link = {
     if (linkId >= allLinks.length || linkId < 0) {
       logger.error(
-        s"getLinkUnsafe for $linkId, when allLinks length is ${allLinks.length} and MaxLinkId is $maxLinkId!"
-      )
+        s"getLinkUnsafe for $linkId, when allLinks length is ${allLinks.length} and MaxLinkId is $maxLinkId!")
       null
     } else {
       val link = allLinks(linkId)

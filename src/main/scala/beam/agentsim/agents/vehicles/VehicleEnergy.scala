@@ -1,17 +1,17 @@
 package beam.agentsim.agents.vehicles
 
-import beam.agentsim.agents.vehicles.ConsumptionRateFilterStore.{PowerTrainPriority, Primary, Secondary}
+import beam.agentsim.agents.vehicles.ConsumptionRateFilterStore.{ PowerTrainPriority, Primary, Secondary }
 import beam.agentsim.agents.vehicles.FuelType.FuelType
 import beam.sim.common.Range
 import beam.sim.config.BeamConfig
-import com.univocity.parsers.csv.{CsvParser, CsvParserSettings}
+import com.univocity.parsers.csv.{ CsvParser, CsvParserSettings }
 import com.univocity.parsers.common.record.Record
 import org.matsim.core.utils.io.IOUtils
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 import scala.collection.JavaConverters._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /*case class LoggingData(linkId: Int, gradientOption: Option[Double], rate: Option[Double], consumption: Option[Double])*/
@@ -46,11 +46,11 @@ trait ConsumptionRateFilterStore {
 }
 
 class ConsumptionRateFilterStoreImpl(
-  csvRecordsForFilePathUsing: (CsvParser, String) => Iterable[Record],
-  baseFilePath: Option[String],
-  primaryConsumptionRateFilePathsByVehicleType: IndexedSeq[(BeamVehicleType, Option[String])],
-  secondaryConsumptionRateFilePathsByVehicleType: IndexedSeq[(BeamVehicleType, Option[String])]
-) extends ConsumptionRateFilterStore {
+    csvRecordsForFilePathUsing: (CsvParser, String) => Iterable[Record],
+    baseFilePath: Option[String],
+    primaryConsumptionRateFilePathsByVehicleType: IndexedSeq[(BeamVehicleType, Option[String])],
+    secondaryConsumptionRateFilePathsByVehicleType: IndexedSeq[(BeamVehicleType, Option[String])])
+    extends ConsumptionRateFilterStore {
   //Possible performance tweak: If memory becomes an issue then this can become a more on demand load
   //For now, and for load speed the best option seems to be to pre-load in a background thread
   private lazy val log = LoggerFactory.getLogger(this.getClass)
@@ -67,8 +67,7 @@ class ConsumptionRateFilterStoreImpl(
   private val primaryConsumptionRateFiltersByVehicleType: Map[BeamVehicleType, Future[ConsumptionRateFilter]] =
     beginLoadingConsumptionRateFiltersFor(
       primaryConsumptionRateFilePathsByVehicleType,
-      bvt => Some(bvt.primaryFuelType)
-    )
+      bvt => Some(bvt.primaryFuelType))
   private val secondaryConsumptionRateFiltersByVehicleType: Map[BeamVehicleType, Future[ConsumptionRateFilter]] =
     beginLoadingConsumptionRateFiltersFor(secondaryConsumptionRateFilePathsByVehicleType, _.secondaryFuelType)
 
@@ -79,9 +78,8 @@ class ConsumptionRateFilterStoreImpl(
     secondaryConsumptionRateFiltersByVehicleType.get(vehicleType)
 
   private def beginLoadingConsumptionRateFiltersFor(
-    files: IndexedSeq[(BeamVehicleType, Option[String])],
-    fuelTypeSelector: BeamVehicleType => Option[FuelType]
-  ) = {
+      files: IndexedSeq[(BeamVehicleType, Option[String])],
+      fuelTypeSelector: BeamVehicleType => Option[FuelType]) = {
     files.collect {
       case (vehicleType, Some(filePath)) if !filePath.trim.isEmpty => {
         val consumptionFuture = Future {
@@ -99,10 +97,9 @@ class ConsumptionRateFilterStoreImpl(
   }
 
   private def loadConsumptionRatesFromCSVFor(
-    file: String,
-    csvParser: CsvParser,
-    fuelTypeOption: Option[FuelType]
-  ): ConsumptionRateFilter = {
+      file: String,
+      csvParser: CsvParser,
+      fuelTypeOption: Option[FuelType]): ConsumptionRateFilter = {
     val currentRateFilter = mutable.Map.empty[Range, mutable.Map[Range, mutable.Map[Range, Double]]]
     csvRecordsForFilePathUsing(csvParser, java.nio.file.Paths.get(baseFilePath.getOrElse(""), file).toString)
       .foreach(csvRecord => {
@@ -113,8 +110,7 @@ class ConsumptionRateFilterStoreImpl(
         if (rawRate == null)
           throw new Exception(
             s"Record $csvRecord does not contain a valid rate. " +
-            "Erroring early to bring attention and get it fixed."
-          )
+            "Erroring early to bring attention and get it fixed.")
         val rate =
           if (fuelTypeOption.exists(_ == FuelType.Electricity)) convertFromKwhPer100MilesToJoulesPerMeter(rawRate)
           else convertFromGallonsPer100MilesToJoulesPerMeter(rawRate)
@@ -135,8 +131,7 @@ class ConsumptionRateFilterStoreImpl(
                       s"Keeping first rate of $rawFirstRate and ignoring new rate of $rawRate.",
                       speedInMilesPerHourBin,
                       gradePercentBin,
-                      numberOfLanesBin
-                    )
+                      numberOfLanesBin)
                   case None => numberOfLanesFilter += numberOfLanesBin -> rate
                 }
               }
@@ -145,7 +140,7 @@ class ConsumptionRateFilterStoreImpl(
           }
           case None =>
             currentRateFilter += speedInMilesPerHourBin ->
-            mutable.Map(gradePercentBin -> mutable.Map(numberOfLanesBin -> rate))
+              mutable.Map(gradePercentBin -> mutable.Map(numberOfLanesBin -> rate))
         }
       })
     currentRateFilter.toMap.map {
@@ -173,9 +168,8 @@ class ConsumptionRateFilterStoreImpl(
 }
 
 class VehicleEnergy(
-  consumptionRateFilterStore: ConsumptionRateFilterStore,
-  linkToGradeRecordsIterableUsing: CsvParser => Iterable[Record]
-) {
+    consumptionRateFilterStore: ConsumptionRateFilterStore,
+    linkToGradeRecordsIterableUsing: CsvParser => Iterable[Record]) {
   private val settings = new CsvParserSettings()
   settings.setHeaderExtractionEnabled(true)
   settings.detectFormatAutomatically()
@@ -186,29 +180,26 @@ class VehicleEnergy(
   private val conversionRateForMilesPerHourFromMetersPerSecond = 2.23694
 
   def getFuelConsumptionEnergyInJoulesUsing(
-    fuelConsumptionDatas: IndexedSeq[BeamVehicle.FuelConsumptionData],
-    fallBack: BeamVehicle.FuelConsumptionData => Double,
-    powerTrainPriority: PowerTrainPriority
-  ): Double = {
+      fuelConsumptionDatas: IndexedSeq[BeamVehicle.FuelConsumptionData],
+      fallBack: BeamVehicle.FuelConsumptionData => Double,
+      powerTrainPriority: PowerTrainPriority): Double = {
     /*(Double, IndexedSeq[LoggingData]) = {*/
     /*val loggingData = mutable.Buffer.empty[LoggingData]*/
-    val consumptionsInJoules: IndexedSeq[Double] = fuelConsumptionDatas
-      .map(fuelConsumptionData => {
-        /*val (rateInJoulesPerMeter, gradientOption) = getRateUsing(fuelConsumptionData, fallBack, powerTrainPriority)*/
-        val rateInJoulesPerMeter = getRateUsing(fuelConsumptionData, fallBack, powerTrainPriority)
-        val distance = fuelConsumptionData.linkLength.getOrElse(0.0)
-        val finalConsumption = rateInJoulesPerMeter * distance
-        /*loggingData += LoggingData(fuelConsumptionData.linkId, gradientOption, Option(rateInJoulesPerMeter), Option(finalConsumption))*/
-        finalConsumption
-      })
+    val consumptionsInJoules: IndexedSeq[Double] = fuelConsumptionDatas.map(fuelConsumptionData => {
+      /*val (rateInJoulesPerMeter, gradientOption) = getRateUsing(fuelConsumptionData, fallBack, powerTrainPriority)*/
+      val rateInJoulesPerMeter = getRateUsing(fuelConsumptionData, fallBack, powerTrainPriority)
+      val distance = fuelConsumptionData.linkLength.getOrElse(0.0)
+      val finalConsumption = rateInJoulesPerMeter * distance
+      /*loggingData += LoggingData(fuelConsumptionData.linkId, gradientOption, Option(rateInJoulesPerMeter), Option(finalConsumption))*/
+      finalConsumption
+    })
     consumptionsInJoules.sum /*(consumptionsInJoules.sum, loggingData.toIndexedSeq)*/
   }
 
   private def getRateUsing(
-    fuelConsumptionData: BeamVehicle.FuelConsumptionData,
-    fallBack: BeamVehicle.FuelConsumptionData => Double,
-    powerTrainPriority: PowerTrainPriority
-  ): Double = {
+      fuelConsumptionData: BeamVehicle.FuelConsumptionData,
+      fallBack: BeamVehicle.FuelConsumptionData => Double,
+      powerTrainPriority: PowerTrainPriority): Double = {
     /*(Double, Option[Double]) = {*/
     val BeamVehicle.FuelConsumptionData(
       linkId,
@@ -220,31 +211,26 @@ class VehicleEnergy(
       speedInMetersPerSecondOption,
       _,
       _,
-      _
-    ) = fuelConsumptionData
+      _) = fuelConsumptionData
     val numberOfLanes: Int = numberOfLanesOption.getOrElse(0)
-    val speedInMilesPerHour: Double = speedInMetersPerSecondOption
-      .map(convertFromMetersPerSecondToMilesPerHour)
-      .getOrElse(0)
+    val speedInMilesPerHour: Double =
+      speedInMetersPerSecondOption.map(convertFromMetersPerSecondToMilesPerHour).getOrElse(0)
     val gradePercent: Double = linkIdToGradePercentMap.getOrElse(linkId, 0)
     (powerTrainPriority match {
       case Primary   => consumptionRateFilterStore.getPrimaryConsumptionRateFilterFor(vehicleType)
       case Secondary => consumptionRateFilterStore.getSecondaryConsumptionRateFilterFor(vehicleType)
-    }).flatMap(
-        consumptionRateFilterFuture =>
-          getRateUsing(consumptionRateFilterFuture, numberOfLanes, speedInMilesPerHour, gradePercent)
-      )
+    }).flatMap(consumptionRateFilterFuture =>
+        getRateUsing(consumptionRateFilterFuture, numberOfLanes, speedInMilesPerHour, gradePercent))
       .getOrElse(fallBack(fuelConsumptionData))
     /*.map(x=>(x,Option(gradePercent)))
       .getOrElse((fallBack(fuelConsumptionData), Option(gradePercent)))*/
   }
 
   private def getRateUsing(
-    consumptionRateFilterFuture: Future[ConsumptionRateFilter],
-    numberOfLanes: Int,
-    speedInMilesPerHour: Double,
-    gradePercent: Double
-  ): Option[Double] = {
+      consumptionRateFilterFuture: Future[ConsumptionRateFilter],
+      numberOfLanes: Int,
+      speedInMilesPerHour: Double,
+      gradePercent: Double): Option[Double] = {
     //1.)Future performance improvement could be to better index the bins so could fuzzily jump straight to it
     //instead of having to iterate
     //2.)Could keep the future in the calling method if you use
@@ -255,10 +241,11 @@ class VehicleEnergy(
     val consumptionRateFilter = Await.result(consumptionRateFilterFuture, 1.minute)
 
     for {
-      (_, gradeFilter) <- consumptionRateFilter
-        .find { case (speedInMilesPerHourBin, _) => speedInMilesPerHourBin.hasDouble(speedInMilesPerHour) }
-      (_, lanesFilter) <- gradeFilter.find { case (gradePercentBin, _)  => gradePercentBin.hasDouble(gradePercent) }
-      (_, rate)        <- lanesFilter.find { case (numberOfLanesBin, _) => numberOfLanesBin.has(numberOfLanes) }
+      (_, gradeFilter) <- consumptionRateFilter.find {
+        case (speedInMilesPerHourBin, _) => speedInMilesPerHourBin.hasDouble(speedInMilesPerHour)
+      }
+      (_, lanesFilter) <- gradeFilter.find { case (gradePercentBin, _) => gradePercentBin.hasDouble(gradePercent) }
+      (_, rate) <- lanesFilter.find { case (numberOfLanesBin, _)       => numberOfLanesBin.has(numberOfLanes) }
     } yield rate
   }
 

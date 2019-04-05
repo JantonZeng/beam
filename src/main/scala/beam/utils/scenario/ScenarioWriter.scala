@@ -5,7 +5,7 @@ import java.io.FileWriter
 import beam.utils.FileUtils
 import com.typesafe.scalalogging.LazyLogging
 import org.matsim.api.core.v01.Id
-import org.matsim.api.core.v01.population.{Activity, Leg, Person, PlanElement => MatsimPlanElement}
+import org.matsim.api.core.v01.population.{ Activity, Leg, Person, PlanElement => MatsimPlanElement }
 import org.matsim.core.scenario.MutableScenario
 import org.matsim.households.Household
 import org.supercsv.io.CsvMapWriter
@@ -36,14 +36,13 @@ object CsvScenarioWriter extends ScenarioWriter with LazyLogging {
     writeCSV(path + "/plans.csv", Seq("personId", "planElement", "activityType", "x", "y", "endTime", "mode")) {
       plans.map { planInfo =>
         Map(
-          "personId"     -> planInfo.personId.id,
-          "planElement"  -> planInfo.planElement,
+          "personId" -> planInfo.personId.id,
+          "planElement" -> planInfo.planElement,
           "activityType" -> planInfo.activityType.getOrElse(""),
-          "x"            -> planInfo.x.map(_.toString).getOrElse(""),
-          "y"            -> planInfo.y.map(_.toString).getOrElse(""),
-          "endTime"      -> planInfo.endTime.map(_.toString).getOrElse(""),
-          "mode"         -> planInfo.mode.getOrElse(""),
-        )
+          "x" -> planInfo.x.map(_.toString).getOrElse(""),
+          "y" -> planInfo.y.map(_.toString).getOrElse(""),
+          "endTime" -> planInfo.endTime.map(_.toString).getOrElse(""),
+          "mode" -> planInfo.mode.getOrElse(""))
       }
     }
   }
@@ -51,10 +50,9 @@ object CsvScenarioWriter extends ScenarioWriter with LazyLogging {
     writeCSV(path + "/persons.csv", Seq("person_id", "household_id", "age")) {
       persons.map { personInfo =>
         Map(
-          "person_id"    -> personInfo.personId.id,
+          "person_id" -> personInfo.personId.id,
           "household_id" -> personInfo.householdId.id,
-          "age"          -> personInfo.age.toString
-        )
+          "age" -> personInfo.age.toString)
       }
     }
   }
@@ -125,8 +123,7 @@ object CsvScenarioWriter extends ScenarioWriter with LazyLogging {
           x = None,
           y = None,
           endTime = None,
-          mode = mode
-        )
+          mode = mode)
       case act: Activity =>
         PlanElement(
           personId = PersonId(personId),
@@ -136,8 +133,7 @@ object CsvScenarioWriter extends ScenarioWriter with LazyLogging {
           x = Option(act.getCoord.getX),
           y = Option(act.getCoord.getY),
           endTime = Option(act.getEndTime),
-          mode = None
-        )
+          mode = None)
     }
   }
   private def getPersonInfo(scenario: MutableScenario): Iterable[PersonInfo] = {

@@ -4,7 +4,13 @@ import java.io.File
 
 import scala.collection.JavaConverters._
 
-import com.typesafe.config.{ConfigException, ConfigFactory, ConfigResolveOptions, ConfigValue, Config => TypesafeConfig}
+import com.typesafe.config.{
+  ConfigException,
+  ConfigFactory,
+  ConfigResolveOptions,
+  ConfigValue,
+  Config => TypesafeConfig
+}
 import com.typesafe.scalalogging.LazyLogging
 
 object ConfigConsistencyComparator extends LazyLogging {
@@ -25,9 +31,7 @@ object ConfigConsistencyComparator extends LazyLogging {
   private val ignorePaths: Set[String] = Set("beam.physsim.inputNetworkFilePath")
 
   def parseBeamTemplateConfFile(userConfFileLocation: String): Unit = {
-    val configResolver = ConfigResolveOptions
-      .defaults()
-      .setAllowUnresolved(true)
+    val configResolver = ConfigResolveOptions.defaults().setAllowUnresolved(true)
 
     val baseUserConf = BeamConfigUtils.parseFileSubstitutingInputDirectory(new File(userConfFileLocation))
     val userBeamConf = baseUserConf.withOnlyPath("beam")
@@ -68,12 +72,7 @@ object ConfigConsistencyComparator extends LazyLogging {
   }
 
   def findDeprecatedKeys(userConf: TypesafeConfig, templateConf: TypesafeConfig): Seq[String] = {
-    userConf
-      .entrySet()
-      .asScala
-      .map(_.getKey)
-      .filterNot(templateConf.hasPathOrNull)
-      .toSeq
+    userConf.entrySet().asScala.map(_.getKey).filterNot(templateConf.hasPathOrNull).toSeq
   }
 
   def findParamsWithDefaultValues(userConf: TypesafeConfig, templateConf: TypesafeConfig): Seq[(String, String)] = {
@@ -134,9 +133,7 @@ object ConfigConsistencyComparator extends LazyLogging {
   }
 
   private def buildStringFromKeys(keys: Seq[String]): String = {
-    keys.sorted
-      .map(key => s"$borderLeft$key")
-      .mkString(borderLeft + eol, eol, eol)
+    keys.sorted.map(key => s"$borderLeft$key").mkString(borderLeft + eol, eol, eol)
   }
 
 }

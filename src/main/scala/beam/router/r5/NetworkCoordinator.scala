@@ -4,9 +4,9 @@ import java.nio.file.Files.exists
 import java.nio.file.Paths
 
 import beam.sim.config.BeamConfig
-import com.conveyal.r5.transit.{TransportNetwork, TripSchedule}
+import com.conveyal.r5.transit.{ TransportNetwork, TripSchedule }
 import com.typesafe.scalalogging.LazyLogging
-import org.matsim.api.core.v01.network.{Network, NetworkWriter}
+import org.matsim.api.core.v01.network.{ Network, NetworkWriter }
 import org.matsim.core.network.NetworkUtils
 import org.matsim.core.network.io.MatsimNetworkReader
 
@@ -38,29 +38,23 @@ trait NetworkCoordinator extends LazyLogging {
     val GRAPH_FILE = "/network.dat"
     if (exists(Paths.get(beamConfig.beam.routing.r5.directory, GRAPH_FILE))) {
       logger.info(
-        s"Initializing router by reading network from: ${Paths.get(beamConfig.beam.routing.r5.directory, GRAPH_FILE).toAbsolutePath}"
-      )
+        s"Initializing router by reading network from: ${Paths.get(beamConfig.beam.routing.r5.directory, GRAPH_FILE).toAbsolutePath}")
       transportNetwork = TransportNetwork.read(Paths.get(beamConfig.beam.routing.r5.directory, GRAPH_FILE).toFile)
       if (exists(Paths.get(beamConfig.matsim.modules.network.inputNetworkFile))) {
         network = NetworkUtils.createNetwork()
-        new MatsimNetworkReader(network)
-          .readFile(beamConfig.matsim.modules.network.inputNetworkFile)
+        new MatsimNetworkReader(network).readFile(beamConfig.matsim.modules.network.inputNetworkFile)
       } else {
         createPhyssimNetwork()
       }
     } else { // Need to create the unpruned and pruned networks from directory
       logger.info(
-        s"Initializing router by creating network from directory: ${Paths.get(beamConfig.beam.routing.r5.directory).toAbsolutePath}"
-      )
+        s"Initializing router by creating network from directory: ${Paths.get(beamConfig.beam.routing.r5.directory).toAbsolutePath}")
       transportNetwork = TransportNetwork.fromDirectory(
         Paths.get(beamConfig.beam.routing.r5.directory).toFile,
         true,
-        false
-      ) // Uses the new signature Andrew created
+        false) // Uses the new signature Andrew created
       transportNetwork.write(Paths.get(beamConfig.beam.routing.r5.directory, GRAPH_FILE).toFile)
-      transportNetwork = TransportNetwork.read(
-        Paths.get(beamConfig.beam.routing.r5.directory, GRAPH_FILE).toFile
-      ) // Needed because R5 closes DB on write
+      transportNetwork = TransportNetwork.read(Paths.get(beamConfig.beam.routing.r5.directory, GRAPH_FILE).toFile) // Needed because R5 closes DB on write
       createPhyssimNetwork()
     }
   }
@@ -71,8 +65,7 @@ trait NetworkCoordinator extends LazyLogging {
     rmNetBuilder.buildMNet()
     network = rmNetBuilder.getNetwork
     logger.info(s"MATSim network created")
-    new NetworkWriter(network)
-      .write(beamConfig.matsim.modules.network.inputNetworkFile)
+    new NetworkWriter(network).write(beamConfig.matsim.modules.network.inputNetworkFile)
     logger.info(s"MATSim network written")
   }
 
@@ -117,7 +110,7 @@ trait NetworkCoordinator extends LazyLogging {
     val tripVehiclesEnRoute = mutable.HashMap.empty[String, mutable.Set[String]]
     transportNetwork.transitLayer.tripPatterns.asScala.foreach { tp =>
       if (tp.hasSchedules) {
-        tp.tripSchedules.asScala.toVector foreach { ts =>
+        tp.tripSchedules.asScala.toVector.foreach { ts =>
           val firstArrival: Int = ts.arrivals(0)
           val lastDeparture: Int = ts.departures(ts.getNStops - 1)
           startStopsByTime.enqueue(IdAndTime(firstArrival, ts.tripId, tp.routeId))

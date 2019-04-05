@@ -11,18 +11,17 @@ import org.matsim.api.core.v01.population.Person
 import scala.collection.mutable.ListBuffer
 
 /**
-  * BEAM
-  */
+ * BEAM
+ */
 class ModeChoiceTransitIfAvailable(val beamServices: BeamServices) extends ModeChoiceCalculator {
 
   override def clone(): ModeChoiceCalculator =
     new ModeChoiceTransitIfAvailable(beamServices)
 
   override def apply(
-    alternatives: IndexedSeq[EmbodiedBeamTrip],
-    attributesOfIndividual: AttributesOfIndividual,
-    destinationActivity: Option[Activity]
-  ): Option[EmbodiedBeamTrip] = {
+      alternatives: IndexedSeq[EmbodiedBeamTrip],
+      attributesOfIndividual: AttributesOfIndividual,
+      destinationActivity: Option[Activity]): Option[EmbodiedBeamTrip] = {
     val containsTransitAlt = alternatives.zipWithIndex.collect {
       case (trip, idx) if trip.tripClassifier.isTransit => idx
     }
@@ -36,18 +35,16 @@ class ModeChoiceTransitIfAvailable(val beamServices: BeamServices) extends ModeC
   }
 
   override def utilityOf(
-    alternative: EmbodiedBeamTrip,
-    attributesOfIndividual: AttributesOfIndividual,
-    destinationActivity: Option[Activity]
-  ): Double = 0.0
+      alternative: EmbodiedBeamTrip,
+      attributesOfIndividual: AttributesOfIndividual,
+      destinationActivity: Option[Activity]): Double = 0.0
 
   override def utilityOf(mode: Modes.BeamMode, cost: Double, time: Double, numTransfers: Int): Double = 0.0
 
   override def computeAllDayUtility(
-    trips: ListBuffer[EmbodiedBeamTrip],
-    person: Person,
-    attributesOfIndividual: AttributesOfIndividual
-  ): Double = 0.0
+      trips: ListBuffer[EmbodiedBeamTrip],
+      person: Person,
+      attributesOfIndividual: AttributesOfIndividual): Double = 0.0
 }
 
 object ModeChoiceTransitIfAvailable {}

@@ -1,17 +1,17 @@
 package beam.agentsim.agents.household
 
-import akka.actor.{ActorContext, ActorRef, ActorSelection, Props}
+import akka.actor.{ ActorContext, ActorRef, ActorSelection, Props }
 import akka.actor.FSM.Failure
 import akka.actor.Status.Success
 import beam.agentsim.agents.BeamAgent._
 import beam.agentsim.agents.InitializeTrigger
-import beam.agentsim.agents.PersonAgent.{DrivingData, PassengerScheduleEmpty, VehicleStack, WaitingToDrive}
-import beam.agentsim.agents.household.HouseholdActor.{ReleaseVehicle, ReleaseVehicleAndReply}
+import beam.agentsim.agents.PersonAgent.{ DrivingData, PassengerScheduleEmpty, VehicleStack, WaitingToDrive }
+import beam.agentsim.agents.household.HouseholdActor.{ ReleaseVehicle, ReleaseVehicleAndReply }
 import beam.agentsim.agents.household.HouseholdCAVDriverAgent.HouseholdCAVDriverData
 import beam.agentsim.agents.modalbehaviors.DrivesVehicle
-import beam.agentsim.agents.modalbehaviors.DrivesVehicle.{ActualVehicle, StartLegTrigger}
-import beam.agentsim.agents.ridehail.RideHailAgent.{Idle, ModifyPassengerSchedule, ModifyPassengerScheduleAck}
-import beam.agentsim.agents.vehicles.{BeamVehicle, PassengerSchedule}
+import beam.agentsim.agents.modalbehaviors.DrivesVehicle.{ ActualVehicle, StartLegTrigger }
+import beam.agentsim.agents.ridehail.RideHailAgent.{ Idle, ModifyPassengerSchedule, ModifyPassengerScheduleAck }
+import beam.agentsim.agents.vehicles.{ BeamVehicle, PassengerSchedule }
 import beam.agentsim.scheduler.BeamAgentScheduler._
 import beam.agentsim.scheduler.Trigger.TriggerWithId
 import beam.router.model.BeamLeg
@@ -19,20 +19,20 @@ import beam.router.osm.TollCalculator
 import beam.sim.BeamServices
 import com.conveyal.r5.transit.TransportNetwork
 import org.matsim.api.core.v01.Id
-import org.matsim.api.core.v01.events.{PersonDepartureEvent, PersonEntersVehicleEvent}
+import org.matsim.api.core.v01.events.{ PersonDepartureEvent, PersonEntersVehicleEvent }
 import org.matsim.core.api.experimental.events.EventsManager
 import org.matsim.vehicles.Vehicle
 
 class HouseholdCAVDriverAgent(
-  val driverId: Id[HouseholdCAVDriverAgent],
-  val scheduler: ActorRef,
-  val beamServices: BeamServices,
-  val eventsManager: EventsManager,
-  val parkingManager: ActorRef,
-  val vehicle: BeamVehicle,
-  val transportNetwork: TransportNetwork,
-  val tollCalculator: TollCalculator
-) extends DrivesVehicle[HouseholdCAVDriverData] {
+    val driverId: Id[HouseholdCAVDriverAgent],
+    val scheduler: ActorRef,
+    val beamServices: BeamServices,
+    val eventsManager: EventsManager,
+    val parkingManager: ActorRef,
+    val vehicle: BeamVehicle,
+    val transportNetwork: TransportNetwork,
+    val tollCalculator: TollCalculator)
+    extends DrivesVehicle[HouseholdCAVDriverData] {
 
   override val id: Id[HouseholdCAVDriverAgent] = driverId
 
@@ -59,15 +59,10 @@ class HouseholdCAVDriverAgent(
       logDebug(s" $id has been initialized, going to Waiting state")
       beamVehicles.put(vehicle.id, ActualVehicle(vehicle))
       eventsManager.processEvent(
-        new PersonDepartureEvent(tick, Id.createPersonId(id), Id.createLinkId(""), "be_a_household_cav_driver")
-      )
-      goto(Idle) using data
-        .copy(currentVehicle = Vector(vehicle.id))
-        .asInstanceOf[HouseholdCAVDriverData] replying
-      CompletionNotice(
-        triggerId,
-        Vector()
-      )
+        new PersonDepartureEvent(tick, Id.createPersonId(id), Id.createLinkId(""), "be_a_household_cav_driver"))
+      goto(Idle)
+        .using(data.copy(currentVehicle = Vector(vehicle.id)).asInstanceOf[HouseholdCAVDriverData])
+        .replying(CompletionNotice(triggerId, Vector()))
   }
   when(Idle) {
     case ev @ Event(ModifyPassengerSchedule(updatedPassengerSchedule, tick, requestId), data) =>
@@ -79,20 +74,15 @@ class HouseholdCAVDriverAgent(
         ScheduleTrigger(
           StartLegTrigger(
             updatedPassengerSchedule.schedule.firstKey.startTime,
-            updatedPassengerSchedule.schedule.firstKey
-          ),
-          self
-        )
-      )
-      goto(WaitingToDrive) using data
-        .withPassengerSchedule(updatedPassengerSchedule)
-        .withCurrentLegPassengerScheduleIndex(0)
-        .asInstanceOf[HouseholdCAVDriverData] replying ModifyPassengerScheduleAck(
-        requestId,
-        triggerToSchedule,
-        vehicle.id,
-        tick
-      )
+            updatedPassengerSchedule.schedule.firstKey),
+          self))
+      goto(WaitingToDrive)
+        .using(
+          data
+            .withPassengerSchedule(updatedPassengerSchedule)
+            .withCurrentLegPassengerScheduleIndex(0)
+            .asInstanceOf[HouseholdCAVDriverData])
+        .replying(ModifyPassengerScheduleAck(requestId, triggerToSchedule, vehicle.id, tick))
   }
 
   when(PassengerScheduleEmpty) {
@@ -120,16 +110,15 @@ object HouseholdCAVDriverAgent {
   def idFromVehicleId(vehId: Id[BeamVehicle]) = Id.create(s"cavDriver-$vehId", classOf[HouseholdCAVDriverAgent])
 
   def props(
-    driverId: Id[HouseholdCAVDriverAgent],
-    scheduler: ActorRef,
-    services: BeamServices,
-    eventsManager: EventsManager,
-    parkingManager: ActorRef,
-    vehicle: BeamVehicle,
-    legs: Seq[BeamLeg],
-    transportNetwork: TransportNetwork,
-    tollCalculator: TollCalculator
-  ): Props = {
+      driverId: Id[HouseholdCAVDriverAgent],
+      scheduler: ActorRef,
+      services: BeamServices,
+      eventsManager: EventsManager,
+      parkingManager: ActorRef,
+      vehicle: BeamVehicle,
+      legs: Seq[BeamLeg],
+      transportNetwork: TransportNetwork,
+      tollCalculator: TollCalculator): Props = {
     Props(
       new HouseholdCAVDriverAgent(
         driverId,
@@ -139,9 +128,7 @@ object HouseholdCAVDriverAgent {
         parkingManager,
         vehicle,
         transportNetwork,
-        tollCalculator
-      )
-    )
+        tollCalculator))
   }
 
   def selectByVehicleId(transitVehicle: Id[Vehicle])(implicit context: ActorContext): ActorSelection = {
@@ -151,22 +138,20 @@ object HouseholdCAVDriverAgent {
   def createAgentIdFromVehicleId(cavVehicle: Id[Vehicle]): Id[HouseholdCAVDriverAgent] = {
     Id.create(
       "HouseholdCAVDriverAgent-" + BeamVehicle.noSpecialChars(cavVehicle.toString),
-      classOf[HouseholdCAVDriverAgent]
-    )
+      classOf[HouseholdCAVDriverAgent])
   }
 
   case class HouseholdCAVDriverData(
-    currentVehicleToken: BeamVehicle,
-    currentVehicle: VehicleStack = Vector(),
-    passengerSchedule: PassengerSchedule = PassengerSchedule(),
-    currentLegPassengerScheduleIndex: Int = 0
-  ) extends DrivingData {
+      currentVehicleToken: BeamVehicle,
+      currentVehicle: VehicleStack = Vector(),
+      passengerSchedule: PassengerSchedule = PassengerSchedule(),
+      currentLegPassengerScheduleIndex: Int = 0)
+      extends DrivingData {
     override def withPassengerSchedule(newPassengerSchedule: PassengerSchedule): DrivingData =
       copy(passengerSchedule = newPassengerSchedule)
 
-    override def withCurrentLegPassengerScheduleIndex(
-      currentLegPassengerScheduleIndex: Int
-    ): DrivingData = copy(currentLegPassengerScheduleIndex = currentLegPassengerScheduleIndex)
+    override def withCurrentLegPassengerScheduleIndex(currentLegPassengerScheduleIndex: Int): DrivingData =
+      copy(currentLegPassengerScheduleIndex = currentLegPassengerScheduleIndex)
 
     override def hasParkingBehaviors: Boolean = false
   }

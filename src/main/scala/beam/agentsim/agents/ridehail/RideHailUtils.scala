@@ -1,11 +1,11 @@
 package beam.agentsim.agents.ridehail
 
 import beam.agentsim.events.SpaceTime
-import beam.router.model.{BeamLeg, RoutingModel}
+import beam.router.model.{ BeamLeg, RoutingModel }
 import beam.utils.GeoUtils
-import com.conveyal.r5.profile.{ProfileRequest, StreetMode}
+import com.conveyal.r5.profile.{ ProfileRequest, StreetMode }
 import com.conveyal.r5.transit.TransportNetwork
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.{ Coord, Id }
 
 import scala.collection.mutable.ListBuffer
 import scala.util.control.Breaks._
@@ -13,10 +13,9 @@ import scala.util.control.Breaks._
 object RideHailUtils {
 
   def getUpdatedBeamLegAfterStopDriving(
-    originalBeamLeg: BeamLeg,
-    stopTime: Int,
-    transportNetwork: TransportNetwork
-  ): BeamLeg = {
+      originalBeamLeg: BeamLeg,
+      stopTime: Int,
+      transportNetwork: TransportNetwork): BeamLeg = {
 
     if (stopTime < originalBeamLeg.startTime || stopTime >= originalBeamLeg.endTime) {
       originalBeamLeg
@@ -34,7 +33,7 @@ object RideHailUtils {
 
       val linkIds = ListBuffer[Int]()
 
-      var distance: Double = 0D
+      var distance: Double = 0d
 
       for (linkId: Int <- originalBeamLeg.travelPath.linkIds) {
         linkIds += linkId
@@ -55,8 +54,7 @@ object RideHailUtils {
       val updatedTravelPath = originalBeamLeg.travelPath.copy(
         linkIds = linkIds.toVector,
         endPoint = updatedEndPoint,
-        distanceInM = updatedDistanceInMeters
-      )
+        distanceInM = updatedDistanceInMeters)
 
       originalBeamLeg.copy(duration = duration, travelPath = updatedTravelPath)
     }
@@ -67,14 +65,10 @@ object RideHailUtils {
       val edge = transportNetwork.streetLayer.edgeStore.getCursor(linkId)
       (edge.getLengthM / edge.calculateSpeed(
         new ProfileRequest,
-        StreetMode.valueOf(leg.mode.r5Mode.get.left.get.toString)
-      )).toInt
+        StreetMode.valueOf(leg.mode.r5Mode.get.left.get.toString))).toInt
     }
 
-    RoutingModel
-      .traverseStreetLeg(leg, Id.createVehicleId(1), travelTime)
-      .map(e => e.getTime)
-      .max - leg.startTime
+    RoutingModel.traverseStreetLeg(leg, Id.createVehicleId(1), travelTime).map(e => e.getTime).max - leg.startTime
   }
 
   def getVehicleCoordinateForInterruptedLeg(beamLeg: BeamLeg, stopTime: Double): Coord = {
@@ -98,22 +92,16 @@ object RideHailUtils {
     val pctTravelled = (stopTime - beamLeg.startTime) / (beamLeg.endTime - beamLeg.startTime)
     val directionCoordVector =
       getDirectionCoordVector(beamLeg.travelPath.startPoint.loc, beamLeg.travelPath.endPoint.loc)
-    getCoord(
-      beamLeg.travelPath.startPoint.loc,
-      scaleDirectionVector(directionCoordVector, pctTravelled)
-    )
+    getCoord(beamLeg.travelPath.startPoint.loc, scaleDirectionVector(directionCoordVector, pctTravelled))
   }
 
   // TODO: move to some utility class,   e.g. geo
   private def getDirectionCoordVector(startCoord: Coord, endCoord: Coord): Coord = {
-    new Coord((endCoord getX ()) - startCoord.getX, endCoord.getY - startCoord.getY)
+    new Coord((endCoord.getX()) - startCoord.getX, endCoord.getY - startCoord.getY)
   }
 
   private def getCoord(startCoord: Coord, directionCoordVector: Coord): Coord = {
-    new Coord(
-      startCoord.getX + directionCoordVector.getX,
-      startCoord.getY + directionCoordVector.getY
-    )
+    new Coord(startCoord.getX + directionCoordVector.getX, startCoord.getY + directionCoordVector.getY)
   }
 
   private def scaleDirectionVector(directionCoordVector: Coord, scalingFactor: Double): Coord = {

@@ -1,9 +1,8 @@
 package beam.utils
 
 /**
-  * Created by sfeygin on 2/6/17.
-  */
-
+ * Created by sfeygin on 2/6/17.
+ */
 object Stats {
   final val STATS_EPS = 1e-12
   final val INV_SQRT_2PI = 1.0 / Math.sqrt(2.0 * Math.PI)

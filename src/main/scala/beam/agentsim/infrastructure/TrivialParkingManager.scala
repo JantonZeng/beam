@@ -1,8 +1,8 @@
 package beam.agentsim.infrastructure
 import akka.actor.Actor
-import beam.agentsim.infrastructure.ParkingManager.{ParkingInquiry, ParkingInquiryResponse}
+import beam.agentsim.infrastructure.ParkingManager.{ ParkingInquiry, ParkingInquiryResponse }
 import beam.agentsim.infrastructure.ParkingStall._
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.{ Coord, Id }
 
 // Abundant parking everywhere people require it. For testing.
 class TrivialParkingManager extends Actor {
@@ -16,8 +16,7 @@ class TrivialParkingManager extends Actor {
           StallAttributes(TAZTreeMap.emptyTAZId, Public, FlatFee, NoCharger, Any),
           request.destinationUtm,
           0.0,
-          None
-        )
+          None)
       sender ! ParkingInquiryResponse(stall, request.requestId)
       nextStallNum += 1
   }
@@ -35,8 +34,7 @@ class AnotherTrivialParkingManager(location: Coord) extends Actor {
           StallAttributes(TAZTreeMap.emptyTAZId, Public, FlatFee, NoCharger, Any),
           location,
           0.0,
-          None
-        )
+          None)
       sender ! ParkingInquiryResponse(stall, request.requestId)
       nextStallNum += 1
   }

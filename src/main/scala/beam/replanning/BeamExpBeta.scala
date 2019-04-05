@@ -3,10 +3,10 @@ package beam.replanning
 import javax.inject.Inject
 
 import beam.physsim.jdeqsim.AgentSimToPhysSimPlanConverter
-import org.matsim.api.core.v01.population.{HasPlansAndId, Person, Plan}
+import org.matsim.api.core.v01.population.{ HasPlansAndId, Person, Plan }
 import org.matsim.core.config.Config
 import org.matsim.core.replanning.selectors.ExpBetaPlanSelector
-import org.slf4j.{Logger, LoggerFactory}
+import org.slf4j.{ Logger, LoggerFactory }
 
 class BeamExpBeta @Inject()(config: Config) extends PlansStrategyAdopter {
 

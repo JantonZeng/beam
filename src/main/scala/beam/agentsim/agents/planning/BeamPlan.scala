@@ -1,10 +1,10 @@
 package beam.agentsim.agents.planning
 
-import java.{lang, util}
+import java.{ lang, util }
 
-import beam.agentsim.agents.planning.Strategy.{ModeChoiceStrategy, Strategy}
+import beam.agentsim.agents.planning.Strategy.{ ModeChoiceStrategy, Strategy }
 import beam.router.Modes.BeamMode
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.{ Coord, Id }
 import org.matsim.api.core.v01.network.Link
 import org.matsim.api.core.v01.population._
 import org.matsim.core.population.PopulationUtils
@@ -15,20 +15,20 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 /**
-  * BeamPlan
-  *
-  * A BeamPlan extends a MATSim [[Plan]], which is a collection of [[PlanElement]] objects ([[Activity]] and
-  * [[Leg]]). What BEAM adds to the Plan are additional PlanElement types that allow further organization, where Legs
-  * are grouped into Trips (one Trip is a Leg/Activity pair), which are grouped into Tours. A special case Tour and Trip
-  * is the first Activity of the day, which contains only that activity.
-  *
-  * In addition, a BeamPlan contains mappings from PlanElements to Strategies. A Strategy
-  * is essentially a label that is assigned during initialization or Replanning and used during the MobSim
-  * to influence within-day Agent behavior. Strategies can be mapped to a Plan at any level (e.g. the whole plan,
-  * to a tour, a trip, etc.) but can be looked up at any level as well (allowing a Tour to have a strategy and a
-  * lookup on a Leg within that tour will yield that strategy).
-  *
-  */
+ * BeamPlan
+ *
+ * A BeamPlan extends a MATSim [[Plan]], which is a collection of [[PlanElement]] objects ([[Activity]] and
+ * [[Leg]]). What BEAM adds to the Plan are additional PlanElement types that allow further organization, where Legs
+ * are grouped into Trips (one Trip is a Leg/Activity pair), which are grouped into Tours. A special case Tour and Trip
+ * is the first Activity of the day, which contains only that activity.
+ *
+ * In addition, a BeamPlan contains mappings from PlanElements to Strategies. A Strategy
+ * is essentially a label that is assigned during initialization or Replanning and used during the MobSim
+ * to influence within-day Agent behavior. Strategies can be mapped to a Plan at any level (e.g. the whole plan,
+ * to a tour, a trip, etc.) but can be looked up at any level as well (allowing a Tour to have a strategy and a
+ * lookup on a Leg within that tour will yield that strategy).
+ *
+ */
 object BeamPlan {
 
   def apply(matsimPlan: Plan): BeamPlan = {
@@ -47,41 +47,38 @@ object BeamPlan {
   }
 
   def addOrReplaceLegBetweenActivities(
-    plan: Plan,
-    leg: Leg,
-    originActivity: Activity,
-    destinationActivity: Activity
-  ): Plan = {
+      plan: Plan,
+      leg: Leg,
+      originActivity: Activity,
+      destinationActivity: Activity): Plan = {
     val newPlanElements = plan.getPlanElements.asScala
-      .sliding(2)
-      .map { elems =>
-        var outputElems = List(elems.head)
-        if (elems.size == 2) {
-          if (elems.head.isInstanceOf[Activity] && elems.head.asInstanceOf[Activity].equals(originActivity)) {
-            if (elems.last.isInstanceOf[Activity] && elems.last.asInstanceOf[Activity].equals(destinationActivity)) {
-              outputElems = outputElems :+ leg.asInstanceOf[PlanElement]
-            } else if (elems.last.isInstanceOf[Leg]) {
-              outputElems = outputElems :+ leg.asInstanceOf[PlanElement]
+        .sliding(2)
+        .map { elems =>
+          var outputElems = List(elems.head)
+          if (elems.size == 2) {
+            if (elems.head.isInstanceOf[Activity] && elems.head.asInstanceOf[Activity].equals(originActivity)) {
+              if (elems.last.isInstanceOf[Activity] && elems.last.asInstanceOf[Activity].equals(destinationActivity)) {
+                outputElems = outputElems :+ leg.asInstanceOf[PlanElement]
+              } else if (elems.last.isInstanceOf[Leg]) {
+                outputElems = outputElems :+ leg.asInstanceOf[PlanElement]
+              }
+            } else if (elems.head.isInstanceOf[Leg] && elems.last
+                         .isInstanceOf[Activity] && elems.last.asInstanceOf[Activity].equals(destinationActivity)) {
+              outputElems = List()
             }
-          } else if (elems.head.isInstanceOf[Leg] && elems.last
-                       .isInstanceOf[Activity] && elems.last.asInstanceOf[Activity].equals(destinationActivity)) {
-            outputElems = List()
           }
+          outputElems
         }
-        outputElems
-      }
-      .flatten
-      .toList :+ plan.getPlanElements.asScala.last
+        .flatten
+        .toList :+ plan.getPlanElements.asScala.last
     val newPlan = PopulationUtils.createPlan()
-    newPlanElements.foreach(
-      pe =>
-        pe match {
-          case a: Activity =>
-            newPlan.addActivity(a)
-          case l: Leg =>
-            newPlan.addLeg(l)
-      }
-    )
+    newPlanElements.foreach(pe =>
+      pe match {
+        case a: Activity =>
+          newPlan.addActivity(a)
+        case l: Leg =>
+          newPlan.addLeg(l)
+      })
     newPlan.setPerson(plan.getPerson)
     newPlan.setType(plan.getType)
     newPlan.getAttributes.putAttribute("modality-style", plan.getAttributes.getAttribute("modality-style"))
@@ -194,8 +191,7 @@ class BeamPlan extends Plan {
     planElement match {
       case _: Tour =>
         throw new RuntimeException(
-          "getTripContaining is only for finding the parent trip to a plan element, not a child."
-        )
+          "getTripContaining is only for finding the parent trip to a plan element, not a child.")
       case actOrLeg: PlanElement =>
         actsLegToTrip.get(actOrLeg) match {
           case Some(trip) =>
@@ -222,8 +218,7 @@ class BeamPlan extends Plan {
     } else {
       throw new RuntimeException(
         "For compatibility with MATSim, a BeamPlan only supports addLeg during initialization " +
-        "but not after the BeamPlan plan has been created."
-      )
+        "but not after the BeamPlan plan has been created.")
     }
   }
 
@@ -233,8 +228,7 @@ class BeamPlan extends Plan {
     } else {
       throw new RuntimeException(
         "For compatibility with MATSim, a BeamPlan only supports addActivity during initialization " +
-        "but not after the BeamPlan plan has been created."
-      )
+        "but not after the BeamPlan plan has been created.")
     }
   }
 

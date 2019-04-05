@@ -122,7 +122,7 @@ object SfGovTazConverter extends App {
       TazViz(gid, taz, nhood, sq_mile, geoJsonString)
     }
 
-    val tazVizJson = Json.toJson(tazVizArray.filter(i => i.taz > 0l))
+    val tazVizJson = Json.toJson(tazVizArray.filter(i => i.taz > 0L))
 
     new PrintWriter("d:\\output.json") { write(tazVizJson.toString()); close() }
 

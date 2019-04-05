@@ -7,9 +7,8 @@ case class TimeAndCost(time: Option[Int], cost: Option[Double])
 trait TravelTimeAndCost {
 
   def overrideTravelTimeAndCostFor(
-    origin: Location,
-    destination: Location,
-    departureTime: Int,
-    mode: BeamMode
-  ): TimeAndCost
+      origin: Location,
+      destination: Location,
+      departureTime: Int,
+      mode: BeamMode): TimeAndCost
 }

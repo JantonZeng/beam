@@ -43,10 +43,8 @@ object CoordInBoundsUtil extends App {
 
   val transformedCoords = coords.map { coord =>
     val coordUtm = wgs2Utm.transform(coord)
-    val coordUtmWithRadius = new Coord(
-      coordUtm.getX + radius * (rand.nextDouble() - 0.5),
-      coordUtm.getY + radius * (rand.nextDouble() - 0.5)
-    )
+    val coordUtmWithRadius =
+      new Coord(coordUtm.getX + radius * (rand.nextDouble() - 0.5), coordUtm.getY + radius * (rand.nextDouble() - 0.5))
     (coord, coordUtmWithRadius)
   }
 

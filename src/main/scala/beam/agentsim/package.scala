@@ -10,8 +10,8 @@ import org.matsim.vehicles.Vehicle
 import scala.language.implicitConversions
 
 /**
-  * Created by sfeygin on 1/27/17.
-  */
+ * Created by sfeygin on 1/27/17.
+ */
 package object agentsim {
 
   implicit def personId2PersonAgentId(id: Id[Person]): Id[PersonAgent] =
@@ -25,8 +25,7 @@ package object agentsim {
   implicit def beamVehicleId2VehicleId(id: Id[BeamVehicle]): Id[Vehicle] = Id.createVehicleId(id)
 
   implicit def beamVehicleMap2MatsimVehicleMap(
-    beamVehicleMap: Map[Id[BeamVehicle], BeamVehicle]
-  ): Map[Id[BeamVehicle], BeamVehicle] = {
+      beamVehicleMap: Map[Id[BeamVehicle], BeamVehicle]): Map[Id[BeamVehicle], BeamVehicle] = {
     beamVehicleMap.map({ case (vid, veh) => (vid, veh) })
   }
 

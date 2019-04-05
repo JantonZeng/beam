@@ -9,7 +9,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.parquet.avro.AvroParquetReader
 import org.apache.parquet.hadoop.util.HadoopInputFile
-import org.apache.parquet.hadoop.{ParquetFileReader, ParquetReader => HadoopParquetReader}
+import org.apache.parquet.hadoop.{ ParquetFileReader, ParquetReader => HadoopParquetReader }
 
 object ParquetReader {
 

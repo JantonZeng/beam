@@ -8,7 +8,7 @@ import beam.sim.BeamServices
 import beam.sim.config.BeamConfig
 import com.conveyal.gtfs.GTFSFeed
 import com.conveyal.gtfs.model.Trip
-import com.conveyal.r5.analyst.scenario.{AddTrips, AdjustFrequency, Scenario}
+import com.conveyal.r5.analyst.scenario.{ AddTrips, AdjustFrequency, Scenario }
 import com.conveyal.r5.transit.TransportNetwork
 import org.matsim.api.core.v01.network.Network
 
@@ -77,27 +77,23 @@ case class FrequencyAdjustingNetworkCoordinator(beamConfig: BeamConfig) extends 
   }
 
   case class FrequencyAdjustmentInput(
-    tripId: String,
-    startTime: Int,
-    endTime: Int,
-    headwaySecs: Int,
-    exactTimes: Int = 0
-  )
+      tripId: String,
+      startTime: Int,
+      endTime: Int,
+      headwaySecs: Int,
+      exactTimes: Int = 0)
 
   def getAllGTFSFiles(pathToR5Dir: String): ArrayBuffer[Path] = {
     val files = ArrayBuffer.empty[Path]
     val r5Path = Paths.get(s"$pathToR5Dir")
-    Files.walkFileTree(
-      r5Path,
-      new SimpleFileVisitor[Path] {
-        override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
-          if (file.getFileName.toString.endsWith(".zip")) {
-            files += file
-          }
-          FileVisitResult.CONTINUE
+    Files.walkFileTree(r5Path, new SimpleFileVisitor[Path] {
+      override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+        if (file.getFileName.toString.endsWith(".zip")) {
+          files += file
         }
+        FileVisitResult.CONTINUE
       }
-    )
+    })
     files
   }
 

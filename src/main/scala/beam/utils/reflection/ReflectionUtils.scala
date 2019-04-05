@@ -1,27 +1,27 @@
 package beam.utils.reflection
 
-import java.lang.reflect.Modifier.{isAbstract, isInterface}
-import java.lang.reflect.{Field, Modifier}
+import java.lang.reflect.Modifier.{ isAbstract, isInterface }
+import java.lang.reflect.{ Field, Modifier }
 
 import akka.event.LoggingAdapter
 import beam.utils.DebugLib
 import org.hsqldb.lib.Collection
 import org.reflections.Reflections
-import org.reflections.util.{ClasspathHelper, ConfigurationBuilder}
+import org.reflections.util.{ ClasspathHelper, ConfigurationBuilder }
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 
 /**
-  * Created by dserdiuk on 5/19/17.
-  */
+ * Created by dserdiuk on 5/19/17.
+ */
 trait ReflectionUtils {
 
   /**
-    *
-    * @return package name to scan in
-    */
+   *
+   * @return package name to scan in
+   */
   def packageName: String
 
   lazy val reflections: Reflections = {
@@ -30,11 +30,7 @@ trait ReflectionUtils {
   }
 
   def classesOfType[T](implicit ct: ClassTag[T]): List[Class[T]] = {
-    reflections
-      .getSubTypesOf(ct.runtimeClass)
-      .asScala
-      .map(_.asInstanceOf[Class[T]])
-      .toList
+    reflections.getSubTypesOf(ct.runtimeClass).asScala.map(_.asInstanceOf[Class[T]]).toList
   }
 
   def concreteClassesOfType[T](implicit ct: ClassTag[T]): List[Class[T]] = {
@@ -64,13 +60,12 @@ object ReflectionUtils {
   }
 
   def logFields(
-    log: LoggingAdapter,
-    obj: Object,
-    level: Int,
-    ignoreFields: String = "",
-    onlyPrintCollectionSize: Boolean = true,
-    indent: String = ""
-  ): Unit = {
+      log: LoggingAdapter,
+      obj: Object,
+      level: Int,
+      ignoreFields: String = "",
+      onlyPrintCollectionSize: Boolean = true,
+      indent: String = ""): Unit = {
 
     if (obj != null) {
       log.info(obj.getClass.getSimpleName + "->logFields")

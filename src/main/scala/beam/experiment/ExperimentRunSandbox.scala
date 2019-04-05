@@ -1,18 +1,17 @@
 package beam.experiment
 
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{ Files, Path, Paths }
 
-import com.typesafe.config.{Config, ConfigValueFactory}
+import com.typesafe.config.{ Config, ConfigValueFactory }
 
 /**
-  * Created by dserdiuk on 11/25/17.
-  */
+ * Created by dserdiuk on 11/25/17.
+ */
 case class ExperimentRunSandbox(
-  experimentBaseDir: Path,
-  experimentDef: ExperimentDef,
-  experimentRun: ExperimentRun,
-  beamTplConf: Config
-) {
+    experimentBaseDir: Path,
+    experimentDef: ExperimentDef,
+    experimentRun: ExperimentRun,
+    beamTplConf: Config) {
   require(Files.exists(experimentBaseDir))
 
   lazy val runConfig: Config = buildRunConfig
@@ -30,9 +29,9 @@ case class ExperimentRunSandbox(
   }
 
   /**
-    *
-    * @return path to an output folder relatively to project root
-    */
+   *
+   * @return path to an output folder relatively to project root
+   */
   def beamOutputDir: Path = {
     experimentDef.projectRoot.relativize(Paths.get(runDirectory.toString, "output"))
   }
@@ -42,11 +41,10 @@ case class ExperimentRunSandbox(
     // beam.agentsim.agents.modalbehaviors.modeChoiceParametersFile
     // beam.outputs.baseOutputDirectory
     val runConfig: Config = (Map(
-      "beam.agentsim.simulationName"               -> "output",
-      "beam.outputs.baseOutputDirectory"           -> beamOutputDir.getParent.toString,
+      "beam.agentsim.simulationName" -> "output",
+      "beam.outputs.baseOutputDirectory" -> beamOutputDir.getParent.toString,
       "beam.outputs.addTimestampToOutputDirectory" -> "false",
-      "beam.inputDirectory"                        -> experimentDef.getTemplateConfigParentDirAsString
-    ) ++ modeChoiceConfigIfDefined ++ experimentRun.params)
+      "beam.inputDirectory" -> experimentDef.getTemplateConfigParentDirAsString) ++ modeChoiceConfigIfDefined ++ experimentRun.params)
       .foldLeft(beamTplConf) {
         case (prevConfig, (paramName, paramValue)) =>
           val configValue = ConfigValueFactory.fromAnyRef(paramValue)
@@ -63,8 +61,7 @@ case class ExperimentRunSandbox(
         Map(
           "beam.agentsim.agents.modalbehaviors.modeChoiceParametersFile" -> experimentDef.projectRoot
             .relativize(modeChoiceParametersXmlPath)
-            .toString
-        )
+            .toString)
     }
   }
 }

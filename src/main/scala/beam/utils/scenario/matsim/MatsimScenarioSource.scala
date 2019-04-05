@@ -1,5 +1,5 @@
 package beam.utils.scenario.matsim
-import beam.utils.scenario.{HouseholdInfo, PersonInfo, PlanElement, ScenarioSource}
+import beam.utils.scenario.{ HouseholdInfo, PersonInfo, PlanElement, ScenarioSource }
 
 class MatsimScenarioSource(val scenarioFolder: String, val rdr: MatsimScenarioReader) extends ScenarioSource {
 

@@ -13,7 +13,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 /** THIS CLASS IS NOT THREAD-SAFE!!! It's safe to use it inside actor, but not use the reference in Future and other threads..
-  */
+ */
 class StuckFinder(val cfg: StuckAgentDetection) extends LazyLogging {
   private var tickValue: Int = -1
   private var lastUpdatedTime: Long = 0
@@ -67,33 +67,26 @@ class StuckFinder(val cfg: StuckAgentDetection) extends LazyLogging {
       updateTickIfNeeded(st.triggerWithId.trigger.tick)
       if (isNew && cfg.checkMaxNumberOfMessagesEnabled)
         checkIfExceedMaxNumOfMsgPerActorType(st)
-      class2Helper
-        .get(toKey(st))
-        .foreach { helper =>
-          helper.add(time, st)
-        }
+      class2Helper.get(toKey(st)).foreach { helper =>
+        helper.add(time, st)
+      }
     }
   }
 
   def removeByKey(st: ScheduledTrigger): Option[ValueWithTime[ScheduledTrigger]] = {
     if (cfg.enabled) {
-      class2Helper
-        .get(toKey(st))
-        .flatMap { helper =>
-          helper.removeByKey(st)
-        }
+      class2Helper.get(toKey(st)).flatMap { helper =>
+        helper.removeByKey(st)
+      }
     } else
       None
   }
 
-  def detectStuckAgents(
-    time: Long = System.currentTimeMillis()
-  ): Seq[ValueWithTime[ScheduledTrigger]] = {
+  def detectStuckAgents(time: Long = System.currentTimeMillis()): Seq[ValueWithTime[ScheduledTrigger]] = {
     @tailrec
     def detectStuckAgents0(
-      helper: StuckFinderHelper[ScheduledTrigger],
-      stuckAgents: ArrayBuffer[ValueWithTime[ScheduledTrigger]]
-    ): Seq[ValueWithTime[ScheduledTrigger]] = {
+        helper: StuckFinderHelper[ScheduledTrigger],
+        stuckAgents: ArrayBuffer[ValueWithTime[ScheduledTrigger]]): Seq[ValueWithTime[ScheduledTrigger]] = {
       helper.removeOldest() match {
         case Some(oldest) =>
           val isStuck: Boolean = isStuckAgent(oldest.value, oldest.time, time)
@@ -179,8 +172,7 @@ class StuckFinder(val cfg: StuckAgentDetection) extends LazyLogging {
     if (diff == -1) {
       exceedMaxNumberOfMessages.append(st)
       logger.warn(
-        s"$st has exceeded max number of messages threshold. Trigger type: '$triggerClazz', current count: $msgCount, max: $maxMsgPerActorType"
-      )
+        s"$st has exceeded max number of messages threshold. Trigger type: '$triggerClazz', current count: $msgCount, max: $maxMsgPerActorType")
     }
   }
 

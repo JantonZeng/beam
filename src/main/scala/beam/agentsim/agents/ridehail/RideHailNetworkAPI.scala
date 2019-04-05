@@ -2,10 +2,10 @@ package beam.agentsim.agents.ridehail
 
 import java.util
 
-import com.conveyal.r5.profile.{ProfileRequest, StreetMode}
+import com.conveyal.r5.profile.{ ProfileRequest, StreetMode }
 import com.conveyal.r5.transit.TransportNetwork
-import org.matsim.api.core.v01.network.{Link, Network}
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.network.{ Link, Network }
+import org.matsim.api.core.v01.{ Coord, Id }
 import org.matsim.core.network.NetworkUtils
 import org.matsim.core.router.util.TravelTime
 
@@ -31,19 +31,11 @@ class RideHailNetworkAPI {
     maybeTravelTime match {
       case Some(matsimTravelTime) =>
         matsimTravelTime
-          .getLinkTravelTime(
-            matsimNetwork.get.getLinks.get(Id.createLinkId(linkId)),
-            time,
-            null,
-            null
-          )
+          .getLinkTravelTime(matsimNetwork.get.getLinks.get(Id.createLinkId(linkId)), time, null, null)
           .toLong
       case None =>
         val edge = r5Network.get.streetLayer.edgeStore.getCursor(linkId)
-        (edge.getLengthM / edge.calculateSpeed(
-          new ProfileRequest,
-          StreetMode.valueOf(StreetMode.CAR.toString)
-        )).toLong
+        (edge.getLengthM / edge.calculateSpeed(new ProfileRequest, StreetMode.valueOf(StreetMode.CAR.toString))).toLong
     }
   }
 

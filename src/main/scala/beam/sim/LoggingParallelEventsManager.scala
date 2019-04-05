@@ -1,6 +1,6 @@
 package beam.sim
 import java.util.concurrent._
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
+import java.util.concurrent.atomic.{ AtomicBoolean, AtomicInteger }
 
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
@@ -10,7 +10,7 @@ import org.matsim.core.config.Config
 import org.matsim.core.events.ParallelEventsManagerImpl
 import org.matsim.core.events.handler.EventHandler
 
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ Await, ExecutionContext, Future }
 import scala.concurrent.duration._
 
 class LoggingParallelEventsManager @Inject()(config: Config) extends EventsManager with LazyLogging {

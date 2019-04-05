@@ -2,8 +2,8 @@ package beam.sim
 
 import beam.replanning.SwitchModalityStyle
 import javax.inject.Inject
-import org.matsim.api.core.v01.{Id, Scenario}
-import org.matsim.api.core.v01.population.{Activity, Person, Plan}
+import org.matsim.api.core.v01.{ Id, Scenario }
+import org.matsim.api.core.v01.population.{ Activity, Person, Plan }
 import org.matsim.core.controler.PrepareForSim
 import org.matsim.households.Household
 import org.matsim.vehicles.Vehicle
@@ -48,8 +48,7 @@ class BeamPrepareForSim @Inject()(scenario: Scenario) extends PrepareForSim {
       .values()
       .forEach(person => {
         person.getPlans.forEach(plan => {
-          plan.getAttributes
-            .putAttribute("modality-style", SwitchModalityStyle.getRandomElement(allStyles, rand))
+          plan.getAttributes.putAttribute("modality-style", SwitchModalityStyle.getRandomElement(allStyles, rand))
         })
       })
   }

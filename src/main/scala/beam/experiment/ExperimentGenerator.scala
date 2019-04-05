@@ -1,41 +1,38 @@
 package beam.experiment
 
 import java.io._
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{ Files, Path, Paths }
 
 import com.google.common.base.Charsets
 import com.google.common.io.Resources
 import com.hubspot.jinjava.Jinjava
-import com.typesafe.config.{ConfigFactory, ConfigRenderOptions}
+import com.typesafe.config.{ ConfigFactory, ConfigRenderOptions }
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang.SystemUtils
 
 import scala.collection.JavaConverters._
 
 /**
-  * Generate beam.conf and run script for individual run.
-  * Couple notes:
-  *  1. paths n config and templates should be relative to project root
-  *  2. --experiments is used to pass location of experiments.yml
-  *
-  * This generator will create sub-directories relatively to experiments.yml
-  *
-  */
+ * Generate beam.conf and run script for individual run.
+ * Couple notes:
+ *  1. paths n config and templates should be relative to project root
+ *  2. --experiments is used to pass location of experiments.yml
+ *
+ * This generator will create sub-directories relatively to experiments.yml
+ *
+ */
 object ExperimentGenerator extends ExperimentApp {
   import beam.experiment.ExperimentApp
 
   override def validateExperimentConfig(experiment: ExperimentDef): Unit = {
     if (!Files.exists(Paths.get(experiment.header.beamTemplateConfPath))) {
       throw new IllegalArgumentException(
-        s"Can't locate base beam config experimentFile at ${experiment.header.beamTemplateConfPath}"
-      )
+        s"Can't locate base beam config experimentFile at ${experiment.header.beamTemplateConfPath}")
     }
 
     val modeChoiceTemplateFile = Paths.get(experiment.header.modeChoiceTemplate).toAbsolutePath
     if (!Files.exists(modeChoiceTemplateFile)) {
-      throw new IllegalArgumentException(
-        "No mode choice template found " + modeChoiceTemplateFile.toString
-      )
+      throw new IllegalArgumentException("No mode choice template found " + modeChoiceTemplateFile.toString)
     }
   }
 
@@ -54,21 +51,19 @@ object ExperimentGenerator extends ExperimentApp {
     ExperimentRunSandbox(experimentPath.getParent, experimentDef, run, baseConfig)
   }
 
-  val modeChoiceTemplate = Resources.toString(
-    Paths.get(experimentDef.header.modeChoiceTemplate).toAbsolutePath.toUri.toURL,
-    Charsets.UTF_8
-  )
+  val modeChoiceTemplate =
+    Resources.toString(Paths.get(experimentDef.header.modeChoiceTemplate).toAbsolutePath.toUri.toURL, Charsets.UTF_8)
   val runScriptTemplate = experimentDef.getRunScriptTemplate
   val batchScriptTemplate = experimentDef.getBatchRunScriptTemplate
   val jinjava = new Jinjava()
 
   experimentRuns.foreach { runSandbox =>
     val templateParams = Map(
-      "BEAM_CONFIG_PATH" -> runSandbox.beamConfPath.toString,
-      "BEAM_OUTPUT_PATH" -> runSandbox.beamOutputDir.toString
-      //      ,
-      //      "BEAM_SHARED_INPUT" -> runSandbox.beamOutputDir.toString
-    ) ++ experimentDef.header.deployParams.asScala ++ runSandbox.experimentRun.params
+        "BEAM_CONFIG_PATH" -> runSandbox.beamConfPath.toString,
+        "BEAM_OUTPUT_PATH" -> runSandbox.beamOutputDir.toString
+        //      ,
+        //      "BEAM_SHARED_INPUT" -> runSandbox.beamOutputDir.toString
+      ) ++ experimentDef.header.deployParams.asScala ++ runSandbox.experimentRun.params
 
     /*
      * Write the config file
@@ -78,9 +73,8 @@ object ExperimentGenerator extends ExperimentApp {
     }
     val beamConfWriter = new BufferedWriter(new FileWriter(runSandbox.beamConfPath.toFile, false))
     try {
-      val beamConfStr = runSandbox.runConfig
-        .root()
-        .render(ConfigRenderOptions.concise().setJson(false).setFormatted(true))
+      val beamConfStr =
+        runSandbox.runConfig.root().render(ConfigRenderOptions.concise().setJson(false).setFormatted(true))
       beamConfWriter.write(beamConfStr)
       beamConfWriter.flush()
     } finally {
@@ -131,9 +125,7 @@ object ExperimentGenerator extends ExperimentApp {
   /*
    * Write a shell script designed to run the batch locally
    */
-  val templateParams = Map(
-    "EXPERIMENT_PATH" -> getExperimentPath().toString,
-  ) ++ experimentDef.defaultParams.asScala
+  val templateParams = Map("EXPERIMENT_PATH" -> getExperimentPath().toString) ++ experimentDef.defaultParams.asScala
   val batchRunWriter = new BufferedWriter(new FileWriter(getBatchRunScriptPath.toFile, false))
   try {
     val renderedTemplate = jinjava.render(batchScriptTemplate, templateParams.asJava)
@@ -149,8 +141,7 @@ object ExperimentGenerator extends ExperimentApp {
   val dynamicParamsPerFactor = experimentDef.getDynamicParamNamesPerFactor
 
   val experimentsCsv = new BufferedWriter(
-    new FileWriter(Paths.get(getExperimentPath().toString, "experiments.csv").toFile, false)
-  )
+    new FileWriter(Paths.get(getExperimentPath().toString, "experiments.csv").toFile, false))
 
   try {
     val factorNames: List[String] = dynamicParamsPerFactor.map(_._1)

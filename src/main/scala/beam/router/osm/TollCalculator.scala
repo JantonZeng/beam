@@ -1,7 +1,7 @@
 package beam.router.osm
 
 import java.io._
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{ Files, Path, Paths }
 import java.util
 import java.util.Collections
 
@@ -41,20 +41,13 @@ class TollCalculator @Inject()(val config: BeamConfig) extends LazyLogging {
   def calcTollByOsmIds(osmIds: IndexedSeq[Long]): Double = {
     if (osmIds.isEmpty || tollsByWayId.isEmpty) 0
     else {
-      osmIds
-        .map(tollsByWayId.get)
-        .filter(toll => toll != null)
-        .map(toll => applyTimeDependentTollAtTime(toll, 0))
-        .sum
+      osmIds.map(tollsByWayId.get).filter(toll => toll != null).map(toll => applyTimeDependentTollAtTime(toll, 0)).sum
     }
   }
 
   def calcTollByLinkIds(path: BeamPath): Double = {
     val linkEnterTimes = path.linkTravelTime.scanLeft(path.startPoint.time)(_ + _)
-    path.linkIds
-      .zip(linkEnterTimes)
-      .map((calcTollByLinkId _).tupled)
-      .sum
+    path.linkIds.zip(linkEnterTimes).map((calcTollByLinkId _).tupled).sum
   }
 
   def calcTollByLinkId(linkId: Int, time: Int): Double = {
@@ -156,7 +149,10 @@ class TollCalculator @Inject()(val config: BeamConfig) extends LazyLogging {
       .flatMap(c => {
         c.split(" ")
           .headOption
-          .flatMap(token => try { Some(token.toDouble) } catch { case _: Throwable => None })
+          .flatMap(token =>
+            try {
+              Some(token.toDouble)
+            } catch { case _: Throwable => None })
           .flatMap(token => Some(Toll(token, Range("[:]"))))
       })
   }

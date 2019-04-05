@@ -19,20 +19,15 @@ import scala.collection.mutable
 
 // TODO: remove params not needed!
 class OutOfServiceVehicleManager(
-  val log: LoggingAdapter,
-  val rideHailManagerActor: ActorRef,
-  val rideHailManager: RideHailManager
-) {
+    val log: LoggingAdapter,
+    val rideHailManagerActor: ActorRef,
+    val rideHailManager: RideHailManager) {
 
   // TODO: refactor the following two later, e.g. into class
   val passengerSchedules: mutable.HashMap[Id[Vehicle], PassengerSchedule] = mutable.HashMap()
   val triggerIds: mutable.HashMap[Id[Vehicle], Option[Long]] = mutable.HashMap()
 
-  def initiateMovementToParkingDepot(
-    vehicleId: Id[Vehicle],
-    passengerSchedule: PassengerSchedule,
-    tick: Int
-  ): Unit = {
+  def initiateMovementToParkingDepot(vehicleId: Id[Vehicle], passengerSchedule: PassengerSchedule, tick: Int): Unit = {
     log.debug("initiateMovementToParkingDepot - vehicle: " + vehicleId)
 
     passengerSchedules.put(vehicleId, passengerSchedule)
@@ -40,44 +35,25 @@ class OutOfServiceVehicleManager(
     rideHailManager.vehicleManager
       .getRideHailAgentLocation(vehicleId)
       .rideHailAgent
-      .tell(
-        Interrupt(RideHailModifyPassengerScheduleManager.nextRideHailAgentInterruptId, tick),
-        rideHailManagerActor
-      )
+      .tell(Interrupt(RideHailModifyPassengerScheduleManager.nextRideHailAgentInterruptId, tick), rideHailManagerActor)
   }
 
   def registerTrigger(vehicleId: Id[Vehicle], triggerId: Option[Long]): Option[Long] = {
     triggerIds.put(vehicleId, triggerId).flatten
   }
 
-  def handleInterruptReply(
-    vehicleId: Id[Vehicle],
-    tick: Int
-  ): Unit = {
+  def handleInterruptReply(vehicleId: Id[Vehicle], tick: Int): Unit = {
 
-    val rideHailAgent = rideHailManager.vehicleManager
-      .getRideHailAgentLocation(vehicleId)
-      .rideHailAgent
+    val rideHailAgent = rideHailManager.vehicleManager.getRideHailAgentLocation(vehicleId).rideHailAgent
 
-    rideHailAgent.tell(
-      ModifyPassengerSchedule(passengerSchedules(vehicleId), tick),
-      rideHailManagerActor
-    )
+    rideHailAgent.tell(ModifyPassengerSchedule(passengerSchedules(vehicleId), tick), rideHailManagerActor)
     rideHailAgent.tell(Resume(), rideHailManagerActor)
   }
 
-  def releaseTrigger(
-    vehicleId: Id[Vehicle],
-    triggersToSchedule: Seq[ScheduleTrigger] = Vector()
-  ): Unit = {
-    val rideHailAgent = rideHailManager.vehicleManager
-      .getRideHailAgentLocation(vehicleId)
-      .rideHailAgent
+  def releaseTrigger(vehicleId: Id[Vehicle], triggersToSchedule: Seq[ScheduleTrigger] = Vector()): Unit = {
+    val rideHailAgent = rideHailManager.vehicleManager.getRideHailAgentLocation(vehicleId).rideHailAgent
 
-    rideHailAgent ! NotifyVehicleResourceIdleReply(
-      triggerIds(vehicleId),
-      triggersToSchedule
-    )
+    rideHailAgent ! NotifyVehicleResourceIdleReply(triggerIds(vehicleId), triggersToSchedule)
   }
 
 }
@@ -85,8 +61,7 @@ class OutOfServiceVehicleManager(
 case class ReleaseAgentTrigger(vehicleId: Id[Vehicle])
 
 case class MoveOutOfServiceVehicleToDepotParking(
-  passengerSchedule: PassengerSchedule,
-  tick: Int,
-  vehicleId: Id[Vehicle],
-  stall: ParkingStall
-)
+    passengerSchedule: PassengerSchedule,
+    tick: Int,
+    vehicleId: Id[Vehicle],
+    stall: ParkingStall)

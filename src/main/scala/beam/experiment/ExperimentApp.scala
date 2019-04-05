@@ -1,14 +1,14 @@
 package beam.experiment
 
-import java.io.{File, FileInputStream}
-import java.nio.file.{Files, Path, Paths}
+import java.io.{ File, FileInputStream }
+import java.nio.file.{ Files, Path, Paths }
 
 import beam.experiment.ExperimentApp.loadExperimentDefs
 import org.yaml.snakeyaml.constructor.Constructor
 
 /**
-  * Prov
-  */
+ * Prov
+ */
 class ExperimentApp extends App {
   val EXPERIMENTS_TAG = "experiments"
 
@@ -45,8 +45,7 @@ class ExperimentApp extends App {
   def validateExperimentConfig(experiment: ExperimentDef): Unit = {
     if (!Files.exists(Paths.get(experiment.header.beamTemplateConfPath))) {
       throw new IllegalArgumentException(
-        s"Can't locate base beam config experimentFile at ${experiment.header.beamTemplateConfPath}"
-      )
+        s"Can't locate base beam config experimentFile at ${experiment.header.beamTemplateConfPath}")
     }
   }
 
@@ -73,7 +72,7 @@ object ExperimentApp {
   }
 
   def loadExperimentDefs(file: File): ExperimentDef = {
-    import org.yaml.snakeyaml.{TypeDescription, Yaml}
+    import org.yaml.snakeyaml.{ TypeDescription, Yaml }
     val constructor = new Constructor(classOf[ExperimentDef])
     //Experiment.class is root
     val experimentDescription = new TypeDescription(classOf[ExperimentDef])

@@ -1,6 +1,6 @@
 package beam.router
 
-import java.io.{BufferedReader, FileInputStream, InputStreamReader}
+import java.io.{ BufferedReader, FileInputStream, InputStreamReader }
 import java.util.zip.GZIPInputStream
 
 import com.typesafe.scalalogging.LazyLogging

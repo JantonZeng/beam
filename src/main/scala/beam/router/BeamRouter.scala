@@ -1,10 +1,10 @@
 package beam.router
 
-import java.time.{ZoneOffset, ZonedDateTime}
+import java.time.{ ZoneOffset, ZonedDateTime }
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import akka.actor.Status.{Status, Success}
+import akka.actor.Status.{ Status, Success }
 import akka.actor.{
   Actor,
   ActorLogging,
@@ -18,12 +18,12 @@ import akka.actor.{
   Stash
 }
 import akka.cluster.ClusterEvent._
-import akka.cluster.{Cluster, Member, MemberStatus}
+import akka.cluster.{ Cluster, Member, MemberStatus }
 import akka.pattern._
 import akka.util.Timeout
 import beam.agentsim.agents.vehicles.VehicleProtocol.StreetVehicle
-import beam.agentsim.agents.vehicles.{BeamVehicle, BeamVehicleType}
-import beam.agentsim.agents.{InitializeTrigger, TransitDriverAgent}
+import beam.agentsim.agents.vehicles.{ BeamVehicle, BeamVehicleType }
+import beam.agentsim.agents.{ InitializeTrigger, TransitDriverAgent }
 import beam.agentsim.events.SpaceTime
 import beam.agentsim.scheduler.BeamAgentScheduler.ScheduleTrigger
 import beam.router.BeamRouter._
@@ -36,32 +36,32 @@ import beam.sim.BeamServices
 import beam.sim.population.AttributesOfIndividual
 import beam.utils.IdGeneratorImpl
 import com.conveyal.r5.profile.StreetMode
-import com.conveyal.r5.transit.{RouteInfo, TransportNetwork}
+import com.conveyal.r5.transit.{ RouteInfo, TransportNetwork }
 import com.romix.akka.serialization.kryo.KryoSerializer
 import org.matsim.api.core.v01.network.Network
-import org.matsim.api.core.v01.{Coord, Id, Scenario}
+import org.matsim.api.core.v01.{ Coord, Id, Scenario }
 import org.matsim.core.api.experimental.events.EventsManager
-import org.matsim.core.population.routes.{NetworkRoute, RouteUtils}
+import org.matsim.core.population.routes.{ NetworkRoute, RouteUtils }
 import org.matsim.core.router.util.TravelTime
-import org.matsim.vehicles.{Vehicle, Vehicles}
+import org.matsim.vehicles.{ Vehicle, Vehicles }
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.{immutable, mutable}
+import scala.collection.{ immutable, mutable }
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import scala.concurrent.{ Await, ExecutionContextExecutor, Future }
 import scala.util.Try
 
 class BeamRouter(
-  services: BeamServices,
-  transportNetwork: TransportNetwork,
-  network: Network,
-  scenario: Scenario,
-  eventsManager: EventsManager,
-  transitVehicles: Vehicles,
-  fareCalculator: FareCalculator,
-  tollCalculator: TollCalculator
-) extends Actor
+    services: BeamServices,
+    transportNetwork: TransportNetwork,
+    network: Network,
+    scenario: Scenario,
+    eventsManager: EventsManager,
+    transitVehicles: Vehicles,
+    fareCalculator: FareCalculator,
+    tollCalculator: TollCalculator)
+    extends Actor
     with Stash
     with ActorLogging {
   type Worker = ActorRef
@@ -97,9 +97,7 @@ class BeamRouter(
   val servicePathElements: immutable.Seq[String] = servicePath match {
     case RelativeActorPath(elements) => elements
     case _ =>
-      throw new IllegalArgumentException(
-        "servicePath [%s] is not a valid relative actor path" format servicePath
-      )
+      throw new IllegalArgumentException("servicePath [%s] is not a valid relative actor path".format(servicePath))
   }
 
   var remoteNodes = Set.empty[Address]
@@ -126,11 +124,10 @@ class BeamRouter(
   // TODO FIX ME
   val travelTimeAndCost: TravelTimeAndCost = new TravelTimeAndCost {
     override def overrideTravelTimeAndCostFor(
-      origin: Location,
-      destination: Location,
-      departureTime: Int,
-      mode: BeamMode
-    ): TimeAndCost = TimeAndCost(None, None)
+        origin: Location,
+        destination: Location,
+        departureTime: Int,
+        mode: BeamMode): TimeAndCost = TimeAndCost(None, None)
   }
 
   if (services.beamConfig.beam.useLocalWorker) {
@@ -143,10 +140,8 @@ class BeamRouter(
         fareCalculator,
         tollCalculator,
         transitVehicles,
-        travelTimeAndCost
-      ),
-      "router-worker"
-    )
+        travelTimeAndCost),
+      "router-worker")
     localNodes += localWorker
     //TODO: Add Deathwatch to remove node
   }
@@ -222,10 +217,7 @@ class BeamRouter(
     case ReachableMember(m) if m.hasRole("compute") =>
       log.info("ReachableMember: {}", m)
       remoteNodes += m.address
-      notifyNewWorkerIfWorkAvailable(
-        m.address,
-        receivePath = "ReachableMember[compute]"
-      )
+      notifyNewWorkerIfWorkAvailable(m.address, receivePath = "ReachableMember[compute]")
     case GimmeWork =>
       val worker = context.sender
       if (!isWorkAvailable)
@@ -285,24 +277,19 @@ class BeamRouter(
             "This is over the configured threshold {}, so submitting to be cleared.",
             workId,
             secondsSinceSent,
-            secondsToWaitToClearRoutedOutstandingWork
-          )
+            secondsToWaitToClearRoutedOutstandingWork)
           self ! ClearRoutedWorkerTracker(workIdToClear = workId)
         } else if (secondsSinceSent > 120)
-          log.warning(
-            "Haven't heard back from work ID '{}' for {} seconds.",
-            workId,
-            secondsSinceSent
-          )
+          log.warning("Haven't heard back from work ID '{}' for {} seconds.", workId, secondsSinceSent)
     }
   }
 
-  private def removeUnavailableMemberFromAvailableWorkers(
-    member: Member
-  ): Unit = {
+  private def removeUnavailableMemberFromAvailableWorkers(member: Member): Unit = {
     try {
       val worker = Await.result(workerFrom(member.address).resolveOne, 60.seconds)
-      if (availableWorkers.contains(worker)) { availableWorkers.remove(worker) }
+      if (availableWorkers.contains(worker)) {
+        availableWorkers.remove(worker)
+      }
       //TODO: If there is work outstanding then it needs handled
     } catch {
       case ex: Throwable =>
@@ -310,10 +297,7 @@ class BeamRouter(
     }
   }
 
-  private def notifyNewWorkerIfWorkAvailable(
-    workerAddress: => Address,
-    receivePath: => String
-  ): Unit = {
+  private def notifyNewWorkerIfWorkAvailable(workerAddress: => Address, receivePath: => String): Unit = {
     if (isWorkAvailable) {
       val worker = workerFrom(workerAddress)
       log.debug("Sending WorkAvailable via {}: {}", receivePath, worker)
@@ -321,30 +305,18 @@ class BeamRouter(
     }
   }
 
-  private def sendWorkTo(
-    worker: Worker,
-    work: Any,
-    originalSender: OriginalSender,
-    receivePath: => String
-  ): Unit = {
+  private def sendWorkTo(worker: Worker, work: Any, originalSender: OriginalSender, receivePath: => String): Unit = {
     work match {
       case routingRequest: RoutingRequest =>
         outstandingWorkIdToOriginalSenderMap.put(routingRequest.requestId, originalSender) //TODO: Add a central Id trait so can just match on that and combine logic
         outstandingWorkIdToTimeSent.put(routingRequest.requestId, getCurrentTime)
         worker ! work
       case embodyWithCurrentTravelTime: EmbodyWithCurrentTravelTime =>
-        outstandingWorkIdToOriginalSenderMap.put(
-          embodyWithCurrentTravelTime.requestId,
-          originalSender
-        )
+        outstandingWorkIdToOriginalSenderMap.put(embodyWithCurrentTravelTime.requestId, originalSender)
         outstandingWorkIdToTimeSent.put(embodyWithCurrentTravelTime.requestId, getCurrentTime)
         worker ! work
       case _ =>
-        log.warning(
-          "Forwarding work via {} instead of telling because it isn't a handled type - {}",
-          receivePath,
-          work
-        )
+        log.warning("Forwarding work via {} instead of telling because it isn't a handled type - {}", receivePath, work)
         worker.forward(work)
     }
   }
@@ -353,10 +325,7 @@ class BeamRouter(
     outstandingWorkIdToOriginalSenderMap.remove(routingResp.requestId) match {
       case Some(originalSender) => originalSender ! routingResp
       case None =>
-        log.error(
-          "Received a RoutingResponse that does not match a tracked WorkId: {}",
-          routingResp.requestId
-        )
+        log.error("Received a RoutingResponse that does not match a tracked WorkId: {}", routingResp.requestId)
     }
 
   private def logIfResponseTookExcessiveTime(routingResp: RoutingResponse): Unit =
@@ -367,8 +336,7 @@ class BeamRouter(
           log.warning(
             "Took longer than 30 seconds to hear back from work id '{}' - {} seconds",
             routingResp.requestId,
-            secondsSinceSent
-          )
+            secondsSinceSent)
       case None => //No matching id. No need to log since this is more for analysis
     }
 
@@ -405,11 +373,10 @@ class BeamRouter(
   }
 
   private def initDriverAgents(
-    initializer: TransitInitializer,
-    scheduler: ActorRef,
-    parkingManager: ActorRef,
-    transits: Map[Id[BeamVehicle], (RouteInfo, Seq[BeamLeg])]
-  ): Unit = {
+      initializer: TransitInitializer,
+      scheduler: ActorRef,
+      parkingManager: ActorRef,
+      transits: Map[Id[BeamVehicle], (RouteInfo, Seq[BeamLeg])]): Unit = {
     transits.foreach {
       case (tripVehId, (route, legs)) =>
         initializer.createTransitVehicle(tripVehId, route, legs).foreach { vehicle =>
@@ -425,8 +392,7 @@ class BeamRouter(
             parkingManager,
             transitDriverId,
             vehicle,
-            legs
-          )
+            legs)
           val transitDriver = context.actorOf(transitDriverAgentProps, transitDriverId.toString)
           scheduler ! ScheduleTrigger(InitializeTrigger(0), transitDriver)
         }
@@ -441,11 +407,10 @@ object BeamRouter {
   case class InitTransit(scheduler: ActorRef, parkingManager: ActorRef, id: UUID = UUID.randomUUID())
   case class TransitInited(transitSchedule: Map[Id[BeamVehicle], (RouteInfo, Seq[BeamLeg])])
   case class EmbodyWithCurrentTravelTime(
-    leg: BeamLeg,
-    vehicleId: Id[Vehicle],
-    vehicleTypeId: Id[BeamVehicleType],
-    requestId: Int = IdGeneratorImpl.nextId
-  )
+      leg: BeamLeg,
+      vehicleId: Id[Vehicle],
+      vehicleTypeId: Id[BeamVehicleType],
+      requestId: Int = IdGeneratorImpl.nextId)
   case class UpdateTravelTimeLocal(travelTime: TravelTime)
   case class R5Network(transportNetwork: TransportNetwork)
   case object GetTravelTime
@@ -456,27 +421,26 @@ object BeamRouter {
   case class UpdateTravelTimeRemote(linkIdToTravelTimePerHour: java.util.Map[String, Array[Double]])
 
   /**
-    * It is use to represent a request object
-    *
-    * @param originUTM                 start/from location of the route
-    * @param destinationUTM            end/to location of the route
-    * @param departureTime          time in seconds from base midnight
-    * @param transitModes           what transit modes should be considered
-    * @param streetVehicles         what vehicles should be considered in route calc
-    * @param streetVehiclesUseIntermodalUse boolean (default true), if false, the vehicles considered for use on egress
-    */
+   * It is use to represent a request object
+   *
+   * @param originUTM                 start/from location of the route
+   * @param destinationUTM            end/to location of the route
+   * @param departureTime          time in seconds from base midnight
+   * @param transitModes           what transit modes should be considered
+   * @param streetVehicles         what vehicles should be considered in route calc
+   * @param streetVehiclesUseIntermodalUse boolean (default true), if false, the vehicles considered for use on egress
+   */
   case class RoutingRequest(
-    originUTM: Location,
-    destinationUTM: Location,
-    departureTime: Int,
-    transitModes: IndexedSeq[BeamMode],
-    streetVehicles: IndexedSeq[StreetVehicle],
-    attributesOfIndividual: Option[AttributesOfIndividual] = None,
-    streetVehiclesUseIntermodalUse: IntermodalUse = Access,
-    requestId: Int = IdGeneratorImpl.nextId
-  ) {
+      originUTM: Location,
+      destinationUTM: Location,
+      departureTime: Int,
+      transitModes: IndexedSeq[BeamMode],
+      streetVehicles: IndexedSeq[StreetVehicle],
+      attributesOfIndividual: Option[AttributesOfIndividual] = None,
+      streetVehiclesUseIntermodalUse: IntermodalUse = Access,
+      requestId: Int = IdGeneratorImpl.nextId) {
     lazy val timeValueOfMoney
-      : Double = attributesOfIndividual.fold(360.0)(3600.0 / _.valueOfTime) // 360 seconds per Dollar, i.e. 10$/h value of travel time savings
+        : Double = attributesOfIndividual.fold(360.0)(3600.0 / _.valueOfTime) // 360 seconds per Dollar, i.e. 10$/h value of travel time savings
   }
 
   sealed trait IntermodalUse
@@ -485,29 +449,25 @@ object BeamRouter {
   case object AccessAndEgress extends IntermodalUse
 
   /**
-    * Message to respond a plan against a particular router request
-    *
-    * @param itineraries a vector of planned routes
-    */
-  case class RoutingResponse(
-    itineraries: Seq[EmbodiedBeamTrip],
-    requestId: Int
-  )
+   * Message to respond a plan against a particular router request
+   *
+   * @param itineraries a vector of planned routes
+   */
+  case class RoutingResponse(itineraries: Seq[EmbodiedBeamTrip], requestId: Int)
 
   object RoutingResponse {
     val dummyRoutingResponse = Some(RoutingResponse(Vector(), IdGeneratorImpl.nextId))
   }
 
   def props(
-    beamServices: BeamServices,
-    transportNetwork: TransportNetwork,
-    network: Network,
-    scenario: Scenario,
-    eventsManager: EventsManager,
-    transitVehicles: Vehicles,
-    fareCalculator: FareCalculator,
-    tollCalculator: TollCalculator
-  ) = {
+      beamServices: BeamServices,
+      transportNetwork: TransportNetwork,
+      network: Network,
+      scenario: Scenario,
+      eventsManager: EventsManager,
+      transitVehicles: Vehicles,
+      fareCalculator: FareCalculator,
+      tollCalculator: TollCalculator) = {
     checkForConsistentTimeZoneOffsets(beamServices, transportNetwork)
 
     Props(
@@ -519,21 +479,18 @@ object BeamRouter {
         eventsManager,
         transitVehicles,
         fareCalculator,
-        tollCalculator
-      )
-    )
+        tollCalculator))
   }
 
   def linkIdsToEmbodyRequest(
-    linkIds: IndexedSeq[Int],
-    vehicle: StreetVehicle,
-    departTime: Int,
-    mode: BeamMode,
-    beamServices: BeamServices,
-    originUTM: Coord,
-    destinationUTM: Coord,
-    requestIdOpt: Option[Int] = None
-  ) = {
+      linkIds: IndexedSeq[Int],
+      vehicle: StreetVehicle,
+      departTime: Int,
+      mode: BeamMode,
+      beamServices: BeamServices,
+      originUTM: Coord,
+      destinationUTM: Coord,
+      requestIdOpt: Option[Int] = None) = {
     val leg = BeamLeg(
       departTime,
       mode,
@@ -546,35 +503,23 @@ object BeamRouter {
         beamServices.geo.utm2Wgs(SpaceTime(destinationUTM, departTime + 1)),
         linkIds.map { linkId =>
           beamServices.networkHelper.getLink(linkId).map(_.getLength).getOrElse(0.0)
-        }.sum
-      )
-    )
+        }.sum))
     requestIdOpt match {
       case Some(reqId) =>
-        EmbodyWithCurrentTravelTime(
-          leg,
-          vehicle.id,
-          vehicle.vehicleTypeId,
-          reqId
-        )
+        EmbodyWithCurrentTravelTime(leg, vehicle.id, vehicle.vehicleTypeId, reqId)
       case None =>
-        EmbodyWithCurrentTravelTime(
-          leg,
-          vehicle.id,
-          vehicle.vehicleTypeId
-        )
+        EmbodyWithCurrentTravelTime(leg, vehicle.id, vehicle.vehicleTypeId)
     }
   }
 
   def matsimLegToEmbodyRequest(
-    route: NetworkRoute,
-    vehicle: StreetVehicle,
-    departTime: Int,
-    mode: BeamMode,
-    beamServices: BeamServices,
-    origin: Coord,
-    destination: Coord
-  ) = {
+      route: NetworkRoute,
+      vehicle: StreetVehicle,
+      departTime: Int,
+      mode: BeamMode,
+      beamServices: BeamServices,
+      origin: Coord,
+      destination: Coord) = {
     val linkIds = new ArrayBuffer[Int](2 + route.getLinkIds.size())
     linkIds += route.getStartLinkId.toString.toInt
     route.getLinkIds.asScala.foreach { id =>
@@ -591,37 +536,28 @@ object BeamRouter {
         None,
         beamServices.geo.utm2Wgs(SpaceTime(origin, departTime)),
         beamServices.geo.utm2Wgs(SpaceTime(destination, departTime + 1)),
-        RouteUtils.calcDistance(route, 1.0, 1.0, beamServices.matsimServices.getScenario.getNetwork)
-      )
-    )
-    EmbodyWithCurrentTravelTime(
-      leg,
-      vehicle.id,
-      vehicle.vehicleTypeId
-    )
+        RouteUtils.calcDistance(route, 1.0, 1.0, beamServices.matsimServices.getScenario.getNetwork)))
+    EmbodyWithCurrentTravelTime(leg, vehicle.id, vehicle.vehicleTypeId)
   }
 
   def checkForConsistentTimeZoneOffsets(beamServices: BeamServices, transportNetwork: TransportNetwork) = {
     if (beamServices.dates.zonedBaseDateTime.getOffset != transportNetwork.getTimeZone.getRules.getOffset(
-          beamServices.dates.localBaseDateTime
-        )) {
-      throw new RuntimeException(
-        s"Time Zone Mismatch\n\n" +
-        s"\tZone offset inferred by R5: ${transportNetwork.getTimeZone.getRules.getOffset(beamServices.dates.localBaseDateTime)}\n" +
-        s"\tZone offset specified in Beam config file: ${beamServices.dates.zonedBaseDateTime.getOffset}\n\n" +
-        "Detailed Explanation:\n\n" +
-        "There is a subtle requirement in BEAM related to timezones that is easy to miss and cause problems.\n\n" +
-        "BEAM uses the R5 router, which was designed as a stand-alone service either for doing accessibility analysis or as a point to point trip planner. R5 was designed with public transit at the top of the developers’ minds, so they infer the time zone of the region being modeled from the 'timezone' field in the 'agency.txt' file in the first GTFS data archive that is parsed during the network building process.\n\n" +
-        "Therefore, if no GTFS data is provided to R5, it cannot infer the locate timezone and it then assumes UTC.\n\n" +
-        "Meanwhile, there is a parameter in beam, 'beam.routing.baseDate' that is used to ensure that routing requests to R5 are send with the appropriate timestamp. This allows you to run BEAM using any sub-schedule in your GTFS archive. I.e. if your base date is a weekday, R5 will use the weekday schedules for transit, if it’s a weekend day, then the weekend schedules will be used.\n\n" +
-        "The time zone in the baseDate parameter (e.g. for PST one might use '2016-10-17T00:00:00-07:00') must match the time zone in the GTFS archive(s) provided to R5.\n\n" +
-        "As a default, we provide a 'dummy' GTFS data archive that is literally empty of any transit schedules, but is still a valid GTFS archive. This archive happens to have a time zone of Los Angeles. You can download a copy of this archive here:\n\n" +
-        "https://www.dropbox.com/s/2tfbhxuvmep7wf7/dummy.zip?dl=1\n\n" +
-        "But in general, if you use your own GTFS data for your region, then you may need to change this baseDate parameter to reflect the local time zone there. Look for the 'timezone' field in the 'agency.txt' data file in the GTFS archive.\n\n" +
-        "The date specified by the baseDate parameter must fall within the schedule of all GTFS archives included in the R5 sub-directory. See the 'calendar.txt' data file in the GTFS archive and make sure your baseDate is within the 'start_date' and 'end_date' fields folder across all GTFS inputs. If this is not the case, you can either change baseDate or you can change the GTFS data, expanding the date ranges… the particular dates chosen are arbitrary and will have no other impact on the simulation results.\n\n" +
-        "One more word of caution. If you make changes to GTFS data, then make sure your properly zip the data back into an archive. You do this by selecting all of the individual text files and then right-click-compress. Do not compress the folder containing the GTFS files, if you do this, R5 will fail to read your data and will do so without any warning or errors.\n\n" +
-        "Finally, any time you make a changes to either the GTFS inputs or the OSM network inputs, then you need to delete the file 'network.dat' under the 'r5' sub-directory. This will signal to the R5 library to re-build the network."
-      )
+          beamServices.dates.localBaseDateTime)) {
+      throw new RuntimeException(s"Time Zone Mismatch\n\n" +
+      s"\tZone offset inferred by R5: ${transportNetwork.getTimeZone.getRules.getOffset(beamServices.dates.localBaseDateTime)}\n" +
+      s"\tZone offset specified in Beam config file: ${beamServices.dates.zonedBaseDateTime.getOffset}\n\n" +
+      "Detailed Explanation:\n\n" +
+      "There is a subtle requirement in BEAM related to timezones that is easy to miss and cause problems.\n\n" +
+      "BEAM uses the R5 router, which was designed as a stand-alone service either for doing accessibility analysis or as a point to point trip planner. R5 was designed with public transit at the top of the developers’ minds, so they infer the time zone of the region being modeled from the 'timezone' field in the 'agency.txt' file in the first GTFS data archive that is parsed during the network building process.\n\n" +
+      "Therefore, if no GTFS data is provided to R5, it cannot infer the locate timezone and it then assumes UTC.\n\n" +
+      "Meanwhile, there is a parameter in beam, 'beam.routing.baseDate' that is used to ensure that routing requests to R5 are send with the appropriate timestamp. This allows you to run BEAM using any sub-schedule in your GTFS archive. I.e. if your base date is a weekday, R5 will use the weekday schedules for transit, if it’s a weekend day, then the weekend schedules will be used.\n\n" +
+      "The time zone in the baseDate parameter (e.g. for PST one might use '2016-10-17T00:00:00-07:00') must match the time zone in the GTFS archive(s) provided to R5.\n\n" +
+      "As a default, we provide a 'dummy' GTFS data archive that is literally empty of any transit schedules, but is still a valid GTFS archive. This archive happens to have a time zone of Los Angeles. You can download a copy of this archive here:\n\n" +
+      "https://www.dropbox.com/s/2tfbhxuvmep7wf7/dummy.zip?dl=1\n\n" +
+      "But in general, if you use your own GTFS data for your region, then you may need to change this baseDate parameter to reflect the local time zone there. Look for the 'timezone' field in the 'agency.txt' data file in the GTFS archive.\n\n" +
+      "The date specified by the baseDate parameter must fall within the schedule of all GTFS archives included in the R5 sub-directory. See the 'calendar.txt' data file in the GTFS archive and make sure your baseDate is within the 'start_date' and 'end_date' fields folder across all GTFS inputs. If this is not the case, you can either change baseDate or you can change the GTFS data, expanding the date ranges… the particular dates chosen are arbitrary and will have no other impact on the simulation results.\n\n" +
+      "One more word of caution. If you make changes to GTFS data, then make sure your properly zip the data back into an archive. You do this by selecting all of the individual text files and then right-click-compress. Do not compress the folder containing the GTFS files, if you do this, R5 will fail to read your data and will do so without any warning or errors.\n\n" +
+      "Finally, any time you make a changes to either the GTFS inputs or the OSM network inputs, then you need to delete the file 'network.dat' under the 'r5' sub-directory. This will signal to the R5 library to re-build the network.")
     }
 
   }

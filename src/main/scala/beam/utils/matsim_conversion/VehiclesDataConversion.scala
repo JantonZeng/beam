@@ -1,6 +1,6 @@
 package beam.utils.matsim_conversion
 
-import java.io.{File, FileWriter}
+import java.io.{ File, FileWriter }
 import java.util
 
 import beam.agentsim.agents.vehicles.EnergyEconomyAttributes.Powertrain
@@ -9,19 +9,15 @@ import org.supercsv.io.CsvMapWriter
 import org.supercsv.prefs.CsvPreference
 
 import scala.util.Try
-import scala.xml.{Elem, NodeSeq, XML}
+import scala.xml.{ Elem, NodeSeq, XML }
 
 object VehiclesDataConversion extends App {
 
   lazy val beamFuelTypesTitles = Seq("fuelTypeId", "priceInDollarsPerMJoule")
 
   //TODO
-  lazy val beamFuelTypes = Seq(
-    Seq("gasoline", "0.03"),
-    Seq("diesel", "0.02"),
-    Seq("electricity", "0.01"),
-    Seq("biodiesel", "0.01")
-  )
+  lazy val beamFuelTypes =
+    Seq(Seq("gasoline", "0.03"), Seq("diesel", "0.02"), Seq("electricity", "0.01"), Seq("biodiesel", "0.01"))
 
   lazy val beamVehicleTypeTitles = Seq(
     "vehicleTypeId",
@@ -39,13 +35,9 @@ object VehiclesDataConversion extends App {
     "passengerCarUnit",
     "rechargeLevel2RateLimitInWatts",
     "rechargeLevel3RateLimitInWatts",
-    "vehicleCategory"
-  )
+    "vehicleCategory")
 
-  lazy val beamVehicleTitles = Seq(
-    "vehicleId",
-    "vehicleTypeId"
-  )
+  lazy val beamVehicleTitles = Seq("vehicleId", "vehicleTypeId")
 
   lazy val beamVehicleTypes = Seq(
     Seq(
@@ -64,8 +56,7 @@ object VehiclesDataConversion extends App {
       null,
       null,
       null,
-      null
-    ),
+      null),
     Seq(
       "SUV",
       "6",
@@ -82,8 +73,7 @@ object VehiclesDataConversion extends App {
       null,
       null,
       null,
-      null
-    ),
+      null),
     Seq(
       "BUS-DEFAULT",
       "50",
@@ -100,8 +90,7 @@ object VehiclesDataConversion extends App {
       null,
       null,
       null,
-      null
-    ),
+      null),
     Seq(
       "SUBWAY-DEFAULT",
       "50",
@@ -118,8 +107,7 @@ object VehiclesDataConversion extends App {
       null,
       null,
       null,
-      null
-    ),
+      null),
     Seq(
       "TRAM-DEFAULT",
       "50",
@@ -136,8 +124,7 @@ object VehiclesDataConversion extends App {
       null,
       null,
       null,
-      null
-    ),
+      null),
     Seq(
       "RAIL-DEFAULT",
       "50",
@@ -154,8 +141,7 @@ object VehiclesDataConversion extends App {
       null,
       null,
       null,
-      null
-    ),
+      null),
     Seq(
       "CABLE_CAR-DEFAULT",
       "50",
@@ -172,9 +158,7 @@ object VehiclesDataConversion extends App {
       null,
       null,
       null,
-      null
-    ),
-  )
+      null))
 
   if (null == args || args.length < 3) {
     println("Please include parameters: /path/to/vehicles.xml /path/to/transitVehicles.xml /outputDirectory/path")
@@ -215,7 +199,7 @@ object VehiclesDataConversion extends App {
     val requiredFieldsForType = List("capacity", "length", "engineInformation") //description ?
 
     for {
-      vehicleType  <- vehicleTypeSeq
+      vehicleType <- vehicleTypeSeq
       requiredElem <- requiredFieldsForType if (vehicleType \\ requiredElem).isEmpty
     } yield {
       println(s"Input vehicle data is missing $requiredElem xml element in ${vehicleType.label}")
@@ -227,7 +211,7 @@ object VehiclesDataConversion extends App {
       val standingCap = vt \ "capacity" \\ "standingRoom" \@ "persons"
       val length = vt \\ "length" \@ "meter"
       val fuelType = (vt \ "engineInformation" \\ "fuelType").text
-      val litersPerMeter = Try((vt \ "engineInformation" \\ "gasConsumption" \@ "literPerMeter").toDouble).getOrElse(0D)
+      val litersPerMeter = Try((vt \ "engineInformation" \\ "gasConsumption" \@ "literPerMeter").toDouble).getOrElse(0d)
       val joulesPerMeter = Powertrain.litersPerMeterToJoulesPerMeter(fuelType, litersPerMeter)
 
       Seq(
@@ -246,8 +230,7 @@ object VehiclesDataConversion extends App {
         null,
         null,
         null,
-        null
-      )
+        null)
     }
   }
 
@@ -282,8 +265,7 @@ object VehiclesDataConversion extends App {
     }
     val beamVehiclesPath = new File(
       scenarioDirectory +
-      "/vehicles.csv"
-    ).toString
+      "/vehicles.csv").toString
     writeCsvFile(beamVehiclesPath, vehicles, beamVehicleTitles)
     vehicles
   }

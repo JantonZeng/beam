@@ -1,12 +1,12 @@
 package beam.agentsim.agents.ridehail.allocation
 
 import beam.agentsim.agents.ridehail.RideHailManager
-import beam.utils.{PointToPlot, SpatialPlot}
+import beam.utils.{ PointToPlot, SpatialPlot }
 import java.awt.Color
 
 /**
-  * BEAM
-  */
+ * BEAM
+ */
 class DebugRepositioning {}
 
 object DebugRepositioning {
@@ -20,23 +20,16 @@ object DebugRepositioning {
           PointToPlot(
             rideHailManager.vehicleManager.getRideHailAgentLocation(veh.id).currentLocationUTM.loc,
             Color.BLACK,
-            5
-          )
-        )
+            5))
       }
 
       rideHailManager.tncIterationStats.foreach(tncIterationStats => {
 
-        val tazEntries = tncIterationStats getCoordinatesWithRideHailStatsEntry (tick, tick + 3600)
+        val tazEntries = tncIterationStats.getCoordinatesWithRideHailStatsEntry(tick, tick + 3600)
 
         for (tazEntry <- tazEntries.filter(x => x._2.sumOfRequestedRides > 0)) {
           spatialPlot.addPoint(
-            PointToPlot(
-              tazEntry._1,
-              Color.RED,
-              10 + Math.log(tazEntry._2.sumOfRequestedRides).toInt
-            )
-          )
+            PointToPlot(tazEntry._1, Color.RED, 10 + Math.log(tazEntry._2.sumOfRequestedRides).toInt))
         }
       })
 
@@ -45,10 +38,8 @@ object DebugRepositioning {
         rideHailManager.beamServices.matsimServices.getControlerIO
           .getIterationFilename(
             rideHailManager.beamServices.iterationNumber,
-            tick.toInt / 3600 + "locationOfAgentsInitally.png"
-          )
-          .replace(iteration, iteration + "/rideHailDebugging")
-      )
+            tick.toInt / 3600 + "locationOfAgentsInitally.png")
+          .replace(iteration, iteration + "/rideHailDebugging"))
     }
   }
 }

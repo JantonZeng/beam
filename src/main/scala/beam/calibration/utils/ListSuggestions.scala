@@ -2,7 +2,7 @@ package beam.calibration.utils
 
 import beam.utils.DebugLib
 import com.sigopt.Sigopt
-import com.sigopt.model.{Experiment, Pagination, Suggestion}
+import com.sigopt.model.{ Experiment, Pagination, Suggestion }
 
 import scala.collection.JavaConverters._
 

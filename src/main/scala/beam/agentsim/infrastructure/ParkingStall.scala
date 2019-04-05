@@ -1,18 +1,17 @@
 package beam.agentsim.infrastructure
 
 import beam.agentsim.Resource
-import beam.agentsim.infrastructure.ParkingStall.{StallAttributes, StallValues}
+import beam.agentsim.infrastructure.ParkingStall.{ StallAttributes, StallValues }
 import beam.agentsim.infrastructure.TAZTreeMap.TAZ
 import beam.router.BeamRouter.Location
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.{ Coord, Id }
 
 case class ParkingStall(
-  id: Id[ParkingStall],
-  attributes: StallAttributes,
-  locationUTM: Location,
-  cost: Double,
-  stallValues: Option[StallValues]
-)
+    id: Id[ParkingStall],
+    attributes: StallAttributes,
+    locationUTM: Location,
+    cost: Double,
+    stallValues: Option[StallValues])
 
 object ParkingStall {
   val emptyId = Id.create("NA", classOf[ParkingStall])
@@ -22,16 +21,14 @@ object ParkingStall {
     StallAttributes(TAZTreeMap.emptyTAZId, Public, FlatFee, NoCharger, Any),
     new Coord(0.0, 0.0),
     0.0,
-    None
-  )
+    None)
 
   case class StallAttributes(
-    tazId: Id[TAZ],
-    parkingType: ParkingType,
-    pricingModel: PricingModel,
-    chargingType: ChargingType,
-    reservedFor: ReservedParkingType
-  )
+      tazId: Id[TAZ],
+      parkingType: ParkingType,
+      pricingModel: PricingModel,
+      chargingType: ChargingType,
+      reservedFor: ReservedParkingType)
 
   case class StallValues(private[infrastructure] var _numStalls: Int, private[infrastructure] var _feeInCents: Int) {
     def numStalls: Int = _numStalls
@@ -100,13 +97,12 @@ object ParkingStall {
     }
 
     def calculateChargingSessionLengthAndEnergyInJoules(
-      chargerType: ChargingType,
-      currentEnergyLevelInJoule: Double,
-      energyCapacityInJoule: Double,
-      level2VehicleChargingLimitInWatts: Option[Double],
-      level3VehicleChargingLimitInWatts: Option[Double],
-      sessionDurationLimit: Option[Long]
-    ): (Long, Double) = {
+        chargerType: ChargingType,
+        currentEnergyLevelInJoule: Double,
+        energyCapacityInJoule: Double,
+        level2VehicleChargingLimitInWatts: Option[Double],
+        level3VehicleChargingLimitInWatts: Option[Double],
+        sessionDurationLimit: Option[Long]): (Long, Double) = {
       val vehicleChargingLimitActualInKW = chargerType match {
         case NoCharger => 0.0
         case chType if chType == Level1 || chType == Level2 =>
@@ -115,30 +111,27 @@ object ParkingStall {
           level3VehicleChargingLimitInWatts.getOrElse(Double.MaxValue) / 1000.0
       }
       val sessionLengthLimiter = sessionDurationLimit.getOrElse(Long.MaxValue)
-      val sessionLength = Math.min(
-        sessionLengthLimiter,
-        chargerType match {
-          case NoCharger => 0L
-          case chType if chType == Level1 || chType == Level2 =>
-            Math.round(
-              (energyCapacityInJoule - currentEnergyLevelInJoule) / 3.6e6 / Math
-                .min(vehicleChargingLimitActualInKW, getChargerPowerInKW(chargerType)) * 3600.0
-            )
-          case chType if chType == DCFast || chType == UltraFast =>
-            if (energyCapacityInJoule * 0.8 < currentEnergyLevelInJoule) {
-              0L
-            } else {
+      val sessionLength =
+        Math.min(
+          sessionLengthLimiter,
+          chargerType match {
+            case NoCharger => 0L
+            case chType if chType == Level1 || chType == Level2 =>
               Math.round(
-                (energyCapacityInJoule * 0.8 - currentEnergyLevelInJoule) / 3.6e6 / Math
-                  .min(vehicleChargingLimitActualInKW, getChargerPowerInKW(chargerType)) * 3600.0
-              )
-            }
-        }
-      )
+                (energyCapacityInJoule - currentEnergyLevelInJoule) / 3.6e6 / Math
+                  .min(vehicleChargingLimitActualInKW, getChargerPowerInKW(chargerType)) * 3600.0)
+            case chType if chType == DCFast || chType == UltraFast =>
+              if (energyCapacityInJoule * 0.8 < currentEnergyLevelInJoule) {
+                0L
+              } else {
+                Math.round(
+                  (energyCapacityInJoule * 0.8 - currentEnergyLevelInJoule) / 3.6e6 / Math
+                    .min(vehicleChargingLimitActualInKW, getChargerPowerInKW(chargerType)) * 3600.0)
+              }
+          })
       val sessionEnergyInJoules = sessionLength.toDouble / 3600.0 * Math.min(
-        vehicleChargingLimitActualInKW,
-        getChargerPowerInKW(chargerType)
-      ) * 3.6e6
+          vehicleChargingLimitActualInKW,
+          getChargerPowerInKW(chargerType)) * 3.6e6
 
       (sessionLength, sessionEnergyInJoules)
     }

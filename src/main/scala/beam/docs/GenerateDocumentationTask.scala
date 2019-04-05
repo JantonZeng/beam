@@ -1,12 +1,12 @@
 package beam.docs
 
-import java.io.{FileOutputStream, PrintWriter}
-import java.nio.file.{FileSystems, Path, Paths}
+import java.io.{ FileOutputStream, PrintWriter }
+import java.nio.file.{ FileSystems, Path, Paths }
 
 import scala.collection.JavaConverters._
 
 import beam.analysis.plots.GraphsStatsAgentSimEventsListener
-import beam.sim.{BeamOutputDataDescriptionGenerator, OutputDataDescription, ScoreStatsOutputs}
+import beam.sim.{ BeamOutputDataDescriptionGenerator, OutputDataDescription, ScoreStatsOutputs }
 import beam.utils.OutputDataDescriptor
 import com.typesafe.scalalogging.StrictLogging
 import org.matsim.core.controler.OutputDirectoryHierarchy
@@ -19,10 +19,7 @@ object GenerateDocumentationTask extends App with StrictLogging {
 
   def runApp(): Unit = {
     logger.info("Generating Output data description started...")
-    val outputDirectory = FileSystems.getDefault
-      .getPath(".", "docs")
-      .toAbsolutePath
-      .normalize()
+    val outputDirectory = FileSystems.getDefault.getPath(".", "docs").toAbsolutePath.normalize()
 
     initializeDependencies(outputDirectory.toString)
 
@@ -41,10 +38,7 @@ object GenerateDocumentationTask extends App with StrictLogging {
   private def addMainTitle(outputFile: Path): Unit = {
     val documentHeader = s".. _model-outputs:$eol$eol"
     val documentTile = s"Model Outputs$eol=============$eol"
-    new PrintWriter(outputFile.toFile)
-      .append(documentHeader)
-      .append(documentTile)
-      .close()
+    new PrintWriter(outputFile.toFile).append(documentHeader).append(documentTile).close()
   }
 
   def loadValues(): Seq[OutputDataDescription] = {
@@ -52,10 +46,8 @@ object GenerateDocumentationTask extends App with StrictLogging {
   }
 
   private def initializeDependencies(outputDirectory: String): Unit = {
-    GraphsStatsAgentSimEventsListener.CONTROLLER_IO = new OutputDirectoryHierarchy(
-      outputDirectory,
-      OverwriteFileSetting.overwriteExistingFiles
-    )
+    GraphsStatsAgentSimEventsListener.CONTROLLER_IO =
+      new OutputDirectoryHierarchy(outputDirectory, OverwriteFileSetting.overwriteExistingFiles)
   }
 
   def buildDocument(descriptor: OutputDataDescriptor): String = {
@@ -94,11 +86,10 @@ object GenerateDocumentationTask extends App with StrictLogging {
   }
 
   private def buildGroup(
-    title: String,
-    allValues: Seq[OutputDataDescription],
-    columns: Seq[String],
-    columnsSize: Map[String, Int]
-  ): String = {
+      title: String,
+      allValues: Seq[OutputDataDescription],
+      columns: Seq[String],
+      columnsSize: Map[String, Int]): String = {
     val theClassname = allValues.head.className
     new StringBuilder(formatTitle(title))
       .append(buildHeader(columns, columnsSize, theClassname))
@@ -108,10 +99,9 @@ object GenerateDocumentationTask extends App with StrictLogging {
   }
 
   private def buildTableBody(
-    allValues: Seq[OutputDataDescription],
-    columns: Seq[String],
-    columnsSize: Map[String, Int]
-  ): String = {
+      allValues: Seq[OutputDataDescription],
+      columns: Seq[String],
+      columnsSize: Map[String, Int]): String = {
     allValues
       .map { record =>
         rowAsString(record, columns, columnsSize)

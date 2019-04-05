@@ -4,10 +4,10 @@ import java.io._
 import java.util
 
 import com.vividsolutions.jts.geom.Geometry
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.{ Coord, Id }
 import org.matsim.core.utils.gis.ShapeFileReader
 import org.opengis.feature.simple.SimpleFeature
-import org.supercsv.cellprocessor.constraint.{NotNull, UniqueHashCode}
+import org.supercsv.cellprocessor.constraint.{ NotNull, UniqueHashCode }
 import org.supercsv.cellprocessor.ift.CellProcessor
 import org.supercsv.io._
 import org.supercsv.prefs.CsvPreference
@@ -23,23 +23,12 @@ object ShapeUtils {
   private def featureToCsvTaz(f: SimpleFeature, tazIDFieldName: String): Option[CsvTaz] = {
     f.getDefaultGeometry match {
       case g: Geometry =>
-        Some(
-          CsvTaz(
-            f.getAttribute(tazIDFieldName).toString,
-            g.getCoordinate.x,
-            g.getCoordinate.y,
-            g.getArea
-          )
-        )
+        Some(CsvTaz(f.getAttribute(tazIDFieldName).toString, g.getCoordinate.x, g.getCoordinate.y, g.getArea))
       case _ => None
     }
   }
 
-  def shapeFileToCsv(
-    shapeFilePath: String,
-    tazIDFieldName: String,
-    writeDestinationPath: String
-  ): Unit = {
+  def shapeFileToCsv(shapeFilePath: String, tazIDFieldName: String, writeDestinationPath: String): Unit = {
     val shapeFileReader: ShapeFileReader = new ShapeFileReader
     shapeFileReader.readFileAndInitialize(shapeFilePath)
     val features: util.Collection[SimpleFeature] = shapeFileReader.getFeatureSet
@@ -52,11 +41,7 @@ object ShapeUtils {
       val header = Array[String]("taz", "coord-x", "coord-y", "area")
       mapWriter.writeHeader(header: _*)
 
-      val tazs = features.asScala
-        .map(featureToCsvTaz(_, tazIDFieldName))
-        .filter(_.isDefined)
-        .map(_.get)
-        .toArray
+      val tazs = features.asScala.map(featureToCsvTaz(_, tazIDFieldName)).filter(_.isDefined).map(_.get).toArray
 //      println(s"Total TAZ ${tazs.length}")
 
       val groupedTazs = groupTaz(tazs)
@@ -110,16 +95,19 @@ object ShapeUtils {
   }
 
   private def addSuffix(id: String, elems: Array[CsvTaz]): Array[CsvTaz] = {
-    ((1 to elems.length) zip elems map {
-      case (index, elem) => elem.copy(id = s"${id}_$index")
-    }).toArray
+    (1 to elems.length)
+      .zip(elems)
+      .map {
+        case (index, elem) => elem.copy(id = s"${id}_$index")
+      }
+      .toArray
   }
 
   private def closestToPoint(referencePoint: Double, elems: Array[CsvTaz]): CsvTaz = {
     elems.reduce { (a, b) =>
       val comparison1 = (a, Math.abs(referencePoint - a.coordY))
       val comparison2 = (b, Math.abs(referencePoint - b.coordY))
-      val closest = Seq(comparison1, comparison2) minBy (_._2)
+      val closest = Seq(comparison1, comparison2).minBy(_._2)
       closest._1
     }
   }

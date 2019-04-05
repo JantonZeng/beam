@@ -1,6 +1,6 @@
 package json.converter
 
-import java.io.{BufferedWriter, File, FileWriter}
+import java.io.{ BufferedWriter, File, FileWriter }
 
 import json.converter.TazOutput._
 import play.api.libs.json.Json
@@ -49,9 +49,8 @@ object TncToday {
               }
               (day, allHours)
           }
-          val allDaysWithAllHours = (0 to 6)
-            .map(i => (i, groupedByDayWithAllData.getOrElse(i, generateDataForDay(i, tazId))))
-            .toMap
+          val allDaysWithAllHours =
+            (0 to 6).map(i => (i, groupedByDayWithAllData.getOrElse(i, generateDataForDay(i, tazId)))).toMap
           (tazId, allDaysWithAllHours.values.flatten)
       }
       .values
@@ -59,7 +58,7 @@ object TncToday {
       .toSeq
   }
 
-  def roundAt(p: Int)(n: Double): Double = { val s = math pow (10, p); (math round n * s) / s }
+  def roundAt(p: Int)(n: Double): Double = { val s = math.pow(10, p); (math.round(n * s)) / s }
 
   def generateTotals(data: Seq[TazStats]): Seq[TazStatsTotals] = {
 
@@ -84,23 +83,15 @@ object TncToday {
   def statsAndTotalsToJson(data: Seq[TazStats]): (String, String) = {
     val allData = completeStats(data)
 
-    val statsOutData = Json
-      .toJson(allData)
-      .toString()
+    val statsOutData = Json.toJson(allData).toString()
 
     val outDataTotals = generateTotals(allData)
 
-    val outDataTotalsJson = Json
-      .toJson(outDataTotals)
-      .toString()
+    val outDataTotalsJson = Json.toJson(outDataTotals).toString()
     (statsOutData, outDataTotalsJson)
   }
 
-  def saveJsonStructure(
-    data: java.util.List[TazStats],
-    statsOut: String,
-    statsTotalsOut: String
-  ): Unit = {
+  def saveJsonStructure(data: java.util.List[TazStats], statsOut: String, statsTotalsOut: String): Unit = {
     val (outData, outDataTotalsJson) = statsAndTotalsToJson(data.asScala)
 
     saveTo(statsOut, outData)

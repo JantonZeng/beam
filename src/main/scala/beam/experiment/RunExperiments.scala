@@ -1,7 +1,7 @@
 package beam.experiment
 
 import java.io.IOException
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{ Files, Path, Paths }
 
 import beam.sim.BeamHelper
 

@@ -2,10 +2,10 @@ package beam.utils
 
 import java.nio.file.Paths
 import java.time.ZonedDateTime
-import java.util.{Collections, Comparator}
+import java.util.{ Collections, Comparator }
 
 import akka.actor.ActorRef
-import beam.agentsim.agents.choice.mode.{ModeIncentive, PtFares}
+import beam.agentsim.agents.choice.mode.{ ModeIncentive, PtFares }
 import beam.agentsim.agents.modalbehaviors.ModeChoiceCalculator
 import beam.agentsim.agents.vehicles.FuelType.FuelType
 import beam.agentsim.agents.vehicles._
@@ -13,15 +13,15 @@ import beam.router.Modes
 import beam.router.r5.DefaultNetworkCoordinator
 import beam.sim.BeamServices
 import beam.sim.common.GeoUtilsImpl
-import beam.sim.config.{BeamConfig, MatSimBeamConfigBuilder}
+import beam.sim.config.{ BeamConfig, MatSimBeamConfigBuilder }
 import beam.sim.population.AttributesOfIndividual
-import beam.utils.BeamVehicleUtils.{readBeamVehicleTypeFile, readFuelTypeFile, readVehiclesFile}
+import beam.utils.BeamVehicleUtils.{ readBeamVehicleTypeFile, readFuelTypeFile, readVehiclesFile }
 import beam.utils.plan.sampling.AvailableModeUtils
 import com.typesafe.config.ConfigValueFactory
 import org.matsim.api.core.v01.Id
-import org.matsim.api.core.v01.population.{Person, Plan}
+import org.matsim.api.core.v01.population.{ Person, Plan }
 import org.matsim.core.controler.ControlerI
-import org.matsim.core.scenario.{MutableScenario, ScenarioUtils}
+import org.matsim.core.scenario.{ MutableScenario, ScenarioUtils }
 import org.matsim.households.Household
 import org.matsim.vehicles.Vehicle
 
@@ -112,8 +112,7 @@ object ScenarioComparator extends App with Comparator[MutableScenario] {
       override var modeChoiceCalculatorFactory: AttributesOfIndividual => ModeChoiceCalculator = _
       override val dates: DateUtils = DateUtils(
         ZonedDateTime.parse(beamConfig.beam.routing.baseDate).toLocalDateTime,
-        ZonedDateTime.parse(beamConfig.beam.routing.baseDate)
-      )
+        ZonedDateTime.parse(beamConfig.beam.routing.baseDate))
       override var beamRouter: ActorRef = _
       override var personHouseholds: Map[Id[Person], Household] = Map()
 
@@ -133,18 +132,12 @@ object ScenarioComparator extends App with Comparator[MutableScenario] {
           primaryConsumptionRateFilePathsByVehicleType =
             vehicleTypes.values.map(x => (x, x.primaryVehicleEnergyFile)).toIndexedSeq,
           secondaryConsumptionRateFilePathsByVehicleType =
-            vehicleTypes.values.map(x => (x, x.secondaryVehicleEnergyFile)).toIndexedSeq
-        )
-      val vehicleEnergy = new VehicleEnergy(
-        consumptionRateFilterStore,
-        vehicleCsvReader.getLinkToGradeRecordsUsing
-      )
+            vehicleTypes.values.map(x => (x, x.secondaryVehicleEnergyFile)).toIndexedSeq)
+      val vehicleEnergy = new VehicleEnergy(consumptionRateFilterStore, vehicleCsvReader.getLinkToGradeRecordsUsing)
 
       // TODO Fix me once `TrieMap` is removed
       val privateVehicles: TrieMap[Id[BeamVehicle], BeamVehicle] =
-        TrieMap(
-          readVehiclesFile(beamConfig.beam.agentsim.agents.vehicles.vehiclesFilePath, vehicleTypes).toSeq: _*
-        )
+        TrieMap(readVehiclesFile(beamConfig.beam.agentsim.agents.vehicles.vehiclesFilePath, vehicleTypes).toSeq: _*)
 
       override def startNewIteration(): Unit = throw new Exception("???")
 
@@ -160,9 +153,7 @@ object ScenarioComparator extends App with Comparator[MutableScenario] {
       override lazy val agencyAndRouteByVehicleIds: TrieMap[Id[Vehicle], (String, String)] = ???
       override lazy val ptFares: PtFares = ???
       override def networkHelper: NetworkHelper = ???
-      override def setTransitFleetSizes(
-        tripFleetSizeMap: mutable.HashMap[String, Integer]
-      ): Unit = {}
+      override def setTransitFleetSizes(tripFleetSizeMap: mutable.HashMap[String, Integer]): Unit = {}
     }
 
     beamServices
@@ -175,8 +166,7 @@ object ScenarioComparator extends App with Comparator[MutableScenario] {
     scenario.getHouseholds.getHouseholds.forEach {
       case (hId: Id[Household], h: Household) => {
         println(
-          "hId => " + hId + ", h => " + h.getMemberIds.toString + ", " + h.getVehicleIds.toString + ", " + h.getIncome.toString
-        )
+          "hId => " + hId + ", h => " + h.getMemberIds.toString + ", " + h.getVehicleIds.toString + ", " + h.getIncome.toString)
       }
     }
     println("--")

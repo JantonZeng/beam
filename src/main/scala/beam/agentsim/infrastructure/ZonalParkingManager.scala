@@ -1,10 +1,10 @@
 package beam.agentsim.infrastructure
 
-import java.io.{File, FileWriter}
-import java.nio.file.{Files, Paths}
+import java.io.{ File, FileWriter }
+import java.nio.file.{ Files, Paths }
 import java.util
 
-import akka.actor.{ActorLogging, ActorRef, Props}
+import akka.actor.{ ActorLogging, ActorRef, Props }
 import beam.agentsim.Resource._
 import beam.agentsim.infrastructure.ParkingManager._
 import beam.agentsim.infrastructure.ParkingStall._
@@ -12,12 +12,12 @@ import beam.agentsim.infrastructure.TAZTreeMap.TAZ
 import beam.agentsim.infrastructure.ZonalParkingManager.ParkingAlternative
 import beam.router.BeamRouter.Location
 import beam.sim.common.GeoUtils
-import beam.sim.{BeamServices, HasServices}
+import beam.sim.{ BeamServices, HasServices }
 import beam.utils.FileUtils
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.{ Coord, Id }
 import org.supercsv.cellprocessor.constraint.NotNull
 import org.supercsv.cellprocessor.ift.CellProcessor
-import org.supercsv.io.{CsvMapReader, CsvMapWriter, ICsvMapWriter}
+import org.supercsv.io.{ CsvMapReader, CsvMapWriter, ICsvMapWriter }
 import org.supercsv.prefs.CsvPreference
 
 import scala.collection.JavaConverters._
@@ -25,10 +25,10 @@ import scala.collection.mutable
 import scala.util.Random
 
 class ZonalParkingManager(
-  override val beamServices: BeamServices,
-  val beamRouter: ActorRef,
-  parkingStockAttributes: ParkingStockAttributes
-) extends ParkingManager(parkingStockAttributes)
+    override val beamServices: BeamServices,
+    val beamRouter: ActorRef,
+    parkingStockAttributes: ParkingStockAttributes)
+    extends ParkingManager(parkingStockAttributes)
     with HasServices
     with ActorLogging {
   val stalls: mutable.Map[Id[ParkingStall], ParkingStall] = mutable.Map()
@@ -39,13 +39,8 @@ class ZonalParkingManager(
 
   val pathResourceCSV: String = beamServices.beamConfig.beam.agentsim.taz.parkingFilePath
 
-  val defaultStallAttributes = StallAttributes(
-    Id.create("NA", classOf[TAZ]),
-    NoOtherExists,
-    FlatFee,
-    NoCharger,
-    ParkingStall.Any
-  )
+  val defaultStallAttributes =
+    StallAttributes(Id.create("NA", classOf[TAZ]), NoOtherExists, FlatFee, NoCharger, ParkingStall.Any)
   def defaultStallValues: StallValues = StallValues(Int.MaxValue, 0)
   def defaultRideHailStallValues: StallValues = StallValues(0, 0)
 
@@ -62,22 +57,22 @@ class ZonalParkingManager(
   def fillInDefaultPooledResources(): Unit = {
     // First do general parking and charging for personal vehicles
     for {
-      taz          <- beamServices.tazTreeMap.tazQuadTree.values().asScala
-      parkingType  <- List(Residential, Workplace, Public)
+      taz <- beamServices.tazTreeMap.tazQuadTree.values().asScala
+      parkingType <- List(Residential, Workplace, Public)
       pricingModel <- List(FlatFee, Block)
       chargingType <- List(NoCharger, Level1, Level2, DCFast, UltraFast)
-      reservedFor  <- List(ParkingStall.Any)
+      reservedFor <- List(ParkingStall.Any)
     } yield {
       val attrib = StallAttributes(taz.tazId, parkingType, pricingModel, chargingType, reservedFor)
       addToPoolResource(attrib, defaultStallValues)
     }
     // Now do parking/charging for ride hail fleet
     for {
-      taz          <- beamServices.tazTreeMap.tazQuadTree.values().asScala
-      parkingType  <- List(Workplace)
+      taz <- beamServices.tazTreeMap.tazQuadTree.values().asScala
+      parkingType <- List(Workplace)
       pricingModel <- List(FlatFee)
       chargingType <- List(Level2, DCFast, UltraFast)
-      reservedFor  <- List(ParkingStall.RideHailManager)
+      reservedFor <- List(ParkingStall.RideHailManager)
     } yield {
       val attrib = StallAttributes(taz.tazId, parkingType, pricingModel, chargingType, reservedFor)
       addToPoolResource(attrib, defaultRideHailStallValues)
@@ -188,8 +183,7 @@ class ZonalParkingManager(
               preferredType,
               idx.pricingModel,
               NoCharger,
-              inquiry.reservedFor
-            ),
+              inquiry.reservedFor),
             inquiry.destinationUtm,
             0.0,
             Some(stallValue.copy()) // let's send a copy to be in safe
@@ -211,28 +205,18 @@ class ZonalParkingManager(
             }
         },
         inquiry.requestId,
-        inquiry.reserveStall
-      )
+        inquiry.reserveStall)
   }
 
   private def maybeCreateNewStall(
-    attrib: StallAttributes,
-    atLocation: Location,
-    withCost: Double,
-    stallValues: Option[StallValues],
-    reservedFor: ReservedParkingType = ParkingStall.Any
-  ): Option[ParkingStall] = {
+      attrib: StallAttributes,
+      atLocation: Location,
+      withCost: Double,
+      stallValues: Option[StallValues],
+      reservedFor: ReservedParkingType = ParkingStall.Any): Option[ParkingStall] = {
     if (pooledResources(attrib).numStalls > 0) {
       stallNum = stallNum + 1
-      Some(
-        new ParkingStall(
-          Id.create(stallNum, classOf[ParkingStall]),
-          attrib,
-          atLocation,
-          withCost,
-          stallValues
-        )
-      )
+      Some(new ParkingStall(Id.create(stallNum, classOf[ParkingStall]), attrib, atLocation, withCost, stallValues))
     } else {
       None
     }
@@ -264,12 +248,7 @@ class ZonalParkingManager(
 
   // TODO make pricing into parameters
   // TODO make Block parking model based off a schedule
-  def calculateCost(
-    attrib: StallAttributes,
-    feeInCents: Int,
-    arrivalTime: Long,
-    parkingDuration: Double
-  ): Double = {
+  def calculateCost(attrib: StallAttributes, feeInCents: Int, arrivalTime: Long, parkingDuration: Double): Double = {
     attrib.pricingModel match {
       case FlatFee => feeInCents.toDouble / 100.0
       case Block   => parkingDuration / 3600.0 * (feeInCents.toDouble / 100.0)
@@ -288,12 +267,7 @@ class ZonalParkingManager(
           val stallLoc = sampleLocationForStall(taz._1, attrib)
           val walkingDistance = beamServices.geo.distUTMInMeters(stallLoc, inquiry.destinationUtm)
           val valueOfTimeSpentWalking = walkingDistance / 1.4 / 3600.0 * inquiry.attributesOfIndividual.valueOfTime // 1.4 m/s avg. walk
-          val cost = calculateCost(
-            attrib,
-            stallValues.feeInCents,
-            inquiry.arrivalTime,
-            inquiry.parkingDuration
-          )
+          val cost = calculateCost(attrib, stallValues.feeInCents, inquiry.arrivalTime, inquiry.parkingDuration)
           ParkingAlternative(attrib, stallLoc, cost, cost + valueOfTimeSpentWalking, stallValues)
       }.toVector
       foundAfter
@@ -304,8 +278,7 @@ class ZonalParkingManager(
           alternative.stallAttributes,
           alternative.location,
           alternative.cost,
-          Some(alternative.stallValues)
-        )
+          Some(alternative.stallValues))
       case None => None
     }
     // Finally, if no stall found, repeat with larger search distance for TAZs or create one very expensive
@@ -320,8 +293,7 @@ class ZonalParkingManager(
             defaultStallAttributes,
             inquiry.destinationUtm,
             1000.0,
-            Some(defaultStallValues)
-          )
+            Some(defaultStallValues))
         } else {
           selectPublicStall(inquiry, startSearchRadius * 2.0)
         }
@@ -332,10 +304,8 @@ class ZonalParkingManager(
     var nearbyTAZs: Vector[TAZ] = Vector()
     var searchRadius = startRadius
     while (nearbyTAZs.isEmpty && searchRadius <= maxRadius) {
-      nearbyTAZs = beamServices.tazTreeMap.tazQuadTree
-        .getDisk(searchCenter.getX, searchCenter.getY, searchRadius)
-        .asScala
-        .toVector
+      nearbyTAZs =
+        beamServices.tazTreeMap.tazQuadTree.getDisk(searchCenter.getX, searchCenter.getY, searchRadius).asScala.toVector
       searchRadius = searchRadius * 2.0
     }
     nearbyTAZs
@@ -351,30 +321,28 @@ class ZonalParkingManager(
   def readCsvFile(filePath: String): mutable.Map[StallAttributes, StallValues] = {
     val res: mutable.Map[StallAttributes, StallValues] = mutable.Map()
 
-    FileUtils.using(
-      new CsvMapReader(FileUtils.readerFromFile(filePath), CsvPreference.STANDARD_PREFERENCE)
-    ) { mapReader =>
-      val header = mapReader.getHeader(true)
-      var line: java.util.Map[String, String] = mapReader.read(header: _*)
-      while (null != line) {
+    FileUtils.using(new CsvMapReader(FileUtils.readerFromFile(filePath), CsvPreference.STANDARD_PREFERENCE)) {
+      mapReader =>
+        val header = mapReader.getHeader(true)
+        var line: java.util.Map[String, String] = mapReader.read(header: _*)
+        while (null != line) {
 
-        val taz = Id.create(line.get("taz").toUpperCase, classOf[TAZ])
-        val parkingType = ParkingType.fromString(line.get("parkingType"))
-        val pricingModel = PricingModel.fromString(line.get("pricingModel"))
-        val chargingType = ChargingType.fromString(line.get("chargingType"))
-        val numStalls = line.get("numStalls").toInt
-        //        val parkingId = line.get("parkingId")
-        val feeInCents = line.get("feeInCents").toInt
-        val reservedForString = line.get("reservedFor")
-        val reservedFor = getReservedFor(reservedForString)
+          val taz = Id.create(line.get("taz").toUpperCase, classOf[TAZ])
+          val parkingType = ParkingType.fromString(line.get("parkingType"))
+          val pricingModel = PricingModel.fromString(line.get("pricingModel"))
+          val chargingType = ChargingType.fromString(line.get("chargingType"))
+          val numStalls = line.get("numStalls").toInt
+          //        val parkingId = line.get("parkingId")
+          val feeInCents = line.get("feeInCents").toInt
+          val reservedForString = line.get("reservedFor")
+          val reservedFor = getReservedFor(reservedForString)
 
-        res.put(
-          StallAttributes(taz, parkingType, pricingModel, chargingType, reservedFor),
-          StallValues(numStalls, feeInCents)
-        )
+          res.put(
+            StallAttributes(taz, parkingType, pricingModel, chargingType, reservedFor),
+            StallValues(numStalls, feeInCents))
 
-        line = mapReader.read(header: _*)
-      }
+          line = mapReader.read(header: _*)
+        }
     }
     res
   }
@@ -387,9 +355,8 @@ class ZonalParkingManager(
   }
 
   def parkingStallToCsv(
-    pooledResources: mutable.Map[ParkingStall.StallAttributes, StallValues],
-    writeDestinationPath: String
-  ): Unit = {
+      pooledResources: mutable.Map[ParkingStall.StallAttributes, StallValues],
+      writeDestinationPath: String): Unit = {
     var mapWriter: ICsvMapWriter = null
     try {
       val destinationFile = new File(writeDestinationPath)
@@ -403,8 +370,7 @@ class ZonalParkingManager(
         "chargingType",
         "numStalls",
         "feeInCents",
-        "reservedFor"
-      ) //, "parkingId"
+        "reservedFor") //, "parkingId"
       val processors = Array[CellProcessor](
         new NotNull(), // Id (must be unique)
         new NotNull(),
@@ -412,13 +378,11 @@ class ZonalParkingManager(
         new NotNull(),
         new NotNull(),
         new NotNull(),
-        new NotNull()
-      ) //new UniqueHashCode()
+        new NotNull()) //new UniqueHashCode()
       mapWriter.writeHeader(header: _*)
 
       val range = 1 to pooledResources.size
-      val resourcesWithId = (pooledResources zip range).toSeq
-        .sortBy(_._2)
+      val resourcesWithId = pooledResources.zip(range).toSeq.sortBy(_._2)
 
       for (((attrs, values), _) <- resourcesWithId) {
         val tazToWrite = new util.HashMap[String, Object]()
@@ -440,27 +404,19 @@ class ZonalParkingManager(
   }
 
   private def getAvailableStalls: Long = {
-    pooledResources
-      .filter(_._1.reservedFor == RideHailManager)
-      .map(_._2.numStalls.toLong)
-      .sum
+    pooledResources.filter(_._1.reservedFor == RideHailManager).map(_._2.numStalls.toLong).sum
   }
 }
 
 object ZonalParkingManager {
   case class ParkingAlternative(
-    stallAttributes: StallAttributes,
-    location: Location,
-    cost: Double,
-    rankingWeight: Double,
-    stallValues: StallValues
-  )
+      stallAttributes: StallAttributes,
+      location: Location,
+      cost: Double,
+      rankingWeight: Double,
+      stallValues: StallValues)
 
-  def props(
-    beamServices: BeamServices,
-    beamRouter: ActorRef,
-    parkingStockAttributes: ParkingStockAttributes
-  ): Props = {
+  def props(beamServices: BeamServices, beamRouter: ActorRef, parkingStockAttributes: ParkingStockAttributes): Props = {
     Props(new ZonalParkingManager(beamServices, beamRouter, parkingStockAttributes))
   }
 

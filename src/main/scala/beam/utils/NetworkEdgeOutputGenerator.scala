@@ -8,17 +8,15 @@ import scala.collection.mutable
 import scala.language.postfixOps
 
 /**
-  * @author Bhavya Latha Bandaru.
-  * Loads network and then exports required data to an output file.
-  */
+ * @author Bhavya Latha Bandaru.
+ * Loads network and then exports required data to an output file.
+ */
 object NetworkEdgeOutputGenerator extends App {
 
   if (args.isEmpty) throw new Exception("No arguments passed . Required arguments : 1 - path to the conf file")
   val configFile = args(0)
 
-  val config: Config = BeamConfigUtils
-    .parseFileSubstitutingInputDirectory(configFile)
-    .resolve()
+  val config: Config = BeamConfigUtils.parseFileSubstitutingInputDirectory(configFile).resolve()
   val beamConfig: BeamConfig = BeamConfig(config)
   private lazy val networkCoordinator = DefaultNetworkCoordinator(beamConfig)
   networkCoordinator.loadNetwork()
@@ -48,9 +46,11 @@ object NetworkEdgeOutputGenerator extends App {
   }
 
   private def getDataFromEdges(edgesArray: mutable.ListBuffer[EdgeStore#Edge]) = {
-    edgesArray map { edge =>
-      s"${edge.getEdgeIndex},${edge.getFromVertex},${edge.getToVertex},${edge.getSpeed},${edge.getLengthM},${edge.getLengthM / edge.getSpeed}"
-    } mkString "\n"
+    edgesArray
+      .map { edge =>
+        s"${edge.getEdgeIndex},${edge.getFromVertex},${edge.getToVertex},${edge.getSpeed},${edge.getLengthM},${edge.getLengthM / edge.getSpeed}"
+      }
+      .mkString("\n")
   }
 
   private def writeAccessibleEdgesToFile(): Unit = {

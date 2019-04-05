@@ -1,15 +1,15 @@
 package beam.utils
 
-import io.circe.{Encoder, Json}
+import io.circe.{ Encoder, Json }
 import org.matsim.api.core.v01.Coord
 import org.matsim.core.utils.io.IOUtils
 
 import scala.xml.XML
 
 /**
-  * [[Encoder]]s, implicit encoders, and output serialization utilities
-  * Created by sfeygin on 3/28/17.
-  */
+ * [[Encoder]]s, implicit encoders, and output serialization utilities
+ * Created by sfeygin on 3/28/17.
+ */
 object JsonUtils {
 
   // Put global implicit encoders here. Can import wholesale in implementing code.
@@ -18,9 +18,7 @@ object JsonUtils {
       Json.fromValues(
         Seq(
           Json.fromDoubleOrNull(MathUtils.roundDouble(a.getX, 5)),
-          Json.fromDoubleOrNull(MathUtils.roundDouble(a.getY, 5))
-        )
-      )
+          Json.fromDoubleOrNull(MathUtils.roundDouble(a.getY, 5))))
     }
   }
 

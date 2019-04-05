@@ -1,22 +1,22 @@
 package beam.utils.matsim_conversion
 
-import java.io.{File, FileWriter}
+import java.io.{ File, FileWriter }
 import java.nio.file.Paths
 import java.util
 
 import beam.agentsim.agents.vehicles.BeamVehicleType
-import beam.agentsim.agents.vehicles.FuelType.{Biodiesel, Diesel, Electricity, Gasoline}
+import beam.agentsim.agents.vehicles.FuelType.{ Biodiesel, Diesel, Electricity, Gasoline }
 import com.typesafe.config.ConfigFactory
 import org.apache.commons.io.FileUtils
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.{ Coord, Id }
 import org.matsim.api.core.v01.network.Network
 import org.matsim.core.network.NetworkUtils
 import org.matsim.core.network.io.MatsimNetworkReader
 import org.matsim.core.utils.geometry.transformations.GeotoolsTransformation
-import org.matsim.vehicles.{EngineInformationImpl, VehicleCapacityImpl, VehicleType, VehicleUtils}
-import org.supercsv.io.{CsvMapWriter, ICsvMapWriter}
+import org.matsim.vehicles.{ EngineInformationImpl, VehicleCapacityImpl, VehicleType, VehicleUtils }
+import org.supercsv.io.{ CsvMapWriter, ICsvMapWriter }
 import org.supercsv.prefs.CsvPreference
-import org.matsim.vehicles.EngineInformation.{FuelType => MatsimFuelType}
+import org.matsim.vehicles.EngineInformation.{ FuelType => MatsimFuelType }
 
 import scala.collection.JavaConverters._
 
@@ -70,11 +70,7 @@ object MatsimConversionTool extends App {
     }
   }
 
-  def generateSingleDefaultTaz(
-    default: ShapeUtils.CsvTaz,
-    outputFilePath: String,
-    localCRS: String
-  ): Unit = {
+  def generateSingleDefaultTaz(default: ShapeUtils.CsvTaz, outputFilePath: String, localCRS: String): Unit = {
     var mapWriter: ICsvMapWriter = null
     try {
       mapWriter = new CsvMapWriter(new FileWriter(outputFilePath), CsvPreference.STANDARD_PREFERENCE)
@@ -122,9 +118,7 @@ object MatsimConversionTool extends App {
   def parseFileSubstitutingInputDirectory(file: File): com.typesafe.config.Config = {
     ConfigFactory
       .parseFile(file)
-      .withFallback(
-        ConfigFactory.parseMap(Map("beam.inputDirectory" -> file.getAbsoluteFile.getParent).asJava)
-      )
+      .withFallback(ConfigFactory.parseMap(Map("beam.inputDirectory" -> file.getAbsoluteFile.getParent).asJava))
       .resolve
   }
 
@@ -134,38 +128,33 @@ object MatsimConversionTool extends App {
       case Biodiesel =>
         new EngineInformationImpl(
           MatsimFuelType.biodiesel,
-          fuelConsumptionInJoulePerMeter * 1 / BIODIESEL_JOULE_PER_LITER
-        )
+          fuelConsumptionInJoulePerMeter * 1 / BIODIESEL_JOULE_PER_LITER)
       case Diesel =>
         new EngineInformationImpl(MatsimFuelType.diesel, fuelConsumptionInJoulePerMeter * 1 / DIESEL_JOULE_PER_LITER)
       case Gasoline =>
         new EngineInformationImpl(
           MatsimFuelType.gasoline,
-          fuelConsumptionInJoulePerMeter * 1 / GASOLINE_JOULE_PER_LITER
-        )
+          fuelConsumptionInJoulePerMeter * 1 / GASOLINE_JOULE_PER_LITER)
       case Electricity =>
         new EngineInformationImpl(
           MatsimFuelType.electricity,
-          fuelConsumptionInJoulePerMeter * 1 / ELECTRICITY_JOULE_PER_LITER
-        )
+          fuelConsumptionInJoulePerMeter * 1 / ELECTRICITY_JOULE_PER_LITER)
       case _ =>
         new EngineInformationImpl(
           MatsimFuelType.gasoline,
-          fuelConsumptionInJoulePerMeter * 1 / GASOLINE_JOULE_PER_LITER
-        )
+          fuelConsumptionInJoulePerMeter * 1 / GASOLINE_JOULE_PER_LITER)
     }
   }
 
   // From https://www.extension.iastate.edu/agdm/wholefarm/pdf/c6-87.pdf
-  val GASOLINE_JOULE_PER_LITER = 34.8E6
-  val DIESEL_JOULE_PER_LITER = 38.7E6
-  val BIODIESEL_JOULE_PER_LITER = 35.2E6
+  val GASOLINE_JOULE_PER_LITER = 34.8e6
+  val DIESEL_JOULE_PER_LITER = 38.7e6
+  val BIODIESEL_JOULE_PER_LITER = 35.2e6
   val ELECTRICITY_JOULE_PER_LITER = 1
 
   def beamVehicleTypeToMatsimVehicleType(beamVehicleType: BeamVehicleType): VehicleType = {
     val matsimVehicleType = VehicleUtils.getFactory.createVehicleType(
-      Id.create(beamVehicleType.vehicleCategory.toString, classOf[VehicleType])
-    )
+      Id.create(beamVehicleType.vehicleCategory.toString, classOf[VehicleType]))
 
     val vehicleCapacity = new VehicleCapacityImpl()
     vehicleCapacity.setSeats(beamVehicleType.seatingCapacity)

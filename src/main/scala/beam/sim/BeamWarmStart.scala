@@ -1,10 +1,10 @@
 package beam.sim
 
 import java.io.File
-import java.nio.file.{Files, Paths}
+import java.nio.file.{ Files, Paths }
 
 import akka.actor.ActorRef
-import beam.router.BeamRouter.{UpdateTravelTimeLocal, UpdateTravelTimeRemote}
+import beam.router.BeamRouter.{ UpdateTravelTimeLocal, UpdateTravelTimeRemote }
 import beam.router.LinkTravelTimeContainer
 import beam.sim.config.BeamConfig
 import beam.utils.FileUtils.downloadFile
@@ -12,7 +12,7 @@ import beam.utils.TravelTimeCalculatorHelper
 import beam.utils.UnzipUtility._
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.FileUtils.getTempDirectoryPath
-import org.apache.commons.io.FilenameUtils.{getBaseName, getExtension, getName}
+import org.apache.commons.io.FilenameUtils.{ getBaseName, getExtension, getName }
 import org.matsim.api.core.v01.Scenario
 import org.matsim.core.config.Config
 import org.matsim.core.router.util.TravelTime
@@ -24,15 +24,15 @@ class BeamWarmStart private (beamConfig: BeamConfig, maxHour: Int) extends LazyL
   private lazy val srcPath = beamConfig.beam.warmStart.path
 
   /**
-    * check whether warmStart mode is enabled.
-    *
-    * @return true if warm start enabled, otherwise false.
-    */
+   * check whether warmStart mode is enabled.
+   *
+   * @return true if warm start enabled, otherwise false.
+   */
   private lazy val isWarmMode: Boolean = beamConfig.beam.warmStart.enabled
 
   /**
-    * initialize travel times.
-    */
+   * initialize travel times.
+   */
   def warmStartTravelTime(beamRouter: ActorRef, scenario: Scenario): Unit = {
     if (isWarmMode) {
       getWarmStartFilePath("linkstats.csv.gz", rootFirst = false) match {
@@ -52,8 +52,8 @@ class BeamWarmStart private (beamConfig: BeamConfig, maxHour: Int) extends LazyL
   }
 
   /**
-    * initialize population.
-    */
+   * initialize population.
+   */
   def warmStartPopulation(matsimConfig: Config): Unit = {
     if (isWarmMode) {
       getWarmStartFilePath("plans.xml.gz") match {
@@ -63,16 +63,10 @@ class BeamWarmStart private (beamConfig: BeamConfig, maxHour: Int) extends LazyL
             matsimConfig.plans().setInputFile(file)
             logger.info("Population successfully warm started from {}", statsPath)
           } else {
-            logger.warn(
-              "Population failed to warm start, plans not found at path ( {} )",
-              statsPath
-            )
+            logger.warn("Population failed to warm start, plans not found at path ( {} )", statsPath)
           }
         case None =>
-          logger.warn(
-            "Population failed to warm start, plans not found at path ( {} )",
-            srcPath
-          )
+          logger.warn("Population failed to warm start, plans not found at path ( {} )", srcPath)
       }
     }
   }
@@ -118,9 +112,7 @@ class BeamWarmStart private (beamConfig: BeamConfig, maxHour: Int) extends LazyL
       case Some(iterBase) =>
         findIterationContainsFile(itFile, iterBase) match {
           case Some(warmIteration) =>
-            Some(
-              Paths.get(iterBase, s"it.$warmIteration", s"$warmIteration.$itFile").toString
-            )
+            Some(Paths.get(iterBase, s"it.$warmIteration", s"$warmIteration.$itFile").toString)
           case None =>
             None
         }
@@ -145,11 +137,7 @@ class BeamWarmStart private (beamConfig: BeamConfig, maxHour: Int) extends LazyL
   }
 
   private def getITERSPath(runPath: String): Option[String] = {
-    Files
-      .walk(Paths.get(runPath))
-      .toScala[Stream]
-      .map(_.toString)
-      .find(p => "ITERS".equals(getName(p)))
+    Files.walk(Paths.get(runPath)).toScala[Stream].map(_.toString).find(p => "ITERS".equals(getName(p)))
   }
 
   private def findFileInDir(file: String, dir: String): Option[String] =
@@ -194,11 +182,8 @@ object BeamWarmStart {
   def apply(beamConfig: BeamConfig, maxHour: Int): BeamWarmStart = new BeamWarmStart(beamConfig, maxHour)
 
   def updateRemoteRouter(scenario: Scenario, travelTime: TravelTime, maxHour: Int, beamRouter: ActorRef): Unit = {
-    val map = TravelTimeCalculatorHelper.GetLinkIdToTravelTimeArray(
-      scenario.getNetwork.getLinks.values(),
-      travelTime,
-      maxHour
-    )
+    val map =
+      TravelTimeCalculatorHelper.GetLinkIdToTravelTimeArray(scenario.getNetwork.getLinks.values(), travelTime, maxHour)
     beamRouter ! UpdateTravelTimeRemote(map)
   }
 

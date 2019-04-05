@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 import scala.collection.concurrent.TrieMap
 
-import beam.router.RouteHistory.{RouteHistoryADT, _}
+import beam.router.RouteHistory.{ RouteHistoryADT, _ }
 import beam.sim.config.BeamConfig
 import beam.sim.BeamWarmStart
 import beam.utils.FileUtils
@@ -15,14 +15,11 @@ import com.typesafe.scalalogging.LazyLogging
 import org.matsim.core.config.groups.TravelTimeCalculatorConfigGroup
 import org.matsim.core.controler.events.IterationEndsEvent
 import org.matsim.core.controler.listener.IterationEndsListener
-import org.supercsv.io.{CsvMapReader, ICsvMapReader}
+import org.supercsv.io.{ CsvMapReader, ICsvMapReader }
 import org.supercsv.prefs.CsvPreference
 import probability_monad.Distribution
 
-class RouteHistory @Inject()(
-  beamConfig: BeamConfig
-) extends IterationEndsListener
-    with LazyLogging {
+class RouteHistory @Inject()(beamConfig: BeamConfig) extends IterationEndsListener with LazyLogging {
 
   private var previousRouteHistory: RouteHistoryADT = loadPreviousRouteHistory()
   private var routeHistory: RouteHistoryADT = TrieMap()
@@ -32,9 +29,7 @@ class RouteHistory @Inject()(
 
   def loadPreviousRouteHistory(): RouteHistoryADT = {
     if (beamConfig.beam.warmStart.enabled) {
-      routeHistoryFilePath
-        .map(RouteHistory.fromCsv)
-        .getOrElse(TrieMap.empty)
+      routeHistoryFilePath.map(RouteHistory.fromCsv).getOrElse(TrieMap.empty)
     } else {
       TrieMap.empty
     }
@@ -86,8 +81,7 @@ class RouteHistory @Inject()(
       "Overall cache hits {}/{} ({}%)",
       cacheHits,
       cacheRequests,
-      Math.round(cacheHits.toDouble / cacheRequests.toDouble * 100)
-    )
+      Math.round(cacheHits.toDouble / cacheRequests.toDouble * 100))
     cacheRequests = 0
     cacheHits = 0
     routeHistory = TrieMap()
@@ -107,15 +101,10 @@ class RouteHistory @Inject()(
     }
   }
   override def notifyIterationEnds(event: IterationEndsEvent): Unit = {
-    val filePath = event.getServices.getControlerIO.getIterationFilename(
-      event.getServices.getIterationNumber,
-      RouteHistory.outputFileBaseName + ".csv.gz"
-    )
+    val filePath = event.getServices.getControlerIO
+      .getIterationFilename(event.getServices.getIterationNumber, RouteHistory.outputFileBaseName + ".csv.gz")
 
-    FileUtils.writeToFile(
-      filePath,
-      toCsv(routeHistory),
-    )
+    FileUtils.writeToFile(filePath, toCsv(routeHistory))
     previousRouteHistory = routeHistory
     routeHistory = new TrieMap()
   }
@@ -147,11 +136,10 @@ object RouteHistory {
             }
         }
     }
-    val body: Iterator[String] = flattenedRouteHistory
-      .map {
-        case (timeBin, originLinkId, destLinkId, route) =>
-          s"$timeBin,$originLinkId,$destLinkId,$route$Eol"
-      }
+    val body: Iterator[String] = flattenedRouteHistory.map {
+      case (timeBin, originLinkId, destLinkId, route) =>
+        s"$timeBin,$originLinkId,$destLinkId,$route$Eol"
+    }
     Iterator(CsvHeader, Eol) ++ body
   }
 
@@ -167,20 +155,11 @@ object RouteHistory {
         val timeBin = line.get("timeBin").toInt
         val origLinkId = line.get("originLinkId").toInt
         val destLinkId = line.get("destLinkId").toInt
-        val route: IndexedSeq[Int] = line
-          .get("route")
-          .split(":")
-          .map(_.toInt)
+        val route: IndexedSeq[Int] = line.get("route").split(":").map(_.toInt)
 
-        val timeBinReference = result.getOrElseUpdate(
-          timeBin,
-          TrieMap(origLinkId -> TrieMap(destLinkId -> route))
-        )
+        val timeBinReference = result.getOrElseUpdate(timeBin, TrieMap(origLinkId -> TrieMap(destLinkId -> route)))
 
-        val originReference = timeBinReference.getOrElseUpdate(
-          origLinkId,
-          TrieMap(destLinkId -> route)
-        )
+        val originReference = timeBinReference.getOrElseUpdate(origLinkId, TrieMap(destLinkId -> route))
         originReference.update(destLinkId, route)
 
         line = mapReader.read(header: _*)
@@ -195,9 +174,7 @@ object RouteHistory {
 
   private def buildReader(filePath: String): Reader = {
     if (filePath.endsWith(".gz")) {
-      new InputStreamReader(
-        new GZIPInputStream(new BufferedInputStream(new FileInputStream(filePath)))
-      )
+      new InputStreamReader(new GZIPInputStream(new BufferedInputStream(new FileInputStream(filePath))))
     } else {
       new FileReader(filePath)
     }

@@ -1,7 +1,7 @@
 package beam.utils
 
 import org.matsim.api.core.v01.network.Link
-import org.matsim.api.core.v01.{BasicLocation, Id}
+import org.matsim.api.core.v01.{ BasicLocation, Id }
 import org.matsim.core.network.NetworkUtils
 import org.matsim.core.network.io.MatsimNetworkReader
 
@@ -17,8 +17,7 @@ object LinkIdsToGpx {
     val pathToGpx = args(2)
 
     val network = NetworkUtils.createNetwork()
-    new MatsimNetworkReader(network)
-      .readFile(pathToNetwork)
+    new MatsimNetworkReader(network).readFile(pathToNetwork)
     val links = network.getLinks
 
     val geoUtils = new beam.sim.common.GeoUtils {

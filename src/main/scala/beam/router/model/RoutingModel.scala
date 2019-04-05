@@ -3,23 +3,22 @@ package beam.router.model
 import com.conveyal.r5.profile.StreetMode
 import com.conveyal.r5.streets.StreetLayer
 import org.matsim.api.core.v01.Id
-import org.matsim.api.core.v01.events.{Event, LinkEnterEvent, LinkLeaveEvent}
+import org.matsim.api.core.v01.events.{ Event, LinkEnterEvent, LinkLeaveEvent }
 import org.matsim.vehicles.Vehicle
 
 import scala.collection.mutable.ArrayBuffer
 
 /**
-  * BEAM
-  */
+ * BEAM
+ */
 object RoutingModel {
 
   type LegCostEstimator = BeamLeg => Option[Double]
 
   def traverseStreetLeg(
-    leg: BeamLeg,
-    vehicleId: Id[Vehicle],
-    travelTimeByEnterTimeAndLinkId: (Int, Int) => Int
-  ): Iterator[Event] = {
+      leg: BeamLeg,
+      vehicleId: Id[Vehicle],
+      travelTimeByEnterTimeAndLinkId: (Int, Int) => Int): Iterator[Event] = {
     if (leg.travelPath.linkIds.size >= 2) {
       val links = leg.travelPath.linkIds.view
       val fullyTraversedLinks = links.drop(1).dropRight(1)
@@ -41,12 +40,11 @@ object RoutingModel {
   }
 
   def linksToTimeAndDistance(
-    linkIds: IndexedSeq[Int],
-    startTime: Int,
-    travelTimeByEnterTimeAndLinkId: (Int, Int, StreetMode) => Int,
-    mode: StreetMode,
-    streetLayer: StreetLayer
-  ): LinksTimesDistances = {
+      linkIds: IndexedSeq[Int],
+      startTime: Int,
+      travelTimeByEnterTimeAndLinkId: (Int, Int, StreetMode) => Int,
+      mode: StreetMode,
+      streetLayer: StreetLayer): LinksTimesDistances = {
     def exitTimeByEnterTimeAndLinkId(enterTime: Int, linkId: Int): Int =
       enterTime + travelTimeByEnterTimeAndLinkId(enterTime, linkId, mode)
 
@@ -60,11 +58,7 @@ object RoutingModel {
     LinksTimesDistances(linkIds, traversalTimes, cumulDistance)
   }
 
-  case class LinksTimesDistances(
-    linkIds: IndexedSeq[Int],
-    travelTimes: Vector[Int],
-    distances: IndexedSeq[Double]
-  )
+  case class LinksTimesDistances(linkIds: IndexedSeq[Int], travelTimes: Vector[Int], distances: IndexedSeq[Double])
 
   case class TransitStopsInfo(fromStopId: Int, vehicleId: Id[Vehicle], toStopId: Int)
 

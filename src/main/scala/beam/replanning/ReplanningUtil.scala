@@ -12,9 +12,8 @@ import scala.collection.JavaConverters._
 object ReplanningUtil {
 
   def makeExperiencedMobSimCompatible[T <: Plan, I](person: HasPlansAndId[T, I]): Unit = {
-    val experiencedPlan = person.getSelectedPlan.getCustomAttributes
-      .get(PlanCalcScoreConfigGroup.EXPERIENCED_PLAN_KEY)
-      .asInstanceOf[Plan]
+    val experiencedPlan =
+      person.getSelectedPlan.getCustomAttributes.get(PlanCalcScoreConfigGroup.EXPERIENCED_PLAN_KEY).asInstanceOf[Plan]
 
     if (experiencedPlan != null && experiencedPlan.getPlanElements.size() > 0) {
       // BeamMobsim needs activities with coords
@@ -30,10 +29,7 @@ object ReplanningUtil {
       }
       val attributes = experiencedPlan.getAttributes
       val selectedPlanAttributes = person.getSelectedPlan.getAttributes
-      attributes.putAttribute(
-        "modality-style",
-        selectedPlanAttributes.getAttribute("modality-style")
-      )
+      attributes.putAttribute("modality-style", selectedPlanAttributes.getAttribute("modality-style"))
       attributes.putAttribute("scores", selectedPlanAttributes.getAttribute("scores"))
       assert(experiencedPlan.getPlanElements.get(0).asInstanceOf[Activity].getCoord != null)
 
@@ -52,9 +48,7 @@ object ReplanningUtil {
       for (i <- experiencedPlan.getPlanElements.size() until originalPlan.getPlanElements.size()) {
         originalPlan.getPlanElements.get(i) match {
           case activity: Activity =>
-            experiencedPlan.addActivity(
-              PopulationUtils.createActivity(activity)
-            )
+            experiencedPlan.addActivity(PopulationUtils.createActivity(activity))
           case _ =>
             experiencedPlan.addLeg(PopulationUtils.createLeg(originalPlan.getPlanElements.get(i).asInstanceOf[Leg]))
         }

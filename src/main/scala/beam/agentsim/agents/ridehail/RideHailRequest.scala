@@ -7,19 +7,18 @@ import beam.agentsim.agents.vehicles.VehiclePersonId
 import beam.router.BeamRouter.Location
 import beam.utils.RideHailRequestIdGenerator
 import org.matsim.api.core.v01.population.Person
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.{ Coord, Id }
 import org.matsim.vehicles.Vehicle
 
 case class RideHailRequest(
-  requestType: RideHailRequestType,
-  customer: VehiclePersonId,
-  pickUpLocationUTM: Location,
-  departAt: Int,
-  destinationUTM: Location,
-  asPooled: Boolean = false,
-  groupedWithOtherRequests: List[RideHailRequest] = List(),
-  requestId: Int = RideHailRequestIdGenerator.nextId
-) {
+    requestType: RideHailRequestType,
+    customer: VehiclePersonId,
+    pickUpLocationUTM: Location,
+    departAt: Int,
+    destinationUTM: Location,
+    asPooled: Boolean = false,
+    groupedWithOtherRequests: List[RideHailRequest] = List(),
+    requestId: Int = RideHailRequestIdGenerator.nextId) {
 
   def addSubRequest(subRequest: RideHailRequest): RideHailRequest =
     this.copy(requestId = this.requestId, groupedWithOtherRequests = this.groupedWithOtherRequests :+ subRequest)
@@ -36,6 +35,5 @@ object RideHailRequest {
     VehiclePersonId(Id.create("dummy", classOf[Vehicle]), Id.create("dummy", classOf[Person]), ActorRef.noSender),
     new Coord(Double.NaN, Double.NaN),
     Int.MaxValue,
-    new Coord(Double.NaN, Double.NaN)
-  )
+    new Coord(Double.NaN, Double.NaN))
 }

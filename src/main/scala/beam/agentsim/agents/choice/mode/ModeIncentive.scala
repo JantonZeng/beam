@@ -1,7 +1,7 @@
 package beam.agentsim.agents.choice.mode
 
 import java.io.FileNotFoundException
-import java.nio.file.{Files, Paths}
+import java.nio.file.{ Files, Paths }
 
 import beam.agentsim.agents.choice.mode.ModeIncentive.Incentive
 import beam.router.Modes.BeamMode
@@ -17,11 +17,7 @@ case class ModeIncentive(modeIncentives: Map[BeamMode, List[Incentive]]) {
   def computeIncentive(attributesOfIndividual: AttributesOfIndividual, mode: BeamMode): Double = {
     val incentive: Double =
       // incentive for non-public transport
-      getIncentive(
-        mode,
-        attributesOfIndividual.age,
-        attributesOfIndividual.income.map(x => x.toInt)
-      ).getOrElse(0)
+      getIncentive(mode, attributesOfIndividual.age, attributesOfIndividual.income.map(x => x.toInt)).getOrElse(0)
 
     incentive
   }
@@ -57,11 +53,7 @@ object ModeIncentive {
 
   object Incentive {
 
-    def apply(mode: String, age: String, income: String, amount: String): Incentive = new Incentive(
-      BeamMode.fromString(mode).get,
-      Range(age),
-      Range(income),
-      Try(amount.toDouble).getOrElse(0D)
-    )
+    def apply(mode: String, age: String, income: String, amount: String): Incentive =
+      new Incentive(BeamMode.fromString(mode).get, Range(age), Range(income), Try(amount.toDouble).getOrElse(0d))
   }
 }

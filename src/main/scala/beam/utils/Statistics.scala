@@ -3,18 +3,17 @@ package beam.utils
 import org.apache.commons.math3.stat.descriptive.rank.Percentile
 
 case class Statistics(
-  numOfValues: Int,
-  measureTimeMs: Long,
-  minValue: Double,
-  maxValue: Double,
-  median: Double,
-  p75: Double,
-  p95: Double,
-  p99: Double,
-  `p99.95`: Double,
-  `p99.99`: Double,
-  sum: Double
-) {
+    numOfValues: Int,
+    measureTimeMs: Long,
+    minValue: Double,
+    maxValue: Double,
+    median: Double,
+    p75: Double,
+    p95: Double,
+    p99: Double,
+    `p99.95`: Double,
+    `p99.99`: Double,
+    sum: Double) {
   override def toString: String = {
     val avg = sum / numOfValues
     s"numOfValues: $numOfValues, measureTimeMs: $measureTimeMs, [$minValue, $maxValue], median: $median, avg: $avg, p75: $p75, p95: $p95, p99: $p99, p99.95: ${`p99.95`}, p99.99: ${`p99.99`}, sum: $sum"
@@ -48,8 +47,7 @@ object Statistics {
         p99 = p99,
         `p99.95` = `p99.95`,
         `p99.99` = `p99.99`,
-        sum = pq.sum
-      )
+        sum = pq.sum)
     } else {
       Statistics(
         numOfValues = 0,
@@ -62,8 +60,7 @@ object Statistics {
         p99 = Double.NaN,
         `p99.95` = Double.NaN,
         `p99.99` = Double.NaN,
-        sum = 0.0
-      )
+        sum = 0.0)
     }
   }
 }

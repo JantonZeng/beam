@@ -2,8 +2,8 @@ package beam.router
 
 import java.util.concurrent.TimeUnit
 
-import beam.router.BeamRouter.{UpdateTravelTimeLocal, UpdateTravelTimeRemote}
-import beam.sim.{BeamServices, BeamWarmStart}
+import beam.router.BeamRouter.{ UpdateTravelTimeLocal, UpdateTravelTimeRemote }
+import beam.sim.{ BeamServices, BeamWarmStart }
 import beam.utils.TravelTimeCalculatorHelper
 import com.typesafe.scalalogging.LazyLogging
 import org.matsim.api.core.v01.Scenario

@@ -2,21 +2,21 @@ package beam.agentsim.agents.vehicles
 
 import akka.actor.ActorRef
 import beam.agentsim.agents.PersonAgent
-import beam.agentsim.agents.vehicles.BeamVehicle.{BeamVehicleState, FuelConsumed}
-import beam.agentsim.agents.vehicles.ConsumptionRateFilterStore.{Primary, Secondary}
+import beam.agentsim.agents.vehicles.BeamVehicle.{ BeamVehicleState, FuelConsumed }
+import beam.agentsim.agents.vehicles.ConsumptionRateFilterStore.{ Primary, Secondary }
 import beam.agentsim.agents.vehicles.EnergyEconomyAttributes.Powertrain
-import beam.agentsim.agents.vehicles.VehicleCategory.{Bike, Body, Car}
+import beam.agentsim.agents.vehicles.VehicleCategory.{ Bike, Body, Car }
 import beam.agentsim.agents.vehicles.VehicleProtocol.StreetVehicle
 import beam.agentsim.events.SpaceTime
 import beam.agentsim.infrastructure.ParkingStall
 import beam.agentsim.infrastructure.ParkingStall.ChargingType
 import beam.router.Modes
 import beam.router.Modes.BeamMode
-import beam.router.Modes.BeamMode.{BIKE, CAR, CAV, WALK}
+import beam.router.Modes.BeamMode.{ BIKE, CAR, CAV, WALK }
 import beam.router.model.BeamLeg
 import beam.sim.BeamServices
 import beam.sim.common.GeoUtils
-import beam.sim.common.GeoUtils.{Straight, TurningDirection}
+import beam.sim.common.GeoUtils.{ Straight, TurningDirection }
 import beam.utils.NetworkHelper
 import beam.utils.logging.ExponentialLazyLogging
 import org.matsim.api.core.v01.Id
@@ -24,24 +24,21 @@ import org.matsim.api.core.v01.network.Link
 import org.matsim.vehicles.Vehicle
 
 /**
-  * A [[BeamVehicle]] is a state container __administered__ by a driver ([[PersonAgent]]
-  * implementing [[beam.agentsim.agents.modalbehaviors.DrivesVehicle]]). The passengers in the [[BeamVehicle]]
-  * are also [[BeamVehicle]]s, however, others are possible). The
-  * reference to a parent [[BeamVehicle]] is maintained in its carrier. All other information is
-  * managed either through the MATSim [[Vehicle]] interface or within several other classes.
-  *
-  * @author saf
-  * @since Beam 2.0.0
-  */
+ * A [[BeamVehicle]] is a state container __administered__ by a driver ([[PersonAgent]]
+ * implementing [[beam.agentsim.agents.modalbehaviors.DrivesVehicle]]). The passengers in the [[BeamVehicle]]
+ * are also [[BeamVehicle]]s, however, others are possible). The
+ * reference to a parent [[BeamVehicle]] is maintained in its carrier. All other information is
+ * managed either through the MATSim [[Vehicle]] interface or within several other classes.
+ *
+ * @author saf
+ * @since Beam 2.0.0
+ */
 // XXXX: This is a class and MUST NOT be a case class because it contains mutable state.
 // If we need immutable state, we will need to operate on this through lenses.
 
 // TODO: safety for
-class BeamVehicle(
-  val id: Id[BeamVehicle],
-  val powerTrain: Powertrain,
-  val beamVehicleType: BeamVehicleType
-) extends ExponentialLazyLogging {
+class BeamVehicle(val id: Id[BeamVehicle], val powerTrain: Powertrain, val beamVehicleType: BeamVehicleType)
+    extends ExponentialLazyLogging {
 
   var manager: Option[ActorRef] = None
 
@@ -53,29 +50,29 @@ class BeamVehicle(
   var mustBeDrivenHome: Boolean = false
 
   /**
-    * The [[PersonAgent]] who is currently driving the vehicle (or None ==> it is idle).
-    * Effectively, this is the main controller of the vehicle in space and time in the scenario environment;
-    * whereas, the manager is ultimately responsible for assignment and (for now) ownership
-    * of the vehicle as a physical property.
-    */
+   * The [[PersonAgent]] who is currently driving the vehicle (or None ==> it is idle).
+   * Effectively, this is the main controller of the vehicle in space and time in the scenario environment;
+   * whereas, the manager is ultimately responsible for assignment and (for now) ownership
+   * of the vehicle as a physical property.
+   */
   var driver: Option[ActorRef] = None
 
   var reservedStall: Option[ParkingStall] = None
   var stall: Option[ParkingStall] = None
 
   /**
-    * Called by the driver.
-    */
+   * Called by the driver.
+   */
   def unsetDriver(): Unit = {
     driver = None
   }
 
   /**
-    * Only permitted if no driver is currently set. Driver has full autonomy in vehicle, so only
-    * a call of [[unsetDriver]] will remove the driver.
-    *
-    * @param newDriver incoming driver
-    */
+   * Only permitted if no driver is currently set. Driver has full autonomy in vehicle, so only
+   * a call of [[unsetDriver]] will remove the driver.
+   *
+   * @param newDriver incoming driver
+   */
   def becomeDriver(newDriver: ActorRef): Unit = {
     if (driver.isEmpty) {
       driver = Some(newDriver)
@@ -105,25 +102,25 @@ class BeamVehicle(
   }
 
   /**
-    * useFuel
-    *
-    * This method estimates energy consumed for [beamLeg] using data in [beamServices]. It accommodates a secondary
-    * powertrain and tracks the fuel consumed by each powertrain in cascading order (i.e. primary first until tank is
-    * empty and then secondary).
-    *
-    * IMPORTANT -- This method does nothing to stop a vehicle from moving further than the fuel on-board would allow.
-    * When more energy is consumed than the fuel level allows, a warning is logged and the fuel level goes negative.
-    * We choose to allow for negative fuel level because this can convey useful information to the user, namely, the
-    * amount of increased fuel capacity that would be needed to avoid running out.
-    *
-    * When fuel level goes negative, it is assumed to happen on the primary power train, not the secondary.
-    *
-    * It is up to the manager / driver of this vehicle to decide how to react if fuel level becomes negative.
-    *
-    * @param beamLeg
-    * @param beamServices
-    * @return FuelConsumed
-    */
+   * useFuel
+   *
+   * This method estimates energy consumed for [beamLeg] using data in [beamServices]. It accommodates a secondary
+   * powertrain and tracks the fuel consumed by each powertrain in cascading order (i.e. primary first until tank is
+   * empty and then secondary).
+   *
+   * IMPORTANT -- This method does nothing to stop a vehicle from moving further than the fuel on-board would allow.
+   * When more energy is consumed than the fuel level allows, a warning is logged and the fuel level goes negative.
+   * We choose to allow for negative fuel level because this can convey useful information to the user, namely, the
+   * amount of increased fuel capacity that would be needed to avoid running out.
+   *
+   * When fuel level goes negative, it is assumed to happen on the primary power train, not the secondary.
+   *
+   * It is up to the manager / driver of this vehicle to decide how to react if fuel level becomes negative.
+   *
+   * @param beamLeg
+   * @param beamServices
+   * @return FuelConsumed
+   */
   def useFuel(beamLeg: BeamLeg, beamServices: BeamServices): FuelConsumed = {
     val fuelConsumptionData =
       if (beamServices.beamConfig.beam.agentsim.agents.vehicles.enableNewVehicleEnergyConsumptionLogic) {
@@ -138,8 +135,7 @@ class BeamVehicle(
         beamServices.vehicleEnergy.getFuelConsumptionEnergyInJoulesUsing(
           fuelConsumptionData,
           fallBack = powerTrain.getRateInJoulesPerMeter,
-          Primary
-        )
+          Primary)
       else powerTrain.estimateConsumptionInJoules(fuelConsumptionData)
     /*else (powerTrain.estimateConsumptionInJoules(fuelConsumptionData), IndexedSeq.empty[LoggingData])*/
     var primaryEnergyConsumed = primaryEnergyForFullLeg
@@ -154,8 +150,7 @@ class BeamVehicle(
             beamServices.vehicleEnergy.getFuelConsumptionEnergyInJoulesUsing(
               fuelConsumptionData,
               fallBack = powerTrain.getRateInJoulesPerMeter,
-              Secondary
-            )
+              Secondary)
           else powerTrain.estimateConsumptionInJoules(fuelConsumptionData)
         /*else (powerTrain.estimateConsumptionInJoules(fuelConsumptionData), IndexedSeq.empty[LoggingData])*/
         secondaryEnergyConsumed = secondaryEnergyForFullLeg * (primaryEnergyForFullLeg - primaryFuelLevelInJoules) / primaryEnergyConsumed
@@ -163,8 +158,7 @@ class BeamVehicle(
           logger.warn(
             "Vehicle does not have sufficient fuel to make trip (in both primary and secondary fuel tanks), allowing trip to happen and setting fuel level negative: vehicle {} trip distance {} m",
             id,
-            beamLeg.travelPath.distanceInM
-          )
+            beamLeg.travelPath.distanceInM)
           primaryEnergyConsumed = primaryEnergyForFullLeg - secondaryFuelLevelInJoules / secondaryEnergyConsumed
           secondaryEnergyConsumed = secondaryFuelLevelInJoules
         } else {
@@ -174,8 +168,7 @@ class BeamVehicle(
         logger.warn(
           "Vehicle does not have sufficient fuel to make trip, allowing trip to happen and setting fuel level negative: vehicle {} trip distance {} m",
           id,
-          beamLeg.travelPath.distanceInM
-        )
+          beamLeg.travelPath.distanceInM)
       }
     }
     primaryFuelLevelInJoules = primaryFuelLevelInJoules - primaryEnergyConsumed
@@ -191,9 +184,9 @@ class BeamVehicle(
   }
 
   /**
-    *
-    * @return refuelingDuration
-    */
+   *
+   * @return refuelingDuration
+   */
   def refuelingSessionDurationAndEnergyInJoules(): (Long, Double) = {
     stall match {
       case Some(theStall) =>
@@ -203,8 +196,7 @@ class BeamVehicle(
           beamVehicleType.primaryFuelCapacityInJoule,
           beamVehicleType.rechargeLevel2RateLimitInWatts,
           beamVehicleType.rechargeLevel3RateLimitInWatts,
-          None
-        )
+          None)
       case None =>
         (0, 0.0) // if we are not parked, no refueling can occur
     }
@@ -217,8 +209,7 @@ class BeamVehicle(
       primaryFuelLevelInJoules / powerTrain.estimateConsumptionInJoules(1),
       beamVehicleType.secondaryFuelCapacityInJoule.map(_ / beamVehicleType.secondaryFuelConsumptionInJoulePerMeter.get),
       driver,
-      stall
-    )
+      stall)
 
   def toStreetVehicle: StreetVehicle = {
     val mode = beamVehicleType.vehicleCategory match {
@@ -247,8 +238,8 @@ class BeamVehicle(
 object BeamVehicle {
 
   case class FuelConsumed(
-    primaryFuel: Double,
-    secondaryFuel: Double /*, fuelConsumptionData: IndexedSeq[FuelConsumptionData],
+      primaryFuel: Double,
+      secondaryFuel: Double /*, fuelConsumptionData: IndexedSeq[FuelConsumptionData],
                           primaryLoggingData: IndexedSeq[LoggingData],
                           secondaryLoggingData: IndexedSeq[LoggingData]*/
   )
@@ -265,38 +256,35 @@ object BeamVehicle {
   }
 
   case class BeamVehicleState(
-    primaryFuelLevel: Double,
-    secondaryFuelLevel: Option[Double],
-    remainingPrimaryRangeInM: Double,
-    remainingSecondaryRangeInM: Option[Double],
-    driver: Option[ActorRef],
-    stall: Option[ParkingStall]
-  )
+      primaryFuelLevel: Double,
+      secondaryFuelLevel: Option[Double],
+      remainingPrimaryRangeInM: Double,
+      remainingSecondaryRangeInM: Option[Double],
+      driver: Option[ActorRef],
+      stall: Option[ParkingStall])
 
   case class FuelConsumptionData(
-    linkId: Int,
-    vehicleType: BeamVehicleType,
-    linkNumberOfLanes: Option[Int],
-    linkCapacity: Option[Double] = None,
-    linkLength: Option[Double],
-    averageSpeed: Option[Double],
-    freeFlowSpeed: Option[Double],
-    linkArrivalTime: Option[Long] = None,
-    turnAtLinkEnd: Option[TurningDirection] = None,
-    numberOfStops: Option[Int] = None
-  )
+      linkId: Int,
+      vehicleType: BeamVehicleType,
+      linkNumberOfLanes: Option[Int],
+      linkCapacity: Option[Double] = None,
+      linkLength: Option[Double],
+      averageSpeed: Option[Double],
+      freeFlowSpeed: Option[Double],
+      linkArrivalTime: Option[Long] = None,
+      turnAtLinkEnd: Option[TurningDirection] = None,
+      numberOfStops: Option[Int] = None)
 
   /**
-    * Organizes the fuel consumption data table
-    * @param beamLeg Instance of beam leg
-    * @param networkHelper the transport network instance
-    * @return list of fuel consumption objects generated
-    */
+   * Organizes the fuel consumption data table
+   * @param beamLeg Instance of beam leg
+   * @param networkHelper the transport network instance
+   * @return list of fuel consumption objects generated
+   */
   def collectFuelConsumptionData(
-    beamLeg: BeamLeg,
-    theVehicleType: BeamVehicleType,
-    networkHelper: NetworkHelper
-  ): IndexedSeq[FuelConsumptionData] = {
+      beamLeg: BeamLeg,
+      theVehicleType: BeamVehicleType,
+      networkHelper: NetworkHelper): IndexedSeq[FuelConsumptionData] = {
     if (beamLeg.mode.isTransit & !Modes.isOnStreetTransit(beamLeg.mode)) {
       Vector.empty
     } else {

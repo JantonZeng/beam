@@ -1,25 +1,20 @@
 package beam.agentsim.agents.choice.mode
 
 import beam.router.Modes.BeamMode
-import beam.router.Modes.BeamMode.{BUS, FERRY, RAIL, SUBWAY}
+import beam.router.Modes.BeamMode.{ BUS, FERRY, RAIL, SUBWAY }
 import beam.router.model.EmbodiedBeamTrip
 import org.matsim.api.core.v01.Id
 
 /**
-  * TransitFareDefaults
-  *
-  * If no fare is found, these defaults can be use.
-  */
+ * TransitFareDefaults
+ *
+ * If no fare is found, these defaults can be use.
+ */
 object TransitFareDefaults {
 
   // USD per boarding
   // Source: http://www.vitalsigns.mtc.ca.gov/transit-cost-effectiveness
-  val faresByMode: Map[BeamMode, Double] = Map(
-    BUS    -> 0.99,
-    SUBWAY -> 3.43,
-    FERRY  -> 6.87,
-    RAIL   -> 4.52
-  )
+  val faresByMode: Map[BeamMode, Double] = Map(BUS -> 0.99, SUBWAY -> 3.43, FERRY -> 6.87, RAIL -> 4.52)
   val zero: Double = 0
 
   def estimateTransitFares(alternatives: IndexedSeq[EmbodiedBeamTrip]): IndexedSeq[Double] = {

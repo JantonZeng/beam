@@ -1,8 +1,8 @@
 package beam.sim
 
-import java.io.{BufferedWriter, FileWriter, IOException}
+import java.io.{ BufferedWriter, FileWriter, IOException }
 
-import beam.analysis.physsim.{PhyssimCalcLinkSpeedDistributionStatsObject, PhyssimCalcLinkSpeedStatsObject}
+import beam.analysis.physsim.{ PhyssimCalcLinkSpeedDistributionStatsObject, PhyssimCalcLinkSpeedStatsObject }
 import beam.analysis.plots._
 import beam.utils.OutputDataDescriptor
 import com.conveyal.r5.transit.TransportNetwork
@@ -14,52 +14,51 @@ import org.matsim.core.controler.events.ControlerEvent
 import scala.collection.JavaConverters._
 
 /**
-  * Generate data descriptions table for all output file generating classes.
-  */
+ * Generate data descriptions table for all output file generating classes.
+ */
 class BeamOutputDataDescriptionGenerator @Inject()(
-  private val transportNetwork: TransportNetwork,
-  private val beamServices: BeamServices,
-  private val eventsManager: EventsManager,
-  private val scenario: Scenario
-) {
+    private val transportNetwork: TransportNetwork,
+    private val beamServices: BeamServices,
+    private val eventsManager: EventsManager,
+    private val scenario: Scenario) {
 
   private final val outputFileName = "dataDescriptors.csv"
   private final val outputFileHeader = "ClassName,OutputFile,Field,Description\n"
   private final val writeGraphs = beamServices.beamConfig.beam.outputs.writeGraphs
 
   /**
-    * Generates the data descriptors and writes them to the output file.
-    * @param event a controller event
-    */
+   * Generates the data descriptors and writes them to the output file.
+   * @param event a controller event
+   */
   def generateDescriptors(event: ControlerEvent): Unit = {
     //get all the required class file instances
-    val descriptors
-      : Seq[OutputDataDescription] = BeamOutputDataDescriptionGenerator.getClassesGeneratingOutputs flatMap {
-      classRef =>
+    val descriptors: Seq[OutputDataDescription] =
+      BeamOutputDataDescriptionGenerator.getClassesGeneratingOutputs.flatMap { classRef =>
         classRef.getOutputDataDescriptions.asScala.toList
-    }
+      }
     //generate csv from the data objects
-    val descriptionsAsCSV = descriptors map { d =>
-      d.asInstanceOf[Product].productIterator mkString ","
-    } mkString "\n"
+    val descriptionsAsCSV = descriptors
+      .map { d =>
+        d.asInstanceOf[Product].productIterator.mkString(",")
+      }
+      .mkString("\n")
     //write the generated csv to an external file in the output folder
     val filePath = event.getServices.getControlerIO.getOutputPath + "/" + outputFileName
     writeToFile(filePath, Some(outputFileHeader), descriptionsAsCSV, None)
   }
 
   /**
-    * Writes data to the output file at specified path.
-    * @param filePath path of the output file to write data to
-    * @param fileHeader an optional header to be appended (if any)
-    * @param data data to be written to the file
-    * @param fileFooter an optional footer to be appended (if any)
-    */
+   * Writes data to the output file at specified path.
+   * @param filePath path of the output file to write data to
+   * @param fileHeader an optional header to be appended (if any)
+   * @param data data to be written to the file
+   * @param fileFooter an optional footer to be appended (if any)
+   */
   private def writeToFile(
-    filePath: String,
-    fileHeader: Option[String],
-    data: String,
-    fileFooter: Option[String]
-  ): Unit = {
+      filePath: String,
+      fileHeader: Option[String],
+      data: String,
+      fileFooter: Option[String]): Unit = {
     val bw = new BufferedWriter(new FileWriter(filePath))
     try {
       if (fileHeader.isDefined)
@@ -80,83 +79,74 @@ class BeamOutputDataDescriptionGenerator @Inject()(
 object BeamOutputDataDescriptionGenerator {
 
   /**
-    * creates and collects instances of all output file generating classes
-    * @return collected class instances
-    */
-  def getClassesGeneratingOutputs: Seq[OutputDataDescriptor] = List(
-    ModeChosenAnalysisObject,
-    RealizedModeAnalysisObject,
-    RideHailRevenueAnalysisObject,
-    PersonTravelTimeAnalysisObject,
-    FuelUsageAnalysisObject,
+   * creates and collects instances of all output file generating classes
+   * @return collected class instances
+   */
+  def getClassesGeneratingOutputs: Seq[OutputDataDescriptor] =
+    List(
+      ModeChosenAnalysisObject,
+      RealizedModeAnalysisObject,
+      RideHailRevenueAnalysisObject,
+      PersonTravelTimeAnalysisObject,
+      FuelUsageAnalysisObject,
 //    ExpectedMaxUtilityHeatMapObject,
-    PhyssimCalcLinkSpeedStatsObject,
-    PhyssimCalcLinkSpeedDistributionStatsObject,
-    RideHailWaitingAnalysisObject,
-    GraphSurgePricingObject,
-    RideHailingWaitingSingleAnalysisObject,
-    StopWatchOutputs,
-    ScoreStatsOutputs,
-    SummaryStatsOutputs,
-    CountsCompareOutputs,
-    EventOutputs,
-    LegHistogramOutputs,
-    RideHailTripDistanceOutputs,
-    TripDurationOutputs,
-    BiasErrorGraphDataOutputs,
-    BiasNormalizedErrorGraphDataOutputs,
-    RideHailFleetInitializer
-  )
+      PhyssimCalcLinkSpeedStatsObject,
+      PhyssimCalcLinkSpeedDistributionStatsObject,
+      RideHailWaitingAnalysisObject,
+      GraphSurgePricingObject,
+      RideHailingWaitingSingleAnalysisObject,
+      StopWatchOutputs,
+      ScoreStatsOutputs,
+      SummaryStatsOutputs,
+      CountsCompareOutputs,
+      EventOutputs,
+      LegHistogramOutputs,
+      RideHailTripDistanceOutputs,
+      TripDurationOutputs,
+      BiasErrorGraphDataOutputs,
+      BiasNormalizedErrorGraphDataOutputs,
+      RideHailFleetInitializer)
 
 }
 
 object ScoreStatsOutputs extends OutputDataDescriptor {
 
   /**
-    * Get description of fields written to the output files.
-    *
-    * @return list of data description objects
-    */
+   * Get description of fields written to the output files.
+   *
+   * @return list of data description objects
+   */
   override def getOutputDataDescriptions: java.util.List[OutputDataDescription] = {
     val outputFilePath = GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getOutputFilename("scorestats.txt")
     val outputDirPath = GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getOutputPath
     val relativePath = outputFilePath.replace(outputDirPath, "")
     val list = new java.util.ArrayList[OutputDataDescription]
     list.add(
-      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "ITERATION", "Iteration number")
-    )
+      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "ITERATION", "Iteration number"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "avg. EXECUTED",
-        "Average of the total execution time for the given iteration"
-      )
-    )
+        "Average of the total execution time for the given iteration"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "avg. WORST",
-        "Average of worst case time complexities for the given iteration"
-      )
-    )
+        "Average of worst case time complexities for the given iteration"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "avg. AVG",
-        "Average of average case time complexities for the given iteration"
-      )
-    )
+        "Average of average case time complexities for the given iteration"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "avg. BEST",
-        "Average of best case time complexities for the given iteration"
-      )
-    )
+        "Average of best case time complexities for the given iteration"))
     list
   }
 }
@@ -164,170 +154,131 @@ object ScoreStatsOutputs extends OutputDataDescriptor {
 object StopWatchOutputs extends OutputDataDescriptor {
 
   /**
-    * Get description of fields written to the output files.
-    *
-    * @return list of data description objects
-    */
+   * Get description of fields written to the output files.
+   *
+   * @return list of data description objects
+   */
   override def getOutputDataDescriptions: java.util.List[OutputDataDescription] = {
     val outputFilePath = GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getOutputFilename("stopwatch.txt")
     val outputDirPath = GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getOutputPath
     val relativePath = outputFilePath.replace(outputDirPath, "")
     val list = new java.util.ArrayList[OutputDataDescription]
     list.add(
-      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "Iteration", "Iteration number")
-    )
+      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "Iteration", "Iteration number"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "BEGIN iteration",
-        "Begin time of the iteration"
-      )
-    )
+        "Begin time of the iteration"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "BEGIN iterationStartsListeners",
-        "Time at which the iteration start event listeners started"
-      )
-    )
+        "Time at which the iteration start event listeners started"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "END iterationStartsListeners",
-        "Time at which  the iteration start event listeners ended"
-      )
-    )
+        "Time at which  the iteration start event listeners ended"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "BEGIN replanning",
-        "Time at which the replanning event started"
-      )
-    )
+        "Time at which the replanning event started"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "END replanning",
-        "Time at which the replanning event ended"
-      )
-    )
+        "Time at which the replanning event ended"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "BEGIN beforeMobsimListeners",
-        "Time at which the beforeMobsim event listeners started"
-      )
-    )
+        "Time at which the beforeMobsim event listeners started"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "BEGIN dump all plans",
-        "Begin dump all plans"
-      )
-    )
+        "Begin dump all plans"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "END dump all plans",
-        "End dump all plans"
-      )
-    )
+        "End dump all plans"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "END beforeMobsimListeners",
-        "Time at which the beforeMobsim event listeners ended"
-      )
-    )
+        "Time at which the beforeMobsim event listeners ended"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "BEGIN mobsim",
-        "Time at which the mobsim run started"
-      )
-    )
+        "Time at which the mobsim run started"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "END mobsim",
-        "Time at which the mobsim run ended"
-      )
-    )
+        "Time at which the mobsim run ended"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "BEGIN afterMobsimListeners",
-        "Time at which the afterMobsim event listeners started"
-      )
-    )
+        "Time at which the afterMobsim event listeners started"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "END afterMobsimListeners",
-        "Time at which the afterMobsim event listeners ended"
-      )
-    )
+        "Time at which the afterMobsim event listeners ended"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "BEGIN scoring",
-        "Time at which the scoring event started"
-      )
-    )
+        "Time at which the scoring event started"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "END scoring",
-        "Time at which the scoring event ended"
-      )
-    )
+        "Time at which the scoring event ended"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "BEGIN iterationEndsListeners",
-        "Time at which the iteration ends event listeners ended"
-      )
-    )
+        "Time at which the iteration ends event listeners ended"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "BEGIN compare with counts",
-        "Time at which compare with counts started"
-      )
-    )
+        "Time at which compare with counts started"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "END compare with counts",
-        "Time at which compare with counts ended"
-      )
-    )
+        "Time at which compare with counts ended"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "END iteration",
-        "Time at which the iteration ended"
-      )
-    )
+        "Time at which the iteration ended"))
     list
   }
 }
@@ -335,282 +286,215 @@ object StopWatchOutputs extends OutputDataDescriptor {
 object SummaryStatsOutputs extends OutputDataDescriptor {
 
   /**
-    * Get description of fields written to the output files.
-    *
-    * @return list of data description objects
-    */
+   * Get description of fields written to the output files.
+   *
+   * @return list of data description objects
+   */
   override def getOutputDataDescriptions: java.util.List[OutputDataDescription] = {
     val outputFilePath = GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getOutputFilename("summaryStats.txt")
     val outputDirPath = GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getOutputPath
     val relativePath = outputFilePath.replace(outputDirPath, "")
     val list = new java.util.ArrayList[OutputDataDescription]
     list.add(
-      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "Iteration", "Iteration number")
-    )
+      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "Iteration", "Iteration number"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "agentHoursOnCrowdedTransit",
-        "Time taken by the agent to travel in a crowded transit"
-      )
-    )
+        "Time taken by the agent to travel in a crowded transit"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "fuelConsumedInMJ_Diesel",
-        "Amount of diesel consumed in megajoule"
-      )
-    )
+        "Amount of diesel consumed in megajoule"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "fuelConsumedInMJ_Food",
-        "Amount of food consumed in megajoule"
-      )
-    )
+        "Amount of food consumed in megajoule"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "fuelConsumedInMJ_Electricity",
-        "Amount of electricity consumed in megajoule"
-      )
-    )
+        "Amount of electricity consumed in megajoule"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "fuelConsumedInMJ_Gasoline",
-        "Amount of gasoline consumed in megajoule"
-      )
-    )
+        "Amount of gasoline consumed in megajoule"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "numberOfVehicles_BEV",
-        "Time at which the beforeMobsim event listeners started"
-      )
-    )
+        "Time at which the beforeMobsim event listeners started"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "numberOfVehicles_BODY-TYPE-DEFAULT",
-        "Number of vehicles of type BODY-TYPE-DEFAULT"
-      )
-    )
+        "Number of vehicles of type BODY-TYPE-DEFAULT"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "numberOfVehicles_BUS-DEFAULT",
-        "Number of vehicles of type BUS-DEFAULT"
-      )
-    )
+        "Number of vehicles of type BUS-DEFAULT"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "numberOfVehicles_Car",
-        "Time at which the beforeMobsim event listeners ended"
-      )
-    )
+        "Time at which the beforeMobsim event listeners ended"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "numberOfVehicles_SUBWAY-DEFAULT",
-        "Time at which the mobsim run started"
-      )
-    )
+        "Time at which the mobsim run started"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "personTravelTime_car",
-        "Time taken by the passenger to travel by car"
-      )
-    )
+        "Time taken by the passenger to travel by car"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "personTravelTime_drive_transit",
-        "Time taken by the passenger to drive to the transit"
-      )
-    )
+        "Time taken by the passenger to drive to the transit"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "personTravelTime_others",
-        "Time taken by the passenger to travel by other means"
-      )
-    )
+        "Time taken by the passenger to travel by other means"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "personTravelTime_walk",
-        "Time taken by the passenger to travel on foot"
-      )
-    )
+        "Time taken by the passenger to travel on foot"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "personTravelTime_walk_transit",
-        "Time taken by the passenger to walk to the transit"
-      )
-    )
+        "Time taken by the passenger to walk to the transit"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "totalCostIncludingIncentive_walk_transit",
-        "Total cost (including incentive) paid by the passenger to reach destination by walking to transit and then transit to destination"
-      )
-    )
+        "Total cost (including incentive) paid by the passenger to reach destination by walking to transit and then transit to destination"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "totalCostIncludingIncentive_ride_hail",
-        "Total cost (including incentive) paid by the passenger to reach destination on a ride hail"
-      )
-    )
+        "Total cost (including incentive) paid by the passenger to reach destination on a ride hail"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "totalIncentive_drive_transit",
-        "Total incentive amount paid to passenger to reach destination by driving to transit and then transit to destination"
-      )
-    )
+        "Total incentive amount paid to passenger to reach destination by driving to transit and then transit to destination"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "totalIncentive_ride_hail",
-        "Total incentive amount paid to passenger to reach destination by ride hail"
-      )
-    )
+        "Total incentive amount paid to passenger to reach destination by ride hail"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "totalIncentive_walk_transit",
-        "Total incentive amount paid to passenger to reach destination by walking to transit and then transit to destination"
-      )
-    )
+        "Total incentive amount paid to passenger to reach destination by walking to transit and then transit to destination"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "totalTravelTime",
-        "Total time taken by the passenger to travel from source to destination"
-      )
-    )
+        "Total time taken by the passenger to travel from source to destination"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "totalVehicleDelay",
-        "Sum of all the delay times incurred by the vehicle during the travel"
-      )
-    )
+        "Sum of all the delay times incurred by the vehicle during the travel"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "vehicleHoursTraveled_BEV",
-        "Time taken (in hours) by the vehicle to travel from source to destination"
-      )
-    )
+        "Time taken (in hours) by the vehicle to travel from source to destination"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "vehicleHoursTraveled_BODY-TYPE-DEFAULT",
-        "Time taken (in hours) by the vehicle to travel from source to destination"
-      )
-    )
+        "Time taken (in hours) by the vehicle to travel from source to destination"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "vehicleHoursTraveled_BUS-DEFAULT",
-        "Time taken (in hours) by the vehicle(bus) to travel from source to destination"
-      )
-    )
+        "Time taken (in hours) by the vehicle(bus) to travel from source to destination"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "vehicleHoursTraveled_Car",
-        "Time taken (in hours) by the vehicle(car) to travel from source to destination"
-      )
-    )
+        "Time taken (in hours) by the vehicle(car) to travel from source to destination"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "vehicleHoursTraveled_SUBWAY-DEFAULT",
-        "Time taken (in hours) by the vehicle (subway) to travel from source to destination"
-      )
-    )
+        "Time taken (in hours) by the vehicle (subway) to travel from source to destination"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "vehicleMilesTraveled_BEV",
-        "Miles covered by the vehicle to travel from source to destination"
-      )
-    )
+        "Miles covered by the vehicle to travel from source to destination"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "vehicleMilesTraveled_BODY-TYPE-DEFAULT",
-        "Miles covered by the vehicle to travel from source to destination"
-      )
-    )
+        "Miles covered by the vehicle to travel from source to destination"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "vehicleMilesTraveled_BUS-DEFAULT",
-        "Miles covered by the vehicle(bus) to travel from source to destination"
-      )
-    )
+        "Miles covered by the vehicle(bus) to travel from source to destination"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "vehicleMilesTraveled_Car",
-        "Miles covered by the vehicle(car) to travel from source to destination"
-      )
-    )
+        "Miles covered by the vehicle(car) to travel from source to destination"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "vehicleMilesTraveled_SUBWAY-DEFAULT",
-        "Miles covered by the vehicle(subway) to travel from source to destination"
-      )
-    )
+        "Miles covered by the vehicle(subway) to travel from source to destination"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "vehicleMilesTraveled_total",
-        "Miles covered by the vehicles(all modes) to travel from source to destination"
-      )
-    )
+        "Miles covered by the vehicles(all modes) to travel from source to destination"))
     list
   }
 }
@@ -618,66 +502,53 @@ object SummaryStatsOutputs extends OutputDataDescriptor {
 object CountsCompareOutputs extends OutputDataDescriptor {
 
   /**
-    * Get description of fields written to the output files.
-    *
-    * @return list of data description objects
-    */
+   * Get description of fields written to the output files.
+   *
+   * @return list of data description objects
+   */
   override def getOutputDataDescriptions: java.util.List[OutputDataDescription] = {
     val outputFilePath = GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getIterationFilename(0, "countsCompare.txt")
     val outputDirPath = GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getOutputPath
     val relativePath = outputFilePath.replace(outputDirPath, "")
     val list = new java.util.ArrayList[OutputDataDescription]
     list.add(
-      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "Link Id", "Iteration number")
-    )
+      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "Link Id", "Iteration number"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "Count",
-        "Time taken by the agent to travel in a crowded transit"
-      )
-    )
+        "Time taken by the agent to travel in a crowded transit"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "Station Id",
-        "Amount of diesel consumed in megajoule"
-      )
-    )
+        "Amount of diesel consumed in megajoule"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "Hour",
-        "Amount of food consumed in megajoule"
-      )
-    )
+        "Amount of food consumed in megajoule"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "MATSIM volumes",
-        "Amount of electricity consumed in megajoule"
-      )
-    )
+        "Amount of electricity consumed in megajoule"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "Relative Error",
-        "Amount of gasoline consumed in megajoule"
-      )
-    )
+        "Amount of gasoline consumed in megajoule"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "Normalized Relative Error",
-        "Time at which the beforeMobsim event listeners started"
-      )
-    )
+        "Time at which the beforeMobsim event listeners started"))
     list.add(OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "GEH", "GEH"))
     list
   }
@@ -686,283 +557,220 @@ object CountsCompareOutputs extends OutputDataDescriptor {
 object EventOutputs extends OutputDataDescriptor {
 
   /**
-    * Get description of fields written to the output files.
-    *
-    * @return list of data description objects
-    */
+   * Get description of fields written to the output files.
+   *
+   * @return list of data description objects
+   */
   override def getOutputDataDescriptions: java.util.List[OutputDataDescription] = {
     val outputFilePath = GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getIterationFilename(0, "events.csv")
     val outputDirPath = GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getOutputPath
     val relativePath = outputFilePath.replace(outputDirPath, "")
     val list = new java.util.ArrayList[OutputDataDescription]
     list.add(
-      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "person", "Person(Agent) Id")
-    )
+      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "person", "Person(Agent) Id"))
     list.add(OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "vehicle", "vehicle id"))
     list.add(
-      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "time", "Start time of the vehicle")
-    )
+      OutputDataDescription(
+        this.getClass.getSimpleName.dropRight(1),
+        relativePath,
+        "time",
+        "Start time of the vehicle"))
     list.add(OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "type", "Type of the event"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "fuel",
-        "Type of fuel used in the vehicle"
-      )
-    )
+        "Type of fuel used in the vehicle"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "duration",
-        "Duration of the travel"
-      )
-    )
+        "Duration of the travel"))
     list.add(OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "cost", "Cost of travel"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "location.x",
-        "X co-ordinate of the location"
-      )
-    )
+        "X co-ordinate of the location"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "location.y",
-        "Y co-ordinate of the location"
-      )
-    )
+        "Y co-ordinate of the location"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "parking_type",
-        "Parking type chosen by the vehicle"
-      )
-    )
+        "Parking type chosen by the vehicle"))
     list.add(
-      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "pricing_model", "Pricing model")
-    )
+      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "pricing_model", "Pricing model"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "charging_type",
-        "Charging type of the vehicle"
-      )
-    )
+        "Charging type of the vehicle"))
     list.add(
-      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "parking_taz", "Parking TAZ")
-    )
+      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "parking_taz", "Parking TAZ"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "distance",
-        "Distance between source and destination"
-      )
-    )
+        "Distance between source and destination"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "location",
-        "Location of the vehicle"
-      )
-    )
+        "Location of the vehicle"))
     list.add(OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "mode", "Mode of travel"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "currentTourMode",
-        "Current tour mode"
-      )
-    )
+        "Current tour mode"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "expectedMaximumUtility",
-        "Expected maximum utility of the vehicle"
-      )
-    )
+        "Expected maximum utility of the vehicle"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "availableAlternatives",
-        "Available alternatives for travel for the passenger"
-      )
-    )
+        "Available alternatives for travel for the passenger"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "personalVehicleAvailable",
-        "Whether the passenger possesses a personal vehicle"
-      )
-    )
+        "Whether the passenger possesses a personal vehicle"))
     list.add(OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "tourIndex", "Tour index"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "facility",
-        "Facility availed by the passenger"
-      )
-    )
+        "Facility availed by the passenger"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "departTime",
-        "Time of departure of the vehicle"
-      )
-    )
+        "Time of departure of the vehicle"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "originX",
-        "X ordinate of the passenger origin point"
-      )
-    )
+        "X ordinate of the passenger origin point"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "originY",
-        "Y ordinate of the passenger origin point"
-      )
-    )
+        "Y ordinate of the passenger origin point"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "destinationX",
-        "X ordinate of the passenger destination point"
-      )
-    )
+        "X ordinate of the passenger destination point"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "destinationY",
-        "Y ordinate of the passenger destination point"
-      )
-    )
+        "Y ordinate of the passenger destination point"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "fuelType",
-        "Fuel type of the vehicle"
-      )
-    )
+        "Fuel type of the vehicle"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "num_passengers",
-        "Num of passengers travelling in the vehicle"
-      )
-    )
+        "Num of passengers travelling in the vehicle"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "links",
-        "Number of links in the network"
-      )
-    )
+        "Number of links in the network"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "departure_time",
-        "Departure time of the vehicle"
-      )
-    )
+        "Departure time of the vehicle"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "arrival_time",
-        "Arrival time of the vehicle"
-      )
-    )
+        "Arrival time of the vehicle"))
     list.add(
-      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "vehicle_type", "Type of vehicle")
-    )
+      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "vehicle_type", "Type of vehicle"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "capacity",
-        "Total capacity of the vehicle"
-      )
-    )
+        "Total capacity of the vehicle"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "start.x",
-        "X ordinate of the start point"
-      )
-    )
+        "X ordinate of the start point"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "start.y",
-        "Y ordinate of the start point"
-      )
-    )
+        "Y ordinate of the start point"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "end.x",
-        "X ordinate of the vehicle end point"
-      )
-    )
+        "X ordinate of the vehicle end point"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "end.y",
-        "Y ordinate of the vehicle end point"
-      )
-    )
+        "Y ordinate of the vehicle end point"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "end_leg_fuel_level",
-        "Fuel level at the end of the travel"
-      )
-    )
+        "Fuel level at the end of the travel"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "seating_capacity",
-        "Seating capacity of the vehicle"
-      )
-    )
+        "Seating capacity of the vehicle"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "costType",
-        "Type of cost of travel incurred on the passenger"
-      )
-    )
+        "Type of cost of travel incurred on the passenger"))
     list
   }
 }
@@ -970,10 +778,10 @@ object EventOutputs extends OutputDataDescriptor {
 object LegHistogramOutputs extends OutputDataDescriptor {
 
   /**
-    * Get description of fields written to the output files.
-    *
-    * @return list of data description objects
-    */
+   * Get description of fields written to the output files.
+   *
+   * @return list of data description objects
+   */
   override def getOutputDataDescriptions: java.util.List[OutputDataDescription] = {
     val outputFilePath = GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getIterationFilename(0, "legHistogram.txt")
     val outputDirPath = GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getOutputPath
@@ -986,196 +794,147 @@ object LegHistogramOutputs extends OutputDataDescriptor {
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "departures_all",
-        "Total number of departures on all modes"
-      )
-    )
+        "Total number of departures on all modes"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "arrivals_all",
-        "Total number of arrivals on all modes"
-      )
-    )
+        "Total number of arrivals on all modes"))
     list.add(
-      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "duration", "Duration of travel")
-    )
+      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "duration", "Duration of travel"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "stuck_all",
-        "Total number of travels that got stuck on all modes"
-      )
-    )
+        "Total number of travels that got stuck on all modes"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "en-route_all",
-        "Total number of travels by all modes"
-      )
-    )
+        "Total number of travels by all modes"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "departures_car",
-        "Total number of departures by car"
-      )
-    )
+        "Total number of departures by car"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "arrivals_car",
-        "Total number of departures by car"
-      )
-    )
+        "Total number of departures by car"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "stuck_car",
-        "Total number of travels that got stuck while travelling by car"
-      )
-    )
+        "Total number of travels that got stuck while travelling by car"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "en-route_car",
-        "Total number of travels made by car"
-      )
-    )
+        "Total number of travels made by car"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "departures_drive_transit",
-        "Total number of departures by drive to transit"
-      )
-    )
+        "Total number of departures by drive to transit"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "arrivals_drive_transit",
-        "Total number of arrivals by drive to transit"
-      )
-    )
+        "Total number of arrivals by drive to transit"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "stuck_drive_transit",
-        "Total number of travels that got stuck while travelling by drive to transit"
-      )
-    )
+        "Total number of travels that got stuck while travelling by drive to transit"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "en-route_drive_transit",
-        "Total number of travels made by drive to transit"
-      )
-    )
+        "Total number of travels made by drive to transit"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "departures_ride_hail",
-        "Total number of departures by ride hail"
-      )
-    )
+        "Total number of departures by ride hail"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "arrivals_ride_hail",
-        "Total number of arrivals by ride hail"
-      )
-    )
+        "Total number of arrivals by ride hail"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "stuck_ride_hail",
-        "Total number of travels that got stuck while travelling by ride hail"
-      )
-    )
+        "Total number of travels that got stuck while travelling by ride hail"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "en-route_ride_hail",
-        "Total number of travels made by ride hail"
-      )
-    )
+        "Total number of travels made by ride hail"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "departures_walk",
-        "Total number of departures on foot"
-      )
-    )
+        "Total number of departures on foot"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "arrivals_walk",
-        "Total number of arrivals on foot"
-      )
-    )
+        "Total number of arrivals on foot"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "stuck_walk",
-        "Total number of travels that got stuck while travelling on foot"
-      )
-    )
+        "Total number of travels that got stuck while travelling on foot"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "en-route_walk",
-        "Total number of travels made on foot"
-      )
-    )
+        "Total number of travels made on foot"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "departures_walk_transit",
-        "Total number of departures by walk to transit"
-      )
-    )
+        "Total number of departures by walk to transit"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "arrivals_walk_transit",
-        "Total number of arrivals by walk to transit"
-      )
-    )
+        "Total number of arrivals by walk to transit"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "stuck_walk_transit",
-        "Total number of travels that got stuck while travelling by walk to transit"
-      )
-    )
+        "Total number of travels that got stuck while travelling by walk to transit"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "en-route_walk_transit",
-        "Total number of travels made by walk to transit"
-      )
-    )
+        "Total number of travels made by walk to transit"))
     list
   }
 }
@@ -1183,10 +942,10 @@ object LegHistogramOutputs extends OutputDataDescriptor {
 object RideHailTripDistanceOutputs extends OutputDataDescriptor {
 
   /**
-    * Get description of fields written to the output files.
-    *
-    * @return list of data description objects
-    */
+   * Get description of fields written to the output files.
+   *
+   * @return list of data description objects
+   */
   override def getOutputDataDescriptions: java.util.List[OutputDataDescription] = {
     val outputFilePath =
       GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getIterationFilename(0, "rideHailTripDistance.csv")
@@ -1199,17 +958,13 @@ object RideHailTripDistanceOutputs extends OutputDataDescriptor {
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "numPassengers",
-        "Number of passengers travelling in the ride hail"
-      )
-    )
+        "Number of passengers travelling in the ride hail"))
     list.add(
       OutputDataDescription(
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "vkt",
-        "Total number of kilometers travelled by the ride hail vehicle"
-      )
-    )
+        "Total number of kilometers travelled by the ride hail vehicle"))
     list
   }
 }
@@ -1217,10 +972,10 @@ object RideHailTripDistanceOutputs extends OutputDataDescriptor {
 object TripDurationOutputs extends OutputDataDescriptor {
 
   /**
-    * Get description of fields written to the output files.
-    *
-    * @return list of data description objects
-    */
+   * Get description of fields written to the output files.
+   *
+   * @return list of data description objects
+   */
   override def getOutputDataDescriptions: java.util.List[OutputDataDescription] = {
     val outputFilePath = GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getIterationFilename(0, "tripDuration.txt")
     val outputDirPath = GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getOutputPath
@@ -1235,10 +990,10 @@ object TripDurationOutputs extends OutputDataDescriptor {
 object BiasErrorGraphDataOutputs extends OutputDataDescriptor {
 
   /**
-    * Get description of fields written to the output files.
-    *
-    * @return list of data description objects
-    */
+   * Get description of fields written to the output files.
+   *
+   * @return list of data description objects
+   */
   override def getOutputDataDescriptions: java.util.List[OutputDataDescription] = {
     val outputFilePath =
       GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getIterationFilename(0, "biasErrorGraphData.txt")
@@ -1251,12 +1006,9 @@ object BiasErrorGraphDataOutputs extends OutputDataDescriptor {
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "mean relative error",
-        "Mean relative error"
-      )
-    )
+        "Mean relative error"))
     list.add(
-      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "mean bias", "Mean bias value")
-    )
+      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "mean bias", "Mean bias value"))
     list
   }
 }
@@ -1264,10 +1016,10 @@ object BiasErrorGraphDataOutputs extends OutputDataDescriptor {
 object BiasNormalizedErrorGraphDataOutputs extends OutputDataDescriptor {
 
   /**
-    * Get description of fields written to the output files.
-    *
-    * @return list of data description objects
-    */
+   * Get description of fields written to the output files.
+   *
+   * @return list of data description objects
+   */
   override def getOutputDataDescriptions: java.util.List[OutputDataDescription] = {
     val outputFilePath =
       GraphsStatsAgentSimEventsListener.CONTROLLER_IO.getIterationFilename(0, "biasNormalizedErrorGraphData.txt")
@@ -1280,12 +1032,9 @@ object BiasNormalizedErrorGraphDataOutputs extends OutputDataDescriptor {
         this.getClass.getSimpleName.dropRight(1),
         relativePath,
         "mean normalized relative error",
-        "Mean normalized relative error"
-      )
-    )
+        "Mean normalized relative error"))
     list.add(
-      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "mean bias", "Mean bias value")
-    )
+      OutputDataDescription(this.getClass.getSimpleName.dropRight(1), relativePath, "mean bias", "Mean bias value"))
     list
   }
 }

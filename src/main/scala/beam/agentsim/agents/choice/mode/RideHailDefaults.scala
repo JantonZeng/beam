@@ -1,13 +1,13 @@
 package beam.agentsim.agents.choice.mode
 
-import beam.router.Modes.BeamMode.{CAR, RIDE_HAIL, RIDE_HAIL_TRANSIT}
+import beam.router.Modes.BeamMode.{ CAR, RIDE_HAIL, RIDE_HAIL_TRANSIT }
 import beam.router.model.EmbodiedBeamTrip
 
 /**
-  * RideHailDefaults
-  *
-  * If no fare is found, these defaults can be use.
-  */
+ * RideHailDefaults
+ *
+ * If no fare is found, these defaults can be use.
+ */
 object RideHailDefaults {
   val DEFAULT_COST_PER_MILE = 2.00
   val zero: Double = 0
@@ -17,15 +17,15 @@ object RideHailDefaults {
       alt.tripClassifier match {
         case RIDE_HAIL if alt.costEstimate == zero =>
           val cost = alt.legs.view
-            .filter(_.beamLeg.mode == CAR)
-            .map(_.beamLeg.travelPath.distanceInM)
-            .sum * DEFAULT_COST_PER_MILE / 1607
+              .filter(_.beamLeg.mode == CAR)
+              .map(_.beamLeg.travelPath.distanceInM)
+              .sum * DEFAULT_COST_PER_MILE / 1607
           cost
         case RIDE_HAIL_TRANSIT if alt.costEstimate == zero =>
           val cost = alt.legs.view
-            .filter(_.beamLeg.mode == CAR)
-            .map(_.beamLeg.travelPath.distanceInM)
-            .sum * DEFAULT_COST_PER_MILE / 1607
+              .filter(_.beamLeg.mode == CAR)
+              .map(_.beamLeg.travelPath.distanceInM)
+              .sum * DEFAULT_COST_PER_MILE / 1607
           cost
         case _ =>
           zero

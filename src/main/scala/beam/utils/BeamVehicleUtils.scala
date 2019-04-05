@@ -3,7 +3,7 @@ package beam.utils
 import java.util
 
 import beam.agentsim.agents.vehicles.EnergyEconomyAttributes.Powertrain
-import beam.agentsim.agents.vehicles.FuelType.{FuelType}
+import beam.agentsim.agents.vehicles.FuelType.{ FuelType }
 import beam.agentsim.agents.vehicles._
 import org.matsim.api.core.v01.Id
 import org.matsim.households.Household
@@ -12,10 +12,8 @@ import org.supercsv.prefs.CsvPreference
 
 object BeamVehicleUtils {
 
-  def readVehiclesFile(
-    filePath: String,
-    vehiclesTypeMap: scala.collection.Map[Id[BeamVehicleType], BeamVehicleType]
-  ): scala.collection.Map[Id[BeamVehicle], BeamVehicle] = {
+  def readVehiclesFile(filePath: String, vehiclesTypeMap: scala.collection.Map[Id[BeamVehicleType], BeamVehicleType])
+      : scala.collection.Map[Id[BeamVehicle], BeamVehicle] = {
 
     readCsvFileByLine(filePath, scala.collection.mutable.HashMap[Id[BeamVehicle], BeamVehicle]()) {
       case (line, acc) =>
@@ -51,9 +49,8 @@ object BeamVehicleUtils {
   }
 
   def readBeamVehicleTypeFile(
-    filePath: String,
-    fuelTypePrices: scala.collection.Map[FuelType, Double]
-  ): Map[Id[BeamVehicleType], BeamVehicleType] = {
+      filePath: String,
+      fuelTypePrices: scala.collection.Map[FuelType, Double]): Map[Id[BeamVehicleType], BeamVehicleType] = {
     readCsvFileByLine(filePath, scala.collection.mutable.HashMap[Id[BeamVehicleType], BeamVehicleType]()) {
       case (line: util.Map[String, String], z) =>
         val vIdString = line.get("vehicleTypeId")
@@ -104,8 +101,7 @@ object BeamVehicleUtils {
           vehicleCategory,
           primaryVehicleEnergyFile,
           secondaryVehicleEnergyFile,
-          sampleProbabilityWithinCategory
-        )
+          sampleProbabilityWithinCategory)
         z += ((vehicleTypeId, bvt))
     }.toMap
   }

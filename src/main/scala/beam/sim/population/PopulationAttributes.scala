@@ -1,12 +1,12 @@
 package beam.sim.population
 
 import beam.agentsim.agents.choice.mode.ModeChoiceMultinomialLogit
-import beam.agentsim.agents.vehicles.{BeamVehicle, BeamVehicleType}
+import beam.agentsim.agents.vehicles.{ BeamVehicle, BeamVehicleType }
 import beam.router.Modes.BeamMode
 import beam.router.Modes.BeamMode._
-import beam.router.model.{BeamLeg, EmbodiedBeamLeg}
+import beam.router.model.{ BeamLeg, EmbodiedBeamLeg }
 import org.matsim.api.core.v01.Id
-import org.matsim.households.{Household, IncomeImpl}
+import org.matsim.households.{ Household, IncomeImpl }
 import org.matsim.households.Income.IncomePeriod
 import org.matsim.api.core.v01.population._
 import beam.sim.BeamServices
@@ -19,29 +19,28 @@ import scala.collection.mutable
 sealed trait PopulationAttributes
 
 case class AttributesOfIndividual(
-  householdAttributes: HouseholdAttributes,
-  modalityStyle: Option[String],
-  isMale: Boolean,
-  availableModes: Seq[BeamMode],
-  valueOfTime: Double,
-  age: Option[Int],
-  income: Option[Double]
-) extends PopulationAttributes {
+    householdAttributes: HouseholdAttributes,
+    modalityStyle: Option[String],
+    isMale: Boolean,
+    availableModes: Seq[BeamMode],
+    valueOfTime: Double,
+    age: Option[Int],
+    income: Option[Double])
+    extends PopulationAttributes {
   lazy val hasModalityStyle: Boolean = modalityStyle.nonEmpty
 
   // Get Value of Travel Time for a specific leg of a travel alternative:
   // If it is a car leg, we use link-specific multipliers, otherwise we just look at the entire leg travel time and mode
 
   def getGeneralizedTimeOfLinkForMNL(
-    IdAndTT: (LinkId, Int),
-    beamMode: BeamMode,
-    modeChoiceModel: ModeChoiceMultinomialLogit,
-    beamServices: BeamServices,
-    beamVehicleTypeId: Option[Id[BeamVehicleType]] = None,
-    destinationActivity: Option[Activity] = None,
-    isRideHail: Boolean = false,
-    isPooledTrip: Boolean = false
-  ): Double = {
+      IdAndTT: (LinkId, Int),
+      beamMode: BeamMode,
+      modeChoiceModel: ModeChoiceMultinomialLogit,
+      beamServices: BeamServices,
+      beamVehicleTypeId: Option[Id[BeamVehicleType]] = None,
+      destinationActivity: Option[Activity] = None,
+      isRideHail: Boolean = false,
+      isPooledTrip: Boolean = false): Double = {
     // NOTE: This is in hours
     val isWorkTrip = destinationActivity match {
       case None =>
@@ -67,8 +66,7 @@ case class AttributesOfIndividual(
             isWorkTrip,
             modeChoiceModel.situationMultipliers,
             vehicleAutomationLevel,
-            beamServices
-          ) * getModeVotMultiplier(Option(CAR), modeChoiceModel.modeMultipliers)
+            beamServices) * getModeVotMultiplier(Option(CAR), modeChoiceModel.modeMultipliers)
         }
       case _ =>
         getModeVotMultiplier(Option(beamMode), modeChoiceModel.modeMultipliers)
@@ -77,11 +75,10 @@ case class AttributesOfIndividual(
   }
 
   def getGeneralizedTimeOfLegForMNL(
-    embodiedBeamLeg: EmbodiedBeamLeg,
-    modeChoiceModel: ModeChoiceMultinomialLogit,
-    beamServices: BeamServices,
-    destinationActivity: Option[Activity]
-  ): Double = {
+      embodiedBeamLeg: EmbodiedBeamLeg,
+      modeChoiceModel: ModeChoiceMultinomialLogit,
+      beamServices: BeamServices,
+      destinationActivity: Option[Activity]): Double = {
     //NOTE: This gives answers in hours
     embodiedBeamLeg.beamLeg.mode match {
       case CAR => // NOTE: Ride hail legs are classified as CAR mode. For now we only need to loop through links here
@@ -96,9 +93,7 @@ case class AttributesOfIndividual(
             Option(embodiedBeamLeg.beamVehicleTypeId),
             destinationActivity,
             embodiedBeamLeg.isRideHail,
-            embodiedBeamLeg.isPooledTrip
-          )
-        )
+            embodiedBeamLeg.isPooledTrip))
       case _ =>
         getModeVotMultiplier(Option(embodiedBeamLeg.beamLeg.mode), modeChoiceModel.modeMultipliers) *
         embodiedBeamLeg.beamLeg.duration / 3600
@@ -110,15 +105,12 @@ case class AttributesOfIndividual(
   }
 
   private def getAutomationLevel(
-    beamVehicleTypeId: Option[Id[BeamVehicleType]],
-    beamServices: BeamServices
-  ): automationLevel = {
+      beamVehicleTypeId: Option[Id[BeamVehicleType]],
+      beamServices: BeamServices): automationLevel = {
     val automationInt = beamVehicleTypeId match {
       case Some(beamVehicleTypeId) =>
         // Use default if it exists, otherwise look up from vehicle ID
-        beamServices
-          .getDefaultAutomationLevel()
-          .getOrElse(beamServices.vehicleTypes(beamVehicleTypeId).automationLevel)
+        beamServices.getDefaultAutomationLevel().getOrElse(beamServices.vehicleTypes(beamVehicleTypeId).automationLevel)
       case None =>
         1
     }
@@ -138,28 +130,29 @@ case class AttributesOfIndividual(
   }
 
   def getModeVotMultiplier(
-    beamMode: Option[BeamMode],
-    modeMultipliers: mutable.Map[Option[BeamMode], Double]
-  ): Double = {
+      beamMode: Option[BeamMode],
+      modeMultipliers: mutable.Map[Option[BeamMode], Double]): Double = {
     modeMultipliers.getOrElse(beamMode, 1.0)
   }
 
   private def getPooledFactor(
-    vehicleAutomationLevel: automationLevel,
-    poolingMultipliers: mutable.Map[automationLevel, Double]
-  ): Double = {
+      vehicleAutomationLevel: automationLevel,
+      poolingMultipliers: mutable.Map[automationLevel, Double]): Double = {
     poolingMultipliers.getOrElse(vehicleAutomationLevel, 1.0)
   }
 
   private def getLinkCharacteristics(
-    linkID: Int,
-    travelTime: Double,
-    beamServices: BeamServices
-  ): (congestionLevel, roadwayType) = {
+      linkID: Int,
+      travelTime: Double,
+      beamServices: BeamServices): (congestionLevel, roadwayType) = {
     // Note: cutoffs for congested (2/3 free flow speed) and highway (ff speed > 20 m/s) are arbitrary and could be inputs
     val currentLink = beamServices.networkHelper.getLink(linkID).get
     val freeSpeed: Double = currentLink.getFreespeed()
-    val currentSpeed: Double = if (travelTime == 0) { freeSpeed } else { currentLink.getLength() / travelTime }
+    val currentSpeed: Double = if (travelTime == 0) {
+      freeSpeed
+    } else {
+      currentLink.getLength() / travelTime
+    }
     if (currentSpeed < 0.67 * freeSpeed) {
       if (freeSpeed > 20) {
         (highCongestion, highway)
@@ -176,13 +169,12 @@ case class AttributesOfIndividual(
   }
 
   private def getSituationMultiplier(
-    linkID: Int,
-    travelTime: Double,
-    isWorkTrip: Boolean = true,
-    situationMultipliers: mutable.Map[(timeSensitivity, congestionLevel, roadwayType, automationLevel), Double],
-    vehicleAutomationLevel: automationLevel,
-    beamServices: BeamServices
-  ): Double = {
+      linkID: Int,
+      travelTime: Double,
+      isWorkTrip: Boolean = true,
+      situationMultipliers: mutable.Map[(timeSensitivity, congestionLevel, roadwayType, automationLevel), Double],
+      vehicleAutomationLevel: automationLevel,
+      beamServices: BeamServices): Double = {
     val sensitivity: timeSensitivity = if (isWorkTrip) {
       highSensitivity
     } else {
@@ -198,12 +190,8 @@ object AttributesOfIndividual {
   val EMPTY = AttributesOfIndividual(HouseholdAttributes.EMPTY, None, true, Seq(), 0.0, None, None)
 }
 
-case class HouseholdAttributes(
-  householdIncome: Double,
-  householdSize: Int,
-  numCars: Int,
-  numBikes: Int
-) extends PopulationAttributes
+case class HouseholdAttributes(householdIncome: Double, householdSize: Int, numCars: Int, numBikes: Int)
+    extends PopulationAttributes
 
 object HouseholdAttributes {
 
@@ -211,16 +199,13 @@ object HouseholdAttributes {
 
   def apply(household: Household, vehicles: Map[Id[BeamVehicle], BeamVehicle]): HouseholdAttributes = {
     new HouseholdAttributes(
-      Option(household.getIncome)
-        .getOrElse(new IncomeImpl(0, IncomePeriod.year))
-        .getIncome,
+      Option(household.getIncome).getOrElse(new IncomeImpl(0, IncomePeriod.year)).getIncome,
       household.getMemberIds.size(),
       household.getVehicleIds.asScala
         .map(id => vehicles(id))
         .count(_.beamVehicleType.id.toString.toLowerCase.contains("car")),
       household.getVehicleIds.asScala
         .map(id => vehicles(id))
-        .count(_.beamVehicleType.id.toString.toLowerCase.contains("bike"))
-    )
+        .count(_.beamVehicleType.id.toString.toLowerCase.contains("bike")))
   }
 }

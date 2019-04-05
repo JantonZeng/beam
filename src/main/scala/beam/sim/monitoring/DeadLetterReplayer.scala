@@ -1,5 +1,5 @@
 package beam.sim.monitoring
-import akka.actor.{Actor, ActorLogging, DeadLetter, Props}
+import akka.actor.{ Actor, ActorLogging, DeadLetter, Props }
 import beam.router.BeamRouter.RoutingResponse
 
 class DeadLetterReplayer extends Actor with ActorLogging {

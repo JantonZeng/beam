@@ -1,12 +1,12 @@
 package beam.utils.matsim_conversion
 
-import java.io.{FileOutputStream, OutputStreamWriter}
+import java.io.{ FileOutputStream, OutputStreamWriter }
 import java.nio.charset.StandardCharsets
 import java.util.zip.GZIPOutputStream
 
 import scala.xml._
-import scala.xml.dtd.{DocType, SystemID}
-import scala.xml.transform.{RewriteRule, RuleTransformer}
+import scala.xml.dtd.{ DocType, SystemID }
+import scala.xml.transform.{ RewriteRule, RuleTransformer }
 
 object MatsimPlanConversion {
   val UTF8: String = StandardCharsets.UTF_8.name()
@@ -24,8 +24,7 @@ object MatsimPlanConversion {
     val vehiclesWithTypeId = if (conversionConfig.generateVehicles) {
       VehiclesDataConversion.generateVehicleTypesDefaults(
         conversionConfig.scenarioDirectory,
-        VehiclesDataConversion.beamVehicleTypes
-      )
+        VehiclesDataConversion.beamVehicleTypes)
       VehiclesDataConversion.generateVehiclesDataFromPersons(persons, conversionConfig)
     } else {
       val vehiclesFile = conversionConfig.vehiclesInput.get
@@ -42,11 +41,8 @@ object MatsimPlanConversion {
 
     val householdAtrrs = generateHouseholdAttributes(persons)
 
-    val householdsAttrDoctype = DocType(
-      "objectattributes",
-      SystemID("http://www.matsim.org/files/dtd/objectattributes_v1.dtd"),
-      Nil
-    )
+    val householdsAttrDoctype =
+      DocType("objectattributes", SystemID("http://www.matsim.org/files/dtd/objectattributes_v1.dtd"), Nil)
     val populationAttrDoctype =
       DocType("objectattributes", SystemID("../dtd/objectattributes_v1.dtd"), Nil)
 
@@ -80,7 +76,7 @@ object MatsimPlanConversion {
   }
 
   def generatePopulationAttributes(persons: NodeSeq): Elem = {
-    val popAttrs = persons.zipWithIndex map {
+    val popAttrs = persons.zipWithIndex.map {
       case (person, _) =>
         <object id={s"${person.attribute("id").get.toString()}"}>
           <attribute name="excluded-modes" class="java.lang.String"></attribute>
@@ -94,15 +90,12 @@ object MatsimPlanConversion {
   }
 
   def generateHouseholdAttributes(persons: NodeSeq): Elem = {
-    val popAttrs = persons.zipWithIndex map {
+    val popAttrs = persons.zipWithIndex.map {
       case (person, index) =>
-        val homeActivities = (person \\ "activity").filter(
-          _.attributes.exists(
-            a => "type".equalsIgnoreCase(a.key.toString) && "home".equalsIgnoreCase(a.value.toString)
-          )
-        )
+        val homeActivities = (person \\ "activity").filter(_.attributes.exists(a =>
+          "type".equalsIgnoreCase(a.key.toString) && "home".equalsIgnoreCase(a.value.toString)))
         for {
-          node   <- homeActivities.headOption
+          node <- homeActivities.headOption
           xValue <- node.attribute("x").map(_.toString)
           yValue <- node.attribute("y").map(_.toString)
         } yield {
@@ -125,27 +118,27 @@ object MatsimPlanConversion {
 
     val mPersonsWithVehicles = mPersons.zipAll(mVehicles, None, None)
 
-    val houseHoldChildren = mPersonsWithVehicles.zipWithIndex map {
+    val houseHoldChildren = mPersonsWithVehicles.zipWithIndex.map {
       case ((mPerson, mVeh), index) =>
         <household id={s"${index + 1}"}>
         <members>
           {
-          (for{
+          (for {
             n <- mPerson
             personId <- n.attribute("id").map(_.toString)
           } yield {
-              <personId refId={s"$personId"} />
+            <personId refId={s"$personId"} />
           }).getOrElse(NodeSeq.Empty)
-          }
+        }
         </members>
         <vehicles>
           {
-          (for{
+          (for {
             vehId <- mVeh
           } yield {
-              <vehicleDefinitionId refId={s"$vehId"} />
+            <vehicleDefinitionId refId={s"$vehId"} />
           }).getOrElse(NodeSeq.Empty)
-          }
+        }
         </vehicles>
         <income currency={s"${income.currency}"} period={s"${income.period}"}>{income.value}</income>
       </household>
@@ -204,7 +197,7 @@ object MatsimPlanConversion {
   }
 
   def unchainMetaData(m: MetaData): Iterable[GenAttr] =
-    m flatMap decomposeMetaData
+    m.flatMap(decomposeMetaData)
 
   def chainMetaData(l: Iterable[GenAttr]): MetaData = l match {
     case Nil          => Null

@@ -3,7 +3,7 @@ package beam.analysis
 import java.util
 
 import beam.agentsim.events.PathTraversalEvent
-import beam.analysis.plots.{GraphUtils, GraphsStatsAgentSimEventsListener}
+import beam.analysis.plots.{ GraphUtils, GraphsStatsAgentSimEventsListener }
 import beam.router.Modes.BeamMode.CAR
 import beam.utils.NetworkHelper
 import beam.utils.logging.ExponentialLazyLogging
@@ -22,10 +22,10 @@ import scala.collection.JavaConverters._
 case class DelayInLength(delay: Double, length: Int)
 
 class DelayMetricAnalysis @Inject()(
-  eventsManager: EventsManager,
-  controlerIO: OutputDirectoryHierarchy,
-  networkHelper: NetworkHelper
-) extends BasicEventHandler
+    eventsManager: EventsManager,
+    controlerIO: OutputDirectoryHierarchy,
+    networkHelper: NetworkHelper)
+    extends BasicEventHandler
     with ExponentialLazyLogging {
 
   eventsManager.addHandler(this)
@@ -57,10 +57,10 @@ class DelayMetricAnalysis @Inject()(
   var totalTravelTime = 0.0
 
   /**
-    * Handles the PathTraversalEvent notification and generates the metric delay analysis data
-    *
-    * @param event Event
-    */
+   * Handles the PathTraversalEvent notification and generates the metric delay analysis data
+   *
+   * @param event Event
+   */
   override def handleEvent(event: Event): Unit = {
     event match {
       case pathTraversalEvent: PathTraversalEvent =>
@@ -184,8 +184,7 @@ class DelayMetricAnalysis @Inject()(
       xAxisName,
       yAxisName,
       fileName + ".png",
-      true
-    )
+      true)
 
     val plot: CategoryPlot = chart.getCategoryPlot
     GraphUtils.plotLegendItems(plot, legends.toList.asJava, delayTotalByLinkCapacityDataset.getRowCount)
@@ -196,8 +195,7 @@ class DelayMetricAnalysis @Inject()(
       chart,
       graphImageFile,
       GraphsStatsAgentSimEventsListener.GRAPH_WIDTH,
-      GraphsStatsAgentSimEventsListener.GRAPH_HEIGHT
-    )
+      GraphsStatsAgentSimEventsListener.GRAPH_HEIGHT)
   }
 
   def createDelayAveragePerKilometerGraph(): Unit = {
@@ -208,14 +206,12 @@ class DelayMetricAnalysis @Inject()(
       xAxisName,
       yAxisAverageGraphName,
       fileName,
-      false
-    )
+      false)
     GraphUtils.saveJFreeChartAsPNG(
       chart,
       fileName,
       GraphsStatsAgentSimEventsListener.GRAPH_WIDTH,
-      GraphsStatsAgentSimEventsListener.GRAPH_HEIGHT
-    )
+      GraphsStatsAgentSimEventsListener.GRAPH_HEIGHT)
   }
 
   def createNetworkUtilizationGraph(iterationNumber: Int): Unit = {
@@ -235,15 +231,13 @@ class DelayMetricAnalysis @Inject()(
       xAxisName_NetworkUtilized,
       yAxisName_NetworkUtilized,
       graphImageFile,
-      false
-    )
+      false)
 
     GraphUtils.saveJFreeChartAsPNG(
       chart,
       graphImageFile,
       GraphsStatsAgentSimEventsListener.GRAPH_WIDTH,
-      GraphsStatsAgentSimEventsListener.GRAPH_HEIGHT
-    )
+      GraphsStatsAgentSimEventsListener.GRAPH_HEIGHT)
   }
 
   def getTotalDelay: Double = cumulativeDelay.sum

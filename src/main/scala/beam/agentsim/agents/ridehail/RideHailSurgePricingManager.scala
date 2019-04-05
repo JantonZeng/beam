@@ -2,7 +2,7 @@ package beam.agentsim.agents.ridehail
 
 import beam.router.BeamRouter.Location
 import beam.sim.config.BeamConfig.Beam.Agentsim.Agents
-import beam.sim.{BeamServices, HasServices}
+import beam.sim.{ BeamServices, HasServices }
 import com.google.inject.Inject
 import org.matsim.core.utils.misc.Time
 
@@ -27,12 +27,12 @@ class RideHailSurgePricingManager @Inject()(override val beamServices: BeamServi
 
   // TODO: can we allow any other class to inject taz as well, without loading multiple times? (Done)
   val timeBinSize
-    : Int = beamServices.beamConfig.beam.agentsim.timeBinSize // TODO: does throw exception for 60min, if +1 missing below
+      : Int = beamServices.beamConfig.beam.agentsim.timeBinSize // TODO: does throw exception for 60min, if +1 missing below
   val numberOfCategories
-    : Int = rideHailConfig.surgePricing.numberOfCategories // TODO: does throw exception for 0 and negative values
+      : Int = rideHailConfig.surgePricing.numberOfCategories // TODO: does throw exception for 0 and negative values
   val numberOfTimeBins: Int = Math
-    .floor(Time.parseTime(beamServices.beamConfig.matsim.modules.qsim.endTime) / timeBinSize)
-    .toInt + 1
+      .floor(Time.parseTime(beamServices.beamConfig.matsim.modules.qsim.endTime) / timeBinSize)
+      .toInt + 1
   val surgeLevelAdaptionStep: Double = rideHailConfig.surgePricing.surgeLevelAdaptionStep
   val minimumSurgeLevel: Double = rideHailConfig.surgePricing.minimumSurgeLevel
   // TODO: implement all cases for these surge prices properly
@@ -100,8 +100,7 @@ class RideHailSurgePricingManager @Inject()(override val beamServices: BeamServi
             }
           surgePriceBin.copy(
             previousIterationSurgePriceLevel = updatedPreviousSurgePriceLevel,
-            currentIterationSurgePriceLevel = Math.max(updatedSurgeLevel, minimumSurgeLevel)
-          )
+            currentIterationSurgePriceLevel = Math.max(updatedSurgeLevel, minimumSurgeLevel))
         }
       }
     }
@@ -109,9 +108,8 @@ class RideHailSurgePricingManager @Inject()(override val beamServices: BeamServi
   }
 
   //Method to avoid code duplication
-  private def updateForAllElements(
-    surgePriceBins: Map[String, ArrayBuffer[SurgePriceBin]]
-  )(updateFn: SurgePriceBin => SurgePriceBin): Unit = {
+  private def updateForAllElements(surgePriceBins: Map[String, ArrayBuffer[SurgePriceBin]])(
+      updateFn: SurgePriceBin => SurgePriceBin): Unit = {
     surgePriceBins.values.foreach { binArray =>
       for (j <- binArray.indices) {
         val surgePriceBin = binArray.apply(j)
@@ -124,10 +122,7 @@ class RideHailSurgePricingManager @Inject()(override val beamServices: BeamServi
   def updatePreviousIterationRevenuesAndResetCurrent(): Unit = {
     updateForAllElements(surgePriceBins) { surgePriceBin =>
       val updatedPrevIterRevenue = surgePriceBin.currentIterationRevenue
-      surgePriceBin.copy(
-        previousIterationRevenue = updatedPrevIterRevenue,
-        currentIterationRevenue = 0
-      )
+      surgePriceBin.copy(previousIterationRevenue = updatedPrevIterRevenue, currentIterationRevenue = 0)
     }
   }
 
@@ -202,8 +197,7 @@ class RideHailSurgePricingManager @Inject()(override val beamServices: BeamServi
 
 // TODO put in companion object
 case class SurgePriceBin(
-  previousIterationRevenue: Double,
-  currentIterationRevenue: Double,
-  previousIterationSurgePriceLevel: Double,
-  currentIterationSurgePriceLevel: Double
-)
+    previousIterationRevenue: Double,
+    currentIterationRevenue: Double,
+    previousIterationSurgePriceLevel: Double,
+    currentIterationSurgePriceLevel: Double)

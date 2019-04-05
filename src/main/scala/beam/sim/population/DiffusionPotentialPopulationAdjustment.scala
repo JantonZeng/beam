@@ -6,8 +6,8 @@ import beam.sim.BeamServices
 import beam.sim.common.GeoUtils
 import beam.sim.population.DiffusionPotentialPopulationAdjustment._
 import org.joda.time.DateTime
-import org.matsim.api.core.v01.population.{Activity, Person, Plan, Population}
-import org.matsim.api.core.v01.{Id, Scenario}
+import org.matsim.api.core.v01.population.{ Activity, Person, Plan, Population }
+import org.matsim.api.core.v01.{ Id, Scenario }
 import org.matsim.households.Household
 
 import scala.collection.JavaConverters._
@@ -151,8 +151,8 @@ object DiffusionPotentialPopulationAdjustment {
   }
 
   def hasChildUnder8(household: Household, population: Population): Boolean = {
-    household.getMemberIds.asScala
-      .exists(m => findPerson(population, m).forall(_.getAttributes.getAttribute(PERSON_AGE).asInstanceOf[Int] < 8))
+    household.getMemberIds.asScala.exists(m =>
+      findPerson(population, m).forall(_.getAttributes.getAttribute(PERSON_AGE).asInstanceOf[Int] < 8))
   }
 
   def findPerson(population: Population, personId: Id[Person]): Option[Person] = {

@@ -2,16 +2,15 @@ package beam.agentsim.agents.memberships
 
 import org.matsim.api.core.v01.Id
 import org.matsim.api.core.v01.population.Person
-import org.matsim.households.{Household, Households}
+import org.matsim.households.{ Household, Households }
 import org.matsim.vehicles.Vehicle
 
 import scala.collection.concurrent.TrieMap
-import scala.collection.{mutable, JavaConverters}
+import scala.collection.{ mutable, JavaConverters }
 
 case class HouseholdMembershipAllocator(
-  households: Households,
-  implicit val population: org.matsim.api.core.v01.population.Population
-) {
+    households: Households,
+    implicit val population: org.matsim.api.core.v01.population.Population) {
 
   import beam.agentsim.agents.memberships.Memberships.RankedGroup._
 
@@ -32,19 +31,14 @@ case class HouseholdMembershipAllocator(
             mutable.Map()
 
           val householdVehicles =
-            JavaConverters
-              .collectionAsScalaIterable(household.getVehicleIds)
-              .toIndexedSeq
+            JavaConverters.collectionAsScalaIterable(household.getVehicleIds).toIndexedSeq
           for (i <- householdVehicles.indices.toSet ++ household.rankedMembers.indices.toSet) {
             if (i < householdVehicles.size & i < household.rankedMembers.size) {
-              vehicleRes += (household
-                .rankedMembers(i)
-                .memberId -> householdVehicles(i))
+              vehicleRes += (household.rankedMembers(i).memberId -> householdVehicles(i))
             }
           }
           vehicleRes
-        }
-      )
+        })
       .get(personId)
   }
 
@@ -53,9 +47,7 @@ case class HouseholdMembershipAllocator(
       .mapAsScalaMap(households.getHouseholds)
       .flatMap({
         case (_, hh) =>
-          JavaConverters
-            .asScalaBuffer(hh.getMemberIds)
-            .map(personId => personId -> hh)
+          JavaConverters.asScalaBuffer(hh.getMemberIds).map(personId => personId -> hh)
       })
       .toMap
   }

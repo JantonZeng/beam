@@ -1,9 +1,9 @@
 package beam.utils
 
 import java.awt._
-import java.io.{BufferedWriter, FileWriter}
+import java.io.{ BufferedWriter, FileWriter }
 import beam.agentsim.agents.ridehail.RideHailAgent
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.{ Coord, Id }
 
 import scala.collection.mutable.ListBuffer
 

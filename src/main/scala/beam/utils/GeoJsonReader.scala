@@ -1,6 +1,6 @@
 package beam.utils
 
-import java.io.{File, FileInputStream}
+import java.io.{ File, FileInputStream }
 
 import com.typesafe.scalalogging.LazyLogging
 import org.geotools.geojson.feature.FeatureJSON

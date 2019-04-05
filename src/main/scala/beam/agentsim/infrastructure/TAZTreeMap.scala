@@ -5,9 +5,9 @@ import java.util
 import java.util.zip.GZIPInputStream
 
 import beam.agentsim.infrastructure.TAZTreeMap.TAZ
-import beam.utils.matsim_conversion.ShapeUtils.{CsvTaz, QuadTreeBounds}
+import beam.utils.matsim_conversion.ShapeUtils.{ CsvTaz, QuadTreeBounds }
 import com.vividsolutions.jts.geom.Geometry
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.{ Coord, Id }
 import org.matsim.core.utils.collections.QuadTree
 import org.matsim.core.utils.gis.ShapeFileReader
 import org.opengis.feature.simple.SimpleFeature
@@ -61,21 +61,14 @@ object TAZTreeMap {
     new TAZTreeMap(initQuadTreeFromShapeFile(shapeFilePath, tazIDFieldName))
   }
 
-  private def initQuadTreeFromShapeFile(
-    shapeFilePath: String,
-    tazIDFieldName: String
-  ): QuadTree[TAZ] = {
+  private def initQuadTreeFromShapeFile(shapeFilePath: String, tazIDFieldName: String): QuadTree[TAZ] = {
     val shapeFileReader: ShapeFileReader = new ShapeFileReader
     shapeFileReader.readFileAndInitialize(shapeFilePath)
     val features: util.Collection[SimpleFeature] = shapeFileReader.getFeatureSet
     val quadTreeBounds: QuadTreeBounds = quadTreeExtentFromShapeFile(features)
 
-    val tazQuadTree: QuadTree[TAZ] = new QuadTree[TAZ](
-      quadTreeBounds.minx,
-      quadTreeBounds.miny,
-      quadTreeBounds.maxx,
-      quadTreeBounds.maxy
-    )
+    val tazQuadTree: QuadTree[TAZ] =
+      new QuadTree[TAZ](quadTreeBounds.minx, quadTreeBounds.miny, quadTreeBounds.maxx, quadTreeBounds.maxy)
 
     for (f <- features.asScala) {
       f.getDefaultGeometry match {
@@ -83,8 +76,7 @@ object TAZTreeMap {
           val taz = new TAZ(
             f.getAttribute(tazIDFieldName).asInstanceOf[String],
             new Coord(g.getCoordinate.x, g.getCoordinate.y),
-            g.getArea
-          )
+            g.getArea)
           tazQuadTree.put(taz.coord.getX, taz.coord.getY, taz)
         case _ =>
       }
@@ -92,9 +84,7 @@ object TAZTreeMap {
     tazQuadTree
   }
 
-  private def quadTreeExtentFromShapeFile(
-    features: util.Collection[SimpleFeature]
-  ): QuadTreeBounds = {
+  private def quadTreeExtentFromShapeFile(features: util.Collection[SimpleFeature]): QuadTreeBounds = {
     var minX: Double = Double.MaxValue
     var maxX: Double = Double.MinValue
     var minY: Double = Double.MaxValue
@@ -134,12 +124,8 @@ object TAZTreeMap {
 
     val lines = readCsvFile(csvFile)
     val quadTreeBounds: QuadTreeBounds = quadTreeExtentFromCsvFile(lines)
-    val tazQuadTree: QuadTree[TAZ] = new QuadTree[TAZ](
-      quadTreeBounds.minx,
-      quadTreeBounds.miny,
-      quadTreeBounds.maxx,
-      quadTreeBounds.maxy
-    )
+    val tazQuadTree: QuadTree[TAZ] =
+      new QuadTree[TAZ](quadTreeBounds.minx, quadTreeBounds.miny, quadTreeBounds.maxx, quadTreeBounds.maxy)
 
     for (l <- lines) {
       val taz = new TAZ(l.id, new Coord(l.coordX, l.coordY), l.area)
@@ -152,9 +138,7 @@ object TAZTreeMap {
 
   private def readerFromFile(filePath: String): java.io.Reader = {
     if (filePath.endsWith(".gz")) {
-      new InputStreamReader(
-        new GZIPInputStream(new BufferedInputStream(new FileInputStream(filePath)))
-      )
+      new InputStreamReader(new GZIPInputStream(new BufferedInputStream(new FileInputStream(filePath))))
     } else {
       new FileReader(filePath)
     }

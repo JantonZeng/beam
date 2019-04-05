@@ -15,11 +15,11 @@ import scala.collection.parallel.immutable.ParMap
 import beam.utils.logging.ExponentialLazyLogging
 
 class UrbanSimScenarioSource(
-  val scenarioFolder: String,
-  val rdr: UrbanSimScenarioReader,
-  val geoUtils: GeoUtils,
-  val shouldConvertWgs2Utm: Boolean
-) extends ScenarioSource
+    val scenarioFolder: String,
+    val rdr: UrbanSimScenarioReader,
+    val geoUtils: GeoUtils,
+    val shouldConvertWgs2Utm: Boolean)
+    extends ScenarioSource
     with ExponentialLazyLogging {
   val fileExt: String = rdr.inputType.toFileExt
 
@@ -36,16 +36,14 @@ class UrbanSimScenarioSource(
         personId = PersonId(person.personId),
         householdId = HouseholdId(person.householdId),
         rank = person.rank,
-        age = person.age
-      )
+        age = person.age)
     }
   }
   override def getPlans: Iterable[PlanElement] = {
     val rawPlanElements = rdr.readPlansFile(planFilePath)
     val planElements = dropCorruptedPlanElements(rawPlanElements)
     logger.error(
-      s"$planFilePath contains ${rawPlanElements.length} planElement, after removing corrupted data: ${planElements.length}"
-    )
+      s"$planFilePath contains ${rawPlanElements.length} planElement, after removing corrupted data: ${planElements.length}")
 
     planElements.map { plan =>
       val coord = (plan.x, plan.y) match {
@@ -73,8 +71,7 @@ class UrbanSimScenarioSource(
         x = coord.map(_.getX),
         y = coord.map(_.getY),
         endTime = plan.endTime,
-        mode = plan.mode
-      )
+        mode = plan.mode)
     }
   }
   override def getHousehold: Iterable[HouseholdInfo] = {
@@ -90,8 +87,7 @@ class UrbanSimScenarioSource(
         cars = householdInfo.cars,
         income = householdInfo.income,
         x = coord.getX,
-        y = coord.getY
-      )
+        y = coord.getY)
     }
   }
 
@@ -113,10 +109,9 @@ class UrbanSimScenarioSource(
   }
 
   private[urbansim] def getUnitIdToCoord(
-    units: Array[UnitInfo],
-    parcelAttrs: Array[ParcelAttribute],
-    buildings: Array[BuildingInfo]
-  ): Map[String, Coord] = {
+      units: Array[UnitInfo],
+      parcelAttrs: Array[ParcelAttribute],
+      buildings: Array[BuildingInfo]): Map[String, Coord] = {
     val parcelIdToCoord: ParMap[String, Coord] = parcelAttrs.par.groupBy(_.primaryId).map {
       case (k, v) =>
         val pa = v.head

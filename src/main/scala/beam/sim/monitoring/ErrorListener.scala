@@ -1,19 +1,19 @@
 package beam.sim.monitoring
 
-import akka.actor.{Actor, ActorLogging, DeadLetter, Props}
+import akka.actor.{ Actor, ActorLogging, DeadLetter, Props }
 import beam.agentsim.agents.BeamAgent
 import beam.agentsim.agents.vehicles.AccessErrorCodes.DriverNotFoundError
 import beam.agentsim.agents.vehicles.VehicleProtocol.RemovePassengerFromTrip
-import beam.agentsim.agents.vehicles.{ReservationRequest, ReservationResponse}
+import beam.agentsim.agents.vehicles.{ ReservationRequest, ReservationResponse }
 import beam.agentsim.scheduler.BeamAgentScheduler.CompletionNotice
 import beam.agentsim.scheduler.Trigger.TriggerWithId
-import beam.router.BeamRouter.{EmbodyWithCurrentTravelTime, RoutingRequest, WorkAvailable}
+import beam.router.BeamRouter.{ EmbodyWithCurrentTravelTime, RoutingRequest, WorkAvailable }
 import beam.router.Modes.BeamMode.TRANSIT
 
 /**
-  * @author sid.feygin
-  *
-  */
+ * @author sid.feygin
+ *
+ */
 class ErrorListener() extends Actor with ActorLogging {
   private var nextCounter = 1
   private var terminatedPrematurelyEvents: List[BeamAgent.TerminatedPrematurelyEvent] = Nil
@@ -24,15 +24,13 @@ class ErrorListener() extends Actor with ActorLogging {
       if (terminatedPrematurelyEvents.size >= nextCounter) {
         nextCounter *= 2
         log.error(
-          s"\n\n\t****** Agents gone to Error: ${terminatedPrematurelyEvents.size} ********\n${formatErrorReasons()}"
-        )
+          s"\n\n\t****** Agents gone to Error: ${terminatedPrematurelyEvents.size} ********\n${formatErrorReasons()}")
       }
     case d: DeadLetter =>
       d.message match {
         case m: ReservationRequest =>
           log.warning(
-            s"Person ${d.sender} attempted to reserve ride with agent ${d.recipient} that was not found, message sent to dead letters."
-          )
+            s"Person ${d.sender} attempted to reserve ride with agent ${d.recipient} that was not found, message sent to dead letters.")
           d.sender ! ReservationResponse(m.requestId, Left(DriverNotFoundError), TRANSIT)
         case _: RemovePassengerFromTrip =>
         // Can be safely skipped
@@ -41,13 +39,7 @@ class ErrorListener() extends Actor with ActorLogging {
           d.sender ! CompletionNotice(triggerId)
         //
         case m: RoutingRequest =>
-          log.debug(
-            "Retrying {} via {} tell {} using {}",
-            m.requestId,
-            d.recipient,
-            d.message,
-            d.sender
-          )
+          log.debug("Retrying {} via {} tell {} using {}", m.requestId, d.recipient, d.message, d.sender)
           d.recipient.tell(d.message, d.sender)
         case m: EmbodyWithCurrentTravelTime =>
           log.debug("Retrying {} via {} tell {} using {}", m.requestId, d.recipient, d.message, d.sender)
@@ -70,15 +62,14 @@ class ErrorListener() extends Actor with ActorLogging {
         eventsPerReason =>
           eventsPerReason
             .groupBy(event => hourOrMinus1(event))
-            .mapValues(eventsPerReasonPerHour => eventsPerReasonPerHour.size)
-      )
+            .mapValues(eventsPerReasonPerHour => eventsPerReasonPerHour.size))
     msgCounts
       .map {
         case (msg, cntByHour) =>
           val sortedCounts = cntByHour.toSeq.sortBy { case (hr, cnt) => hr }
-          s"$msg:\n\tHour\t${sortedCounts.map { case (hr, _) => hr.toString }.mkString("\t")}\n\tCnt \t${sortedCounts
-            .map { case (_, cnt)                             => cnt.toString }
-            .mkString("\t")}"
+          s"$msg:\n\tHour\t${sortedCounts
+            .map { case (hr, _)                                          => hr.toString }
+            .mkString("\t")}\n\tCnt \t${sortedCounts.map { case (_, cnt) => cnt.toString }.mkString("\t")}"
       }
       .mkString("\n")
   }

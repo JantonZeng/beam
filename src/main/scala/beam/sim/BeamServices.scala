@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorRef
 import akka.util.Timeout
-import beam.agentsim.agents.choice.mode.{ModeIncentive, PtFares}
+import beam.agentsim.agents.choice.mode.{ ModeIncentive, PtFares }
 import beam.agentsim.agents.modalbehaviors.ModeChoiceCalculator.ModeChoiceCalculatorFactory
 import beam.agentsim.agents.vehicles.FuelType.FuelType
 import beam.agentsim.agents.vehicles._
@@ -15,24 +15,24 @@ import beam.agentsim.infrastructure.TAZTreeMap
 import beam.agentsim.infrastructure.TAZTreeMap.TAZ
 import beam.router.Modes.BeamMode
 import beam.router.Modes.BeamMode._
-import beam.router.model.{BeamPath, EmbodiedBeamLeg}
+import beam.router.model.{ BeamPath, EmbodiedBeamLeg }
 import beam.sim.BeamServices.getTazTreeMap
 import beam.sim.common.GeoUtils
 import beam.sim.config.BeamConfig
 import beam.sim.config.BeamConfig.Beam.Agentsim.Agents
 import beam.sim.config.BeamConfig.Beam.Agentsim.Agents.ModalBehaviors
 import beam.sim.metrics.Metrics
-import beam.utils.{DateUtils, NetworkHelper}
-import beam.utils.BeamVehicleUtils.{readBeamVehicleTypeFile, readFuelTypeFile, readVehiclesFile}
-import com.google.inject.{ImplementedBy, Inject, Injector}
+import beam.utils.{ DateUtils, NetworkHelper }
+import beam.utils.BeamVehicleUtils.{ readBeamVehicleTypeFile, readFuelTypeFile, readVehiclesFile }
+import com.google.inject.{ ImplementedBy, Inject, Injector }
 import org.matsim.api.core.v01.population.Person
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.{ Coord, Id }
 import org.matsim.core.controler._
 import org.matsim.core.utils.collections.QuadTree
 import org.matsim.households.Household
 import org.matsim.vehicles.Vehicle
 import org.slf4j.LoggerFactory
-import org.matsim.api.core.v01.network.{Link, Network}
+import org.matsim.api.core.v01.network.{ Link, Network }
 
 import scala.collection.concurrent.TrieMap
 import scala.collection.mutable
@@ -91,8 +91,7 @@ class BeamServicesImpl @Inject()(val injector: Injector) extends BeamServices {
 
   val dates: DateUtils = DateUtils(
     ZonedDateTime.parse(beamConfig.beam.routing.baseDate).toLocalDateTime,
-    ZonedDateTime.parse(beamConfig.beam.routing.baseDate)
-  )
+    ZonedDateTime.parse(beamConfig.beam.routing.baseDate))
 
   val rideHailTransitModes: Seq[BeamMode] =
     if (beamConfig.beam.agentsim.agents.rideHailTransit.modesToConsider.equalsIgnoreCase("all")) BeamMode.transitModes
@@ -110,18 +109,14 @@ class BeamServicesImpl @Inject()(val injector: Injector) extends BeamServices {
   var beamRouter: ActorRef = _
   var rideHailIterationHistoryActor: ActorRef = _
 
-  val agencyAndRouteByVehicleIds: TrieMap[
-    Id[Vehicle],
-    (String, String)
-  ] = TrieMap()
+  val agencyAndRouteByVehicleIds: TrieMap[Id[Vehicle], (String, String)] = TrieMap()
   var personHouseholds: Map[Id[Person], Household] = Map()
 
   val fuelTypePrices: Map[FuelType, Double] =
     readFuelTypeFile(beamConfig.beam.agentsim.agents.vehicles.fuelTypesFilePath).toMap
 
   val vehicleTypes: Map[Id[BeamVehicleType], BeamVehicleType] = maybeScaleTransit(
-    readBeamVehicleTypeFile(beamConfig.beam.agentsim.agents.vehicles.vehicleTypesFilePath, fuelTypePrices)
-  )
+    readBeamVehicleTypeFile(beamConfig.beam.agentsim.agents.vehicles.vehicleTypesFilePath, fuelTypePrices))
 
   private val baseFilePath = Paths.get(beamConfig.beam.agentsim.agents.vehicles.vehicleTypesFilePath).getParent
   private val vehicleCsvReader = new VehicleCsvReader(beamConfig)
@@ -132,13 +127,9 @@ class BeamServicesImpl @Inject()(val injector: Injector) extends BeamServices {
       primaryConsumptionRateFilePathsByVehicleType =
         vehicleTypes.values.map(x => (x, x.primaryVehicleEnergyFile)).toIndexedSeq,
       secondaryConsumptionRateFilePathsByVehicleType =
-        vehicleTypes.values.map(x => (x, x.secondaryVehicleEnergyFile)).toIndexedSeq
-    )
+        vehicleTypes.values.map(x => (x, x.secondaryVehicleEnergyFile)).toIndexedSeq)
 
-  val vehicleEnergy = new VehicleEnergy(
-    consumptionRateFilterStore,
-    vehicleCsvReader.getLinkToGradeRecordsUsing
-  )
+  val vehicleEnergy = new VehicleEnergy(consumptionRateFilterStore, vehicleCsvReader.getLinkToGradeRecordsUsing)
 
   // TODO Fix me once `TrieMap` is removed
   val privateVehicles: TrieMap[Id[BeamVehicle], BeamVehicle] =
@@ -171,8 +162,7 @@ class BeamServicesImpl @Inject()(val injector: Injector) extends BeamServices {
             id -> (if (bvt.standingRoomCapacity > 0)
                      bvt.copy(
                        seatingCapacity = Math.ceil(bvt.seatingCapacity.toDouble * scalingFactor).toInt,
-                       standingRoomCapacity = Math.ceil(bvt.standingRoomCapacity.toDouble * scalingFactor).toInt
-                     )
+                       standingRoomCapacity = Math.ceil(bvt.standingRoomCapacity.toDouble * scalingFactor).toInt)
                    else
                      bvt)
         }
@@ -207,13 +197,12 @@ object BeamServices {
       TAZTreeMap.fromCsv(filePath)
     } catch {
       case fe: FileNotFoundException =>
-        logger.error("No TAZ file found at given file path (using defaultTazTreeMap): %s" format filePath, fe)
+        logger.error("No TAZ file found at given file path (using defaultTazTreeMap): %s".format(filePath), fe)
         defaultTazTreeMap
       case e: Exception =>
         logger.error(
-          "Exception occurred while reading from CSV file from path (using defaultTazTreeMap): %s" format e.getMessage,
-          e
-        )
+          "Exception occurred while reading from CSV file from path (using defaultTazTreeMap): %s".format(e.getMessage),
+          e)
         defaultTazTreeMap
     }
   }

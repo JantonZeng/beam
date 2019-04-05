@@ -3,7 +3,7 @@ package beam.utils.logging
 import java.util.concurrent.ConcurrentHashMap
 
 import beam.utils.logging.ExponentialLoggerWrapperImpl._
-import org.slf4j.{Logger, LoggerFactory}
+import org.slf4j.{ Logger, LoggerFactory }
 
 class ExponentialLoggerWrapperImpl(name: String) extends LoggerWrapper {
 

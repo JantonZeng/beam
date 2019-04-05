@@ -5,9 +5,9 @@ import beam.agentsim.agents.choice.logit.LatentClassChoiceModel.Mandatory
 import beam.agentsim.agents.choice.mode._
 import beam.router.Modes.BeamMode
 import beam.router.Modes.BeamMode._
-import beam.router.model.{EmbodiedBeamLeg, EmbodiedBeamTrip}
+import beam.router.model.{ EmbodiedBeamLeg, EmbodiedBeamTrip }
 import beam.sim.population.AttributesOfIndividual
-import beam.sim.{BeamServices, HasServices}
+import beam.sim.{ BeamServices, HasServices }
 import org.matsim.api.core.v01.population.Activity
 import org.matsim.api.core.v01.population.Person
 
@@ -16,51 +16,44 @@ import scala.collection.mutable.ListBuffer
 import scala.util.Random
 
 /**
-  * BEAM
-  */
+ * BEAM
+ */
 trait ModeChoiceCalculator extends HasServices {
 
   import ModeChoiceCalculator._
 
-  implicit lazy val random: Random = new Random(
-    beamServices.beamConfig.matsim.modules.global.randomSeed
-  )
+  implicit lazy val random: Random = new Random(beamServices.beamConfig.matsim.modules.global.randomSeed)
 
   def getGeneralizedTimeOfTrip(
-    embodiedBeamTrip: EmbodiedBeamTrip,
-    attributesOfIndividual: Option[AttributesOfIndividual] = None,
-    destinationActivity: Option[Activity] = None
-  ): Double = {
+      embodiedBeamTrip: EmbodiedBeamTrip,
+      attributesOfIndividual: Option[AttributesOfIndividual] = None,
+      destinationActivity: Option[Activity] = None): Double = {
     embodiedBeamTrip.totalTravelTimeInSecs / 3600
   }
 
   def getGeneralizedTimeOfLeg(
-    embodiedBeamLeg: EmbodiedBeamLeg,
-    attributesOfIndividual: Option[AttributesOfIndividual],
-    destinationActivity: Option[Activity]
-  ): Double = {
+      embodiedBeamLeg: EmbodiedBeamLeg,
+      attributesOfIndividual: Option[AttributesOfIndividual],
+      destinationActivity: Option[Activity]): Double = {
     embodiedBeamLeg.beamLeg.duration / 3600
   }
 
   def getGeneralizedTime(
-    time: Double,
-    beamMode: Option[BeamMode] = None,
-    beamLeg: Option[EmbodiedBeamLeg] = None
-  ): Double = {
+      time: Double,
+      beamMode: Option[BeamMode] = None,
+      beamLeg: Option[EmbodiedBeamLeg] = None): Double = {
     time / 3600
   }
 
   def apply(
-    alternatives: IndexedSeq[EmbodiedBeamTrip],
-    attributesOfIndividual: AttributesOfIndividual,
-    destinationActivity: Option[Activity]
-  ): Option[EmbodiedBeamTrip]
+      alternatives: IndexedSeq[EmbodiedBeamTrip],
+      attributesOfIndividual: AttributesOfIndividual,
+      destinationActivity: Option[Activity]): Option[EmbodiedBeamTrip]
 
   def utilityOf(
-    alternative: EmbodiedBeamTrip,
-    attributesOfIndividual: AttributesOfIndividual,
-    destinationActivity: Option[Activity]
-  ): Double
+      alternative: EmbodiedBeamTrip,
+      attributesOfIndividual: AttributesOfIndividual,
+      destinationActivity: Option[Activity]): Double
 
   def utilityOf(mode: BeamMode, cost: Double, time: Double, numTransfers: Int = 0): Double
 
@@ -93,10 +86,9 @@ trait ModeChoiceCalculator extends HasServices {
   }
 
   def computeAllDayUtility(
-    trips: ListBuffer[EmbodiedBeamTrip],
-    person: Person,
-    attributesOfIndividual: AttributesOfIndividual
-  ): Double
+      trips: ListBuffer[EmbodiedBeamTrip],
+      person: Person,
+      attributesOfIndividual: AttributesOfIndividual): Double
 
   final def chooseRandomAlternativeIndex(alternatives: Seq[EmbodiedBeamTrip]): Int = {
     if (alternatives.nonEmpty) {
@@ -118,31 +110,22 @@ object ModeChoiceCalculator {
         (attributesOfIndividual: AttributesOfIndividual) =>
           attributesOfIndividual match {
             case AttributesOfIndividual(_, Some(modalityStyle), _, _, _, _, _) =>
-              new ModeChoiceMultinomialLogit(
-                beamServices,
-                lccm.modeChoiceModels(Mandatory)(modalityStyle)
-              )
+              new ModeChoiceMultinomialLogit(beamServices, lccm.modeChoiceModels(Mandatory)(modalityStyle))
             case _ =>
               throw new RuntimeException("LCCM needs people to have modality styles")
           }
       case "ModeChoiceTransitIfAvailable" =>
-        _ =>
-          new ModeChoiceTransitIfAvailable(beamServices)
+        _ => new ModeChoiceTransitIfAvailable(beamServices)
       case "ModeChoiceDriveIfAvailable" =>
-        _ =>
-          new ModeChoiceDriveIfAvailable(beamServices)
+        _ => new ModeChoiceDriveIfAvailable(beamServices)
       case "ModeChoiceRideHailIfAvailable" =>
-        _ =>
-          new ModeChoiceRideHailIfAvailable(beamServices)
+        _ => new ModeChoiceRideHailIfAvailable(beamServices)
       case "ModeChoiceUniformRandom" =>
-        _ =>
-          new ModeChoiceUniformRandom(beamServices)
+        _ => new ModeChoiceUniformRandom(beamServices)
       case "ModeChoiceMultinomialLogit" =>
         val logit = ModeChoiceMultinomialLogit.buildModelFromConfig(
-          beamServices.beamConfig.beam.agentsim.agents.modalBehaviors.mulitnomialLogit
-        )
-        _ =>
-          new ModeChoiceMultinomialLogit(beamServices, logit)
+          beamServices.beamConfig.beam.agentsim.agents.modalBehaviors.mulitnomialLogit)
+        _ => new ModeChoiceMultinomialLogit(beamServices, logit)
     }
   }
   sealed trait ModeVotMultiplier

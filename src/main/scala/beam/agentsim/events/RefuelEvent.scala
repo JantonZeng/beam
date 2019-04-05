@@ -10,12 +10,12 @@ import org.matsim.core.api.internal.HasPersonId
 import org.matsim.vehicles.Vehicle
 
 class RefuelEvent(
-  tick: Double,
-  stall: ParkingStall,
-  energyInJoules: Double,
-  sessionDuration: Double,
-  vehId: Id[Vehicle]
-) extends Event(tick)
+    tick: Double,
+    stall: ParkingStall,
+    energyInJoules: Double,
+    sessionDuration: Double,
+    vehId: Id[Vehicle])
+    extends Event(tick)
     with HasPersonId
     with ScalaEvent {
   import RefuelEvent._

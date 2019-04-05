@@ -1,8 +1,8 @@
 package beam.sim
 
 /**
-  * BEAM
-  */
+ * BEAM
+ */
 trait HasServices {
   val beamServices: BeamServices
 }

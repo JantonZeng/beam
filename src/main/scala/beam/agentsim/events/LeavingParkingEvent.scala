@@ -3,10 +3,10 @@ package beam.agentsim.events
 import java.util
 
 import beam.agentsim.infrastructure.ParkingStall
-import beam.agentsim.infrastructure.ParkingStall.{ChargingType, ParkingType, PricingModel}
+import beam.agentsim.infrastructure.ParkingStall.{ ChargingType, ParkingType, PricingModel }
 import beam.agentsim.infrastructure.TAZTreeMap.TAZ
 import org.matsim.api.core.v01.Id
-import org.matsim.api.core.v01.events.{Event, GenericEvent}
+import org.matsim.api.core.v01.events.{ Event, GenericEvent }
 import org.matsim.api.core.v01.population.Person
 import org.matsim.core.api.internal.HasPersonId
 import org.matsim.vehicles.Vehicle
@@ -14,15 +14,15 @@ import org.matsim.vehicles.Vehicle
 import collection.JavaConverters._
 
 case class LeavingParkingEvent(
-  time: Double,
-  personId: Id[Person],
-  vehicleId: Id[Vehicle],
-  tazId: Id[TAZ],
-  score: Double,
-  parkingType: ParkingType,
-  pricingModel: PricingModel,
-  chargingType: ChargingType
-) extends Event(time)
+    time: Double,
+    personId: Id[Person],
+    vehicleId: Id[Vehicle],
+    tazId: Id[TAZ],
+    score: Double,
+    parkingType: ParkingType,
+    pricingModel: PricingModel,
+    chargingType: ChargingType)
+    extends Event(time)
     with HasPersonId
     with ScalaEvent {
   import LeavingParkingEvent._
@@ -57,12 +57,11 @@ object LeavingParkingEvent {
   val ATTRIBUTE_PERSON_ID: String = "person"
 
   def apply(
-    time: Double,
-    stall: ParkingStall,
-    score: Double,
-    personId: Id[Person],
-    vehId: Id[Vehicle]
-  ): LeavingParkingEvent =
+      time: Double,
+      stall: ParkingStall,
+      score: Double,
+      personId: Id[Person],
+      vehId: Id[Vehicle]): LeavingParkingEvent =
     new LeavingParkingEvent(
       time,
       personId,
@@ -71,8 +70,7 @@ object LeavingParkingEvent {
       score,
       stall.attributes.parkingType,
       stall.attributes.pricingModel,
-      stall.attributes.chargingType
-    )
+      stall.attributes.chargingType)
 
   def apply(genericEvent: GenericEvent): LeavingParkingEvent = {
     assert(genericEvent.getEventType == EVENT_TYPE)

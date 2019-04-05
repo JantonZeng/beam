@@ -6,13 +6,13 @@ import beam.router.Modes.BeamMode.CAR
 import beam.sim.population.PopulationAdjustment
 import beam.sim.population.PopulationAdjustment.BEAM_ATTRIBUTES
 import beam.agentsim.agents.vehicles.BeamVehicleType
-import beam.router.Modes.BeamMode.{CAR, DRIVE_TRANSIT}
+import beam.router.Modes.BeamMode.{ CAR, DRIVE_TRANSIT }
 import beam.utils.BeamVehicleUtils
 import beam.utils.matsim_conversion.MatsimConversionTool
-import beam.utils.plan.sampling.HouseholdAttrib.{HomeCoordX, HomeCoordY, HousingType}
+import beam.utils.plan.sampling.HouseholdAttrib.{ HomeCoordX, HomeCoordY, HousingType }
 import beam.utils.plan.sampling.PopulationAttrib.Rank
 import beam.utils.scripts.PopulationWriterCSV
-import com.vividsolutions.jts.geom.{Envelope, Geometry, GeometryCollection, GeometryFactory, Point}
+import com.vividsolutions.jts.geom.{ Envelope, Geometry, GeometryCollection, GeometryFactory, Point }
 import enumeratum.EnumEntry._
 import enumeratum._
 import org.apache.commons.math3.distribution.EnumeratedDistribution
@@ -20,14 +20,14 @@ import org.apache.commons.math3.random.MersenneTwister
 import org.apache.commons.math3.util.Pair
 import org.geotools.geometry.jts.JTS
 import org.geotools.referencing.CRS
-import org.matsim.api.core.v01.population.{Activity, Person, Plan, Population}
-import org.matsim.api.core.v01.{Coord, Id}
-import org.matsim.core.config.{Config, ConfigUtils}
+import org.matsim.api.core.v01.population.{ Activity, Person, Plan, Population }
+import org.matsim.api.core.v01.{ Coord, Id }
+import org.matsim.core.config.{ Config, ConfigUtils }
 import org.matsim.core.network.NetworkUtils
 import org.matsim.core.population.io.PopulationWriter
-import org.matsim.core.population.{PersonUtils, PopulationUtils}
+import org.matsim.core.population.{ PersonUtils, PopulationUtils }
 import org.matsim.core.router.StageActivityTypesImpl
-import org.matsim.core.scenario.{MutableScenario, ScenarioUtils}
+import org.matsim.core.scenario.{ MutableScenario, ScenarioUtils }
 import org.matsim.core.utils.collections.QuadTree
 import org.matsim.core.utils.geometry.CoordUtils
 import org.matsim.core.utils.geometry.geotools.MGC
@@ -37,25 +37,24 @@ import org.matsim.core.utils.io.IOUtils
 import org.matsim.core.utils.misc.Counter
 import org.matsim.households.Income.IncomePeriod.year
 import org.matsim.households._
-import org.matsim.utils.objectattributes.{ObjectAttributes, ObjectAttributesXmlWriter}
-import org.matsim.vehicles.{Vehicle, VehicleUtils, VehicleWriterV1, Vehicles}
+import org.matsim.utils.objectattributes.{ ObjectAttributes, ObjectAttributesXmlWriter }
+import org.matsim.vehicles.{ Vehicle, VehicleUtils, VehicleWriterV1, Vehicles }
 import org.opengis.feature.simple.SimpleFeature
 import org.opengis.referencing.crs.CoordinateReferenceSystem
 
 import scala.collection.JavaConverters._
-import scala.collection.{immutable, mutable, JavaConverters}
-import scala.util.{Random, Try}
+import scala.collection.{ immutable, mutable, JavaConverters }
+import scala.util.{ Random, Try }
 import scala.util.control.Breaks._
 
 case class SynthHousehold(
-  householdId: Id[Household],
-  numPersons: Int,
-  vehicles: Int,
-  hhIncome: Double,
-  tract: Int,
-  coord: Coord,
-  var individuals: Array[SynthIndividual]
-) {
+    householdId: Id[Household],
+    numPersons: Int,
+    vehicles: Int,
+    hhIncome: Double,
+    tract: Int,
+    coord: Coord,
+    var individuals: Array[SynthIndividual]) {
 
   def addIndividual(individual: SynthIndividual): Unit = {
     individuals ++= Array(individual)
@@ -69,11 +68,11 @@ class SynthHouseholdParser(geoConverter: GeoConverter) {
   import SynthHouseholdParser._
 
   /**
-    * Parses the synthetic households file.
-    *
-    * @param synthFileName : synthetic households filename
-    * @return the [[Vector]] of [[SynthHousehold]]s
-    */
+   * Parses the synthetic households file.
+   *
+   * @param synthFileName : synthetic households filename
+   * @return the [[Vector]] of [[SynthHousehold]]s
+   */
   def parseFile(synthFileName: String): Vector[SynthHousehold] = {
     val resHHMap = scala.collection.mutable.Map[String, SynthHousehold]()
 
@@ -104,8 +103,7 @@ class SynthHouseholdParser(geoConverter: GeoConverter) {
       if (row.length == 12) {
         row(indValTime).toDouble
       } else 18.0,
-      row(indIncomeIdx).toDouble
-    )
+      row(indIncomeIdx).toDouble)
   }
 
   def parseHousehold(row: Array[String], hhIdStr: String): SynthHousehold = {
@@ -115,11 +113,8 @@ class SynthHouseholdParser(geoConverter: GeoConverter) {
       row(hhNumIdx).toInt,
       row(hhIncomeIdx).toDouble,
       row(hhTractIdx).toInt,
-      geoConverter.transform(
-        new Coord(row(homeCoordXIdx).toDouble, row(homeCoordYIdx).toDouble)
-      ),
-      Array(parseIndividual(row))
-    )
+      geoConverter.transform(new Coord(row(homeCoordXIdx).toDouble, row(homeCoordYIdx).toDouble)),
+      Array(parseIndividual(row)))
   }
 }
 
@@ -226,9 +221,7 @@ case class QuadTreeExtent(minx: Double, miny: Double, maxx: Double, maxy: Double
 
 class QuadTreeBuilder(wgsConverter: WGSConverter) {
 
-  private def quadTreeExtentFromShapeFile(
-    features: util.Collection[SimpleFeature]
-  ): QuadTreeExtent = {
+  private def quadTreeExtentFromShapeFile(features: util.Collection[SimpleFeature]): QuadTreeExtent = {
     var minX: Double = Double.MaxValue
     var maxX: Double = Double.MinValue
     var minY: Double = Double.MaxValue
@@ -251,9 +244,8 @@ class QuadTreeBuilder(wgsConverter: WGSConverter) {
 
   // Returns a single geometry that is the union of all the polgyons in a shapefile
   def geometryUnionFromShapefile(
-    features: util.Collection[SimpleFeature],
-    sourceCRS: CoordinateReferenceSystem
-  ): Geometry = {
+      features: util.Collection[SimpleFeature],
+      sourceCRS: CoordinateReferenceSystem): Geometry = {
 
     import scala.collection.JavaConverters._
     val targetCRS = CRS.decode(wgsConverter.targetCRS)
@@ -276,10 +268,9 @@ class QuadTreeBuilder(wgsConverter: WGSConverter) {
 
   // This version parses all activity locations and only keeps agents who have all activities w/ in the bounds
   def buildQuadTree[T: HasXY](
-    aoiShapeFileLoc: util.Collection[SimpleFeature],
-    sourceCRS: CoordinateReferenceSystem,
-    pop: Vector[Person]
-  ): QuadTree[T] = {
+      aoiShapeFileLoc: util.Collection[SimpleFeature],
+      sourceCRS: CoordinateReferenceSystem,
+      pop: Vector[Person]): QuadTree[T] = {
     val ev = implicitly[HasXY[T]]
 
     val qte = quadTreeExtentFromShapeFile(aoiShapeFileLoc)
@@ -375,22 +366,15 @@ object PlansSampler {
     val sourceCrs = MGC.getCRS(args(7))
 
     wgsConverter = Some(WGSConverter(args(7), args(8)))
-    pop ++= scala.collection.JavaConverters
-      .mapAsScalaMap(sc.getPopulation.getPersons)
-      .values
-      .toVector
+    pop ++= scala.collection.JavaConverters.mapAsScalaMap(sc.getPopulation.getPersons).values.toVector
 
     synthHouseholds ++=
       filterSynthHouseholds(
         new SynthHouseholdParser(wgsConverter.get).parseFile(args(3)),
         shapeFileReader.getFeatureSet,
-        sourceCrs
-      )
+        sourceCrs)
 
-    planQt = Some(
-      new QuadTreeBuilder(wgsConverter.get)
-        .buildQuadTree(shapeFileReader.getFeatureSet, sourceCrs, pop)
-    )
+    planQt = Some(new QuadTreeBuilder(wgsConverter.get).buildQuadTree(shapeFileReader.getFeatureSet, sourceCrs, pop))
 
     outDir = args(6)
   }
@@ -411,16 +395,11 @@ object PlansSampler {
     val closestPlan = getClosestPlan(spCoord)
     var col = if (withoutWork && !hasNoWorkAct(closestPlan)) Set[Plan]() else Set(closestPlan)
 
-    var radius = CoordUtils.calcEuclideanDistance(
-      spCoord,
-      PopulationUtils.getFirstActivity(closestPlan).getCoord
-    )
+    var radius = CoordUtils.calcEuclideanDistance(spCoord, PopulationUtils.getFirstActivity(closestPlan).getCoord)
 
     while (col.size < n) {
       radius += 1
-      val candidates = JavaConverters.collectionAsScalaIterable(
-        planQt.get.getDisk(spCoord.getX, spCoord.getY, radius)
-      )
+      val candidates = JavaConverters.collectionAsScalaIterable(planQt.get.getDisk(spCoord.getX, spCoord.getY, radius))
       for (plan <- candidates) {
         if (!col.contains(plan) && (!withoutWork || hasNoWorkAct(plan))) {
           col ++= Vector(plan)
@@ -435,17 +414,13 @@ object PlansSampler {
   }
 
   private def filterSynthHouseholds(
-    synthHouseholds: Vector[SynthHousehold],
-    aoiFeatures: util.Collection[SimpleFeature],
-    sourceCRS: CoordinateReferenceSystem
-  ): Vector[SynthHousehold] = {
+      synthHouseholds: Vector[SynthHousehold],
+      aoiFeatures: util.Collection[SimpleFeature],
+      sourceCRS: CoordinateReferenceSystem): Vector[SynthHousehold] = {
 
     if (spatialSampler == null) {
-      val aoi: Geometry = new QuadTreeBuilder(wgsConverter.get)
-        .geometryUnionFromShapefile(aoiFeatures, sourceCRS)
-      synthHouseholds
-        .filter(hh => aoi.contains(MGC.coord2Point(hh.coord)))
-        .take(sampleNumber)
+      val aoi: Geometry = new QuadTreeBuilder(wgsConverter.get).geometryUnionFromShapefile(aoiFeatures, sourceCRS)
+      synthHouseholds.filter(hh => aoi.contains(MGC.coord2Point(hh.coord))).take(sampleNumber)
     } else {
       val tract2HH = synthHouseholds.groupBy(f => f.tract)
       val synthHHs = mutable.Buffer[SynthHousehold]()
@@ -555,8 +530,7 @@ object PlansSampler {
           val newPerson = newPop.getFactory.createPerson(newPersonId)
           newPop.addPerson(newPerson)
           spHH.getMemberIds.add(newPersonId)
-          newPopAttributes
-            .putAttribute(newPersonId.toString, Rank.entryName, ranks(idx))
+          newPopAttributes.putAttribute(newPersonId.toString, Rank.entryName, ranks(idx))
 
           // Create a new plan for household member based on selected plan of first person
           val newPlan = PopulationUtils.createPlan(newPerson)
@@ -571,8 +545,9 @@ object PlansSampler {
             }
           }
           PopulationUtils.copyFromTo(srcPlan, newPlan)
-          val homeActs = newPlan.getPlanElements.asScala
-            .collect { case activity: Activity if activity.getType.equalsIgnoreCase("Home") => activity }
+          val homeActs = newPlan.getPlanElements.asScala.collect {
+            case activity: Activity if activity.getType.equalsIgnoreCase("Home") => activity
+          }
 
           homePlan match {
             case None =>
@@ -600,8 +575,7 @@ object PlansSampler {
           }
           // TODO: Include non-binary gender if data available
           PersonUtils.setSex(newPerson, sex)
-          newPopAttributes
-            .putAttribute(newPerson.getId.toString, "valueOfTime", synthPerson.valueOfTime)
+          newPopAttributes.putAttribute(newPerson.getId.toString, "valueOfTime", synthPerson.valueOfTime)
           newPopAttributes.putAttribute(newPerson.getId.toString, "income", synthPerson.income)
           addModeExclusions(newPerson)
         }
@@ -619,10 +593,8 @@ object PlansSampler {
     new PopulationWriter(newPop).write(s"$outDir/population.xml.gz")
     PopulationWriterCSV(newPop).write(s"$outDir/population.csv.gz")
     new VehicleWriterV1(newVehicles).writeFile(s"$outDir/vehicles.xml.gz")
-    new ObjectAttributesXmlWriter(newHHAttributes)
-      .writeFile(s"$outDir/householdAttributes.xml.gz")
-    new ObjectAttributesXmlWriter(newPopAttributes)
-      .writeFile(s"$outDir/populationAttributes.xml.gz")
+    new ObjectAttributesXmlWriter(newHHAttributes).writeFile(s"$outDir/householdAttributes.xml.gz")
+    new ObjectAttributesXmlWriter(newPopAttributes).writeFile(s"$outDir/populationAttributes.xml.gz")
 
   }
 
@@ -635,33 +607,33 @@ object PlansSampler {
 }
 
 /**
-  * This script is designed to create input data for BEAM. It expects the following inputs [provided in order of
-  * command-line args]:
-  *
-  * [0] Raw plans input filename
-  * [1] Input AOI shapefile
-  * [2] Network input filename
-  * [3] Synthetic person input filename
-  * [4] Default vehicle type(s) input filename
-  * [5] Number of persons to sample (e.g., 1k, 5k, etc.)
-  * [6] Output directory
-  * [7] Target CRS
-  *
-  * Run from directly from CLI with, for example:
-  *
-  * $> gradle :execute -PmainClass=beam.utils.sampling.PlansSamplerApp
-  * -PappArgs="['production/application-sfbay/population.xml.gz', 'production/application-sfbay/shape/bayarea_county_dissolve_4326.shp',
-  * 'production/application-sfbay/physsim-network.xml', 'test/input/sf-light/ind_X_hh_out.csv.gz',
-  * 'production/application-sfbay/vehicles.xml.gz', '413187', production/application-sfbay/samples', 'epsg:4326', 'epsg:26910']"
-  *
-  * for siouxfalls
-  * test/input/siouxfalls/conversion-input/Siouxfalls_population.xml
-  * test/input/siouxfalls/conversion-input/sioux_falls_population_counts_by_census_block_dissolved.shp
-  * test/input/siouxfalls/conversion-input/Siouxfalls_network_PT.xml
-  * test/input/siouxfalls/conversion-input/ind_X_hh_out.csv.gz
-  * test/input/siouxfalls/conversion-input/transitVehicles.xml
-  * 15000 test/input/siouxfalls/samples/15k epsg:4326 epsg:26914
-  */
+ * This script is designed to create input data for BEAM. It expects the following inputs [provided in order of
+ * command-line args]:
+ *
+ * [0] Raw plans input filename
+ * [1] Input AOI shapefile
+ * [2] Network input filename
+ * [3] Synthetic person input filename
+ * [4] Default vehicle type(s) input filename
+ * [5] Number of persons to sample (e.g., 1k, 5k, etc.)
+ * [6] Output directory
+ * [7] Target CRS
+ *
+ * Run from directly from CLI with, for example:
+ *
+ * $> gradle :execute -PmainClass=beam.utils.sampling.PlansSamplerApp
+ * -PappArgs="['production/application-sfbay/population.xml.gz', 'production/application-sfbay/shape/bayarea_county_dissolve_4326.shp',
+ * 'production/application-sfbay/physsim-network.xml', 'test/input/sf-light/ind_X_hh_out.csv.gz',
+ * 'production/application-sfbay/vehicles.xml.gz', '413187', production/application-sfbay/samples', 'epsg:4326', 'epsg:26910']"
+ *
+ * for siouxfalls
+ * test/input/siouxfalls/conversion-input/Siouxfalls_population.xml
+ * test/input/siouxfalls/conversion-input/sioux_falls_population_counts_by_census_block_dissolved.shp
+ * test/input/siouxfalls/conversion-input/Siouxfalls_network_PT.xml
+ * test/input/siouxfalls/conversion-input/ind_X_hh_out.csv.gz
+ * test/input/siouxfalls/conversion-input/transitVehicles.xml
+ * 15000 test/input/siouxfalls/samples/15k epsg:4326 epsg:26914
+ */
 object PlansSamplerApp extends App {
   val sampler = PlansSampler
   sampler.init(args)

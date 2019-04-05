@@ -1,11 +1,11 @@
 package beam.agentsim.agents.household
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{ Actor, ActorLogging, Props }
 import akka.pattern.pipe
 import optimus.optimization._
 import optimus.optimization.enums.SolverLib
-import optimus.optimization.enums.{PreSolve, SolutionStatus, SolverLib}
-import optimus.optimization.model.{INFINITE, MPConstraint, MPFloatVar, MPIntVar}
+import optimus.optimization.enums.{ PreSolve, SolutionStatus, SolverLib }
+import optimus.optimization.model.{ INFINITE, MPConstraint, MPFloatVar, MPIntVar }
 
 import scala.concurrent.Future
 
@@ -26,16 +26,16 @@ class HouseholdSolverActor extends Actor with ActorLogging {
     case BeginSolving =>
       //println(self + ": Starting Solving")
       val ongoingSolver: Future[Unit] = Future { solve }
-      ongoingSolver.map(_ => SolutionComplete) pipeTo self
+      ongoingSolver.map(_ => SolutionComplete).pipeTo(self)
       //ongoingSolver.onComplete(println)
-      context become solving
+      context.become(solving)
     case _ =>
   }
 
   def solving: Receive = {
     case SolutionComplete =>
       //println(self + ": This is where you can tell the parent what you learned")
-      context stop self
+      context.stop(self)
     case _ =>
   }
 

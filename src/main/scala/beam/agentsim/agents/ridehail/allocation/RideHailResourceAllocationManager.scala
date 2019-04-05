@@ -2,11 +2,11 @@ package beam.agentsim.agents.ridehail.allocation
 
 import akka.actor.ActorRef
 import beam.agentsim.agents.modalbehaviors.DrivesVehicle.StopDrivingIfNoPassengerOnBoardReply
-import beam.agentsim.agents.ridehail.RideHailManager.{BufferedRideHailRequestsTrigger, PoolingInfo}
+import beam.agentsim.agents.ridehail.RideHailManager.{ BufferedRideHailRequestsTrigger, PoolingInfo }
 import beam.agentsim.agents.ridehail.RideHailVehicleManager.RideHailAgentLocation
-import beam.agentsim.agents.ridehail.{RideHailManager, RideHailRequest}
+import beam.agentsim.agents.ridehail.{ RideHailManager, RideHailRequest }
 import beam.agentsim.agents.vehicles.VehiclePersonId
-import beam.router.BeamRouter.{Location, RoutingRequest, RoutingResponse}
+import beam.router.BeamRouter.{ Location, RoutingRequest, RoutingResponse }
 import beam.router.model.EmbodiedBeamLeg
 import com.typesafe.scalalogging.LazyLogging
 import org.matsim.api.core.v01.Id
@@ -35,10 +35,8 @@ abstract class RideHailResourceAllocationManager(private val rideHailManager: Ri
    * rational choices about mode that reflect the true travel time cost of pooling.
    */
   def respondToInquiry(inquiry: RideHailRequest): InquiryResponse = {
-    rideHailManager.vehicleManager.getClosestIdleRideHailAgent(
-      inquiry.pickUpLocationUTM,
-      rideHailManager.radiusInMeters
-    ) match {
+    rideHailManager.vehicleManager
+      .getClosestIdleRideHailAgent(inquiry.pickUpLocationUTM, rideHailManager.radiusInMeters) match {
       case Some(agentLocation) =>
         SingleOccupantQuoteAndPoolingInfo(agentLocation, None)
       case None =>
@@ -122,21 +120,12 @@ abstract class RideHailResourceAllocationManager(private val rideHailManager: Ri
     val allocResponses = vehicleAllocationRequest.requests.map {
       case (request, routingResponses) if (routingResponses.isEmpty) =>
         rideHailManager.vehicleManager
-          .getClosestIdleVehiclesWithinRadiusByETA(
-            request.pickUpLocationUTM,
-            rideHailManager.radiusInMeters,
-            tick
-          )
+          .getClosestIdleVehiclesWithinRadiusByETA(request.pickUpLocationUTM, rideHailManager.radiusInMeters, tick)
           .headOption match {
           case Some(agentETA) =>
             val routeRequired = RoutingRequiredToAllocateVehicle(
               request,
-              rideHailManager.createRoutingRequestsToCustomerAndDestination(
-                tick,
-                request,
-                agentETA.agentLocation
-              )
-            )
+              rideHailManager.createRoutingRequestsToCustomerAndDestination(tick, request, agentETA.agentLocation))
             routeRequired
           case None =>
             NoVehicleAllocated(request)
@@ -150,15 +139,13 @@ abstract class RideHailResourceAllocationManager(private val rideHailManager: Ri
             request.pickUpLocationUTM,
             rideHailManager.radiusInMeters,
             tick,
-            excludeRideHailVehicles = alreadyAllocated
-          )
+            excludeRideHailVehicles = alreadyAllocated)
           .headOption match {
           case Some(agentETA) =>
             alreadyAllocated = alreadyAllocated + agentETA.agentLocation.vehicleId
             val pickDropIdAndLegs = List(
               PickDropIdAndLeg(Some(request.customer), routingResponses.head.itineraries.head.legs.headOption),
-              PickDropIdAndLeg(Some(request.customer), routingResponses.last.itineraries.head.legs.headOption)
-            )
+              PickDropIdAndLeg(Some(request.customer), routingResponses.last.itineraries.head.legs.headOption))
             VehicleMatchedToCustomers(request, agentETA.agentLocation, pickDropIdAndLegs)
           case None =>
             NoVehicleAllocated(request)
@@ -208,10 +195,7 @@ object RideHailResourceAllocationManager {
   val RANDOM_REPOSITIONING = "RANDOM_REPOSITIONING"
   val DUMMY_DISPATCH_WITH_BUFFERING = "DUMMY_DISPATCH_WITH_BUFFERING"
 
-  def apply(
-    allocationManager: String,
-    rideHailManager: RideHailManager
-  ): RideHailResourceAllocationManager = {
+  def apply(allocationManager: String, rideHailManager: RideHailManager): RideHailResourceAllocationManager = {
     allocationManager match {
       case RideHailResourceAllocationManager.DEFAULT_MANAGER =>
         new DefaultRideHailResourceAllocationManager(rideHailManager)
@@ -252,9 +236,9 @@ object RideHailResourceAllocationManager {
 trait InquiryResponse
 case object NoVehiclesAvailable extends InquiryResponse
 case class SingleOccupantQuoteAndPoolingInfo(
-  rideHailAgentLocation: RideHailAgentLocation,
-  poolingInfo: Option[PoolingInfo]
-) extends InquiryResponse
+    rideHailAgentLocation: RideHailAgentLocation,
+    poolingInfo: Option[PoolingInfo])
+    extends InquiryResponse
 /*
  * An AllocationResponse is what the RideHailResourceAllocationManager returns in response to an AllocationRequest
  */
@@ -271,10 +255,10 @@ case class NoVehicleAllocated(request: RideHailRequest) extends VehicleAllocatio
 case class RoutingRequiredToAllocateVehicle(request: RideHailRequest, routesRequired: List[RoutingRequest])
     extends VehicleAllocation
 case class VehicleMatchedToCustomers(
-  request: RideHailRequest,
-  rideHailAgentLocation: RideHailAgentLocation,
-  pickDropIdWithRoutes: List[PickDropIdAndLeg]
-) extends VehicleAllocation
+    request: RideHailRequest,
+    rideHailAgentLocation: RideHailAgentLocation,
+    pickDropIdWithRoutes: List[PickDropIdAndLeg])
+    extends VehicleAllocation
 case class PickDropIdAndLeg(personId: Option[VehiclePersonId], leg: Option[EmbodiedBeamLeg])
 
 case class AllocationRequests(requests: Map[RideHailRequest, List[RoutingResponse]])

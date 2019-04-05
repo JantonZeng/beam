@@ -3,7 +3,7 @@ package beam.calibration.utils
 import java.io.File
 
 import beam.calibration.SigoptExperimentData
-import beam.experiment.{ExperimentApp, ExperimentDef}
+import beam.experiment.{ ExperimentApp, ExperimentDef }
 import com.sigopt.Sigopt
 import com.typesafe.scalalogging.LazyLogging
 

@@ -1,6 +1,6 @@
 package beam.utils
 
-import java.util.{Comparator, PriorityQueue}
+import java.util.{ Comparator, PriorityQueue }
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -58,9 +58,7 @@ class StuckFinderHelper[K] {
   }
 
   @tailrec
-  private final def pollFirstAlive(
-    pq: PriorityQueue[InternalValueWithTime[K]]
-  ): Option[ValueWithTime[K]] = {
+  private final def pollFirstAlive(pq: PriorityQueue[InternalValueWithTime[K]]): Option[ValueWithTime[K]] = {
     if (pq.isEmpty) None
     else {
       val head = pq.poll()

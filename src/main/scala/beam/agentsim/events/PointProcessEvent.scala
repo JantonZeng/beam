@@ -7,24 +7,24 @@ import beam.agentsim.events.PointProcessEvent.PointProcessType.Choice
 import beam.utils.JsonUtils.syntax._
 import enumeratum._
 import io.circe.syntax._
-import io.circe.{Json, JsonObject}
+import io.circe.{ Json, JsonObject }
 import org.matsim.api.core.v01.events.Event
 import org.matsim.api.core.v01.population.Person
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.{ Coord, Id }
 import org.matsim.core.api.internal.HasPersonId
 
 import scala.collection.immutable
 
 /**
-  * Events that encode vizualization data for beam-viz that take the form of points that display for a specified period of time
-  */
+ * Events that encode vizualization data for beam-viz that take the form of points that display for a specified period of time
+ */
 class PointProcessEvent(
-  time: Double,
-  id: Id[Person],
-  pointProcessType: PointProcessType,
-  location: Coord,
-  intensity: Double = 1.0
-) extends Event(time)
+    time: Double,
+    id: Id[Person],
+    pointProcessType: PointProcessType,
+    location: Coord,
+    intensity: Double = 1.0)
+    extends Event(time)
     with HasPersonId {
 
   import beam.agentsim.events.PointProcessEvent._
@@ -36,12 +36,11 @@ class PointProcessEvent(
   def createStarBurst(time: Double, location: Coord, intensity: Double): Json = {
 
     val jsonBuilder: Map[String, Json] = Map(
-      "typ"       -> Json.fromString(EVENT_TYPE),
-      "kind"      -> Json.fromString(PointProcessType.Choice.name),
+      "typ" -> Json.fromString(EVENT_TYPE),
+      "kind" -> Json.fromString(PointProcessType.Choice.name),
       "startTime" -> Json.fromLong(time.toLong),
-      "shp"       -> location.asJson,
-      "attrib"    -> Json.fromJsonObject(JsonObject.fromMap(Map("val" -> intensity.asJson)))
-    )
+      "shp" -> location.asJson,
+      "attrib" -> Json.fromJsonObject(JsonObject.fromMap(Map("val" -> intensity.asJson))))
     Json.fromJsonObject(JsonObject.fromMap(jsonBuilder))
   }
 
@@ -51,8 +50,7 @@ class PointProcessEvent(
     attr.put(
       ATTRIBUTE_VIZ_DATA,
       if (this.pointProcessType.equals(Choice)) createStarBurst(time, location, intensity).noSpaces
-      else ""
-    )
+      else "")
     attr
   }
 

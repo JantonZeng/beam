@@ -10,19 +10,18 @@ import scala.util.Try
 
 case class HouseholdIncome(currency: String, period: String, value: Int)
 case class ConversionConfig(
-  scenarioName: String,
-  scenarioDirectory: String,
-  populationInput: String,
-  income: HouseholdIncome,
-  localCRS: String,
-  matsimNetworkFile: String,
-  osmFile: String,
-  boundingBoxBuffer: Int,
-  generateVehicles: Boolean = false,
-  shapeConfig: Option[ShapeConfig] = None,
+    scenarioName: String,
+    scenarioDirectory: String,
+    populationInput: String,
+    income: HouseholdIncome,
+    localCRS: String,
+    matsimNetworkFile: String,
+    osmFile: String,
+    boundingBoxBuffer: Int,
+    generateVehicles: Boolean = false,
+    shapeConfig: Option[ShapeConfig] = None,
 //                             transitVehiclesInput: Option[String] = None,
-  vehiclesInput: Option[String] = None
-)
+    vehiclesInput: Option[String] = None)
 
 case class ShapeConfig(shapeFile: String, tazIDFieldName: String)
 
@@ -80,15 +79,10 @@ object ConversionConfig {
       boundingBoxBuffer,
       generateVehicles,
       mShapeConfig, /*transitVehiclesPath,*/
-      vehiclesInput
-    )
+      vehiclesInput)
   }
 
-  def getBoundingBoxConfig(
-    network: Network,
-    localCrs: String,
-    boundingBoxBuffer: Int = 0
-  ): BoundingBoxConfig = {
+  def getBoundingBoxConfig(network: Network, localCrs: String, boundingBoxBuffer: Int = 0): BoundingBoxConfig = {
     //bbox = min Longitude , min Latitude , max Longitude , max Latitude
     val bbox = NetworkUtils.getBoundingBox(network.getNodes.values())
 

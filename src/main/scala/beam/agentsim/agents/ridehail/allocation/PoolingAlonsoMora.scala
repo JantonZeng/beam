@@ -1,6 +1,6 @@
 package beam.agentsim.agents.ridehail.allocation
 
-import beam.agentsim.agents.{Dropoff, MobilityRequest, MobilityRequestTrait, Pickup}
+import beam.agentsim.agents.{ Dropoff, MobilityRequest, MobilityRequestTrait, Pickup }
 import beam.agentsim.agents.ridehail.AlonsoMoraPoolingAlgForRideHail._
 import beam.agentsim.agents.ridehail.RideHailManager.PoolingInfo
 import beam.agentsim.agents.ridehail._
@@ -9,13 +9,13 @@ import beam.agentsim.agents.vehicles.VehicleProtocol.StreetVehicle
 import beam.agentsim.events.SpaceTime
 import beam.router.BeamRouter.RoutingRequest
 import beam.router.BeamSkimmer
-import beam.router.Modes.BeamMode.{CAR}
+import beam.router.Modes.BeamMode.{ CAR }
 import org.matsim.api.core.v01.Id
 import org.matsim.core.utils.collections.QuadTree
 import org.matsim.vehicles.Vehicle
 
 import scala.collection.mutable
-import scala.concurrent.{Await, TimeoutException}
+import scala.concurrent.{ Await, TimeoutException }
 
 class PoolingAlonsoMora(val rideHailManager: RideHailManager)
     extends RideHailResourceAllocationManager(rideHailManager) {
@@ -26,42 +26,36 @@ class PoolingAlonsoMora(val rideHailManager: RideHailManager)
     rideHailManager.quadTreeBounds.minx,
     rideHailManager.quadTreeBounds.miny,
     rideHailManager.quadTreeBounds.maxx,
-    rideHailManager.quadTreeBounds.maxy
-  )
+    rideHailManager.quadTreeBounds.maxy)
 
   val defaultBeamVehilceTypeId = Id.create(
     rideHailManager.beamServices.beamConfig.beam.agentsim.agents.rideHail.initialization.procedural.vehicleTypeId,
-    classOf[BeamVehicleType]
-  )
+    classOf[BeamVehicleType])
 
   override def respondToInquiry(inquiry: RideHailRequest): InquiryResponse = {
     rideHailManager.vehicleManager
       .getClosestIdleVehiclesWithinRadiusByETA(
         inquiry.pickUpLocationUTM,
         rideHailManager.radiusInMeters,
-        inquiry.departAt
-      )
+        inquiry.departAt)
       .headOption match {
       case Some(agentETA) =>
         val timeCostFactors = rideHailManager.beamSkimmer.getRideHailPoolingTimeAndCostRatios(
           inquiry.pickUpLocationUTM,
           inquiry.destinationUTM,
           inquiry.departAt,
-          defaultBeamVehilceTypeId
-        )
+          defaultBeamVehilceTypeId)
         SingleOccupantQuoteAndPoolingInfo(
           agentETA.agentLocation,
-          Some(PoolingInfo(timeCostFactors._1, timeCostFactors._2))
-        )
+          Some(PoolingInfo(timeCostFactors._1, timeCostFactors._2)))
       case None =>
         NoVehiclesAvailable
     }
   }
 
   override def allocateVehiclesToCustomers(
-    tick: Int,
-    vehicleAllocationRequest: AllocationRequests
-  ): AllocationResponse = {
+      tick: Int,
+      vehicleAllocationRequest: AllocationRequests): AllocationResponse = {
     rideHailManager.log.debug("Alloc requests {}", vehicleAllocationRequest.requests.size)
     var toAllocate: Set[RideHailRequest] = Set()
     var toFinalize: Set[RideHailRequest] = Set()
@@ -100,8 +94,7 @@ class PoolingAlonsoMora(val rideHailManager: RideHailManager)
                   case Some(routingRequestId) =>
                     PickDropIdAndLeg(
                       reqs.last.person,
-                      indexedResponses(routingRequestId).itineraries.head.legs.headOption
-                    )
+                      indexedResponses(routingRequestId).itineraries.head.legs.headOption)
                   case None =>
                     PickDropIdAndLeg(reqs.last.person, None)
                 }
@@ -111,14 +104,12 @@ class PoolingAlonsoMora(val rideHailManager: RideHailManager)
             // Solo response
             List(
               PickDropIdAndLeg(Some(request.customer), routeResponses.head.itineraries.head.legs.headOption),
-              PickDropIdAndLeg(Some(request.customer), routeResponses.last.itineraries.head.legs.headOption)
-            )
+              PickDropIdAndLeg(Some(request.customer), routeResponses.last.itineraries.head.legs.headOption))
           }
           allocResponses = allocResponses :+ VehicleMatchedToCustomers(
-            request,
-            rideHailManager.vehicleManager.getIdleVehicles(vehicleId),
-            pickDropIdAndLegs
-          )
+              request,
+              rideHailManager.vehicleManager.getIdleVehicles(vehicleId),
+              pickDropIdAndLegs)
         } else {
           if (tempScheduleStore.contains(request.requestId)) tempScheduleStore.remove(request.requestId)
           allocResponses = allocResponses :+ NoVehicleAllocated(request)
@@ -131,12 +122,11 @@ class PoolingAlonsoMora(val rideHailManager: RideHailManager)
     if (toAllocate.size > 0) {
       implicit val skimmer: BeamSkimmer = rideHailManager.beamSkimmer
       val pooledAllocationReqs = toAllocate.filter(_.asPooled)
-      val poolCustomerReqs = pooledAllocationReqs.map(
-        rhr => createPersonRequest(rhr.customer, rhr.pickUpLocationUTM, tick, rhr.destinationUTM)
-      )
+      val poolCustomerReqs = pooledAllocationReqs.map(rhr =>
+        createPersonRequest(rhr.customer, rhr.pickUpLocationUTM, tick, rhr.destinationUTM))
       val customerIdToReqs = toAllocate.map(rhr => rhr.customer.personId -> rhr).toMap
-      val availVehicles = rideHailManager.vehicleManager.availableRideHailVehicles.values
-        .map(veh => createVehicleAndSchedule(veh.vehicleId.toString, veh.currentLocationUTM.loc, tick))
+      val availVehicles = rideHailManager.vehicleManager.availableRideHailVehicles.values.map(veh =>
+        createVehicleAndSchedule(veh.vehicleId.toString, veh.currentLocationUTM.loc, tick))
 
       spatialPoolCustomerReqs.clear()
       poolCustomerReqs.foreach { d =>
@@ -155,8 +145,7 @@ class PoolingAlonsoMora(val rideHailManager: RideHailManager)
         availVehicles.toList,
         Map[MobilityRequestTrait, Int]((Pickup, pickupWindow), (Dropoff, dropoffWindow)),
         maxRequestsPerVehicle = maxRequests,
-        rideHailManager.beamServices
-      )
+        rideHailManager.beamServices)
       import scala.concurrent.duration._
       val assignment = try {
         Await.result(algo.greedyAssignment(), atMost = 2.minutes)
@@ -211,10 +200,7 @@ class PoolingAlonsoMora(val rideHailManager: RideHailManager)
                       vehicleAndSchedule.vehicle.beamVehicleType.id,
                       origin,
                       CAR,
-                      asDriver = true
-                    )
-                  )
-                )
+                      asDriver = true)))
                 scheduleToCache = scheduleToCache :+ orig.copy(routingRequestId = Some(routingRequest.requestId))
                 Some(routingRequest)
               }
@@ -244,8 +230,7 @@ class PoolingAlonsoMora(val rideHailManager: RideHailManager)
     }
     rideHailManager.log.debug(
       "AllocResponses: {}",
-      allocResponses.groupBy(_.getClass).map(x => s"${x._1.getSimpleName} -- ${x._2.size}").mkString("\t")
-    )
+      allocResponses.groupBy(_.getClass).map(x => s"${x._1.getSimpleName} -- ${x._2.size}").mkString("\t"))
     VehicleAllocations(allocResponses)
   }
 

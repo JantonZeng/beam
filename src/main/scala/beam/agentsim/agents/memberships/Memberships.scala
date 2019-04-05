@@ -2,7 +2,7 @@ package beam.agentsim.agents.memberships
 
 import beam.agentsim.agents.memberships.Memberships.RankedGroup.MemberWithRank
 import org.matsim.api.core.v01.population.Person
-import org.matsim.api.core.v01.{Id, Identifiable}
+import org.matsim.api.core.v01.{ Id, Identifiable }
 import org.matsim.households.Household
 import scala.language.implicitConversions
 
@@ -28,29 +28,28 @@ object Memberships {
     case class MemberWithRank[T <: Identifiable[T]](memberId: Id[T], rank: Option[Int])
 
     implicit def rankedHousehold(household: Household)(
-      implicit population: org.matsim.api.core.v01.population.Population
-    ): RankedGroup[Person, Household] = new RankedGroup[Person, Household] {
+        implicit population: org.matsim.api.core.v01.population.Population): RankedGroup[Person, Household] =
+      new RankedGroup[Person, Household] {
 
-      override def lookupMemberRank(member: Id[Person]): Option[Int] = {
-        population.getPersonAttributes.getAttribute(member.toString, "rank") match {
-          case rank: Integer =>
-            Some(rank)
-          case _ =>
-            None
+        override def lookupMemberRank(member: Id[Person]): Option[Int] = {
+          population.getPersonAttributes.getAttribute(member.toString, "rank") match {
+            case rank: Integer =>
+              Some(rank)
+            case _ =>
+              None
+          }
         }
+
+        override val members: Seq[Person] =
+          JavaConverters.asScalaBuffer(household.getMemberIds).map(population.getPersons.get)
+
+        /**
+         * Members sorted by rank.
+         */
+        override val rankedMembers: Vector[MemberWithRank[Person]] =
+          members.toVector.map(mbr => MemberWithRank(mbr.getId, lookupMemberRank(mbr.getId))).sortWith(sortByRank)
+
       }
-
-      override val members: Seq[Person] =
-        JavaConverters.asScalaBuffer(household.getMemberIds).map(population.getPersons.get)
-
-      /**
-        * Members sorted by rank.
-        */
-      override val rankedMembers: Vector[MemberWithRank[Person]] = members.toVector
-        .map(mbr => MemberWithRank(mbr.getId, lookupMemberRank(mbr.getId)))
-        .sortWith(sortByRank)
-
-    }
   }
 
 }

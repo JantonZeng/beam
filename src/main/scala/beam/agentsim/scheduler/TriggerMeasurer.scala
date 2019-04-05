@@ -129,13 +129,11 @@ class TriggerMeasurer(val cfg: BeamConfig.Beam.Debug.TriggerMeasurer) extends La
             (triggerType, (actorType, count))
         }
     }
-    val triggerType2MaxMessagesPerActorType = temp
-      .groupBy { case (triggerType, _) => triggerType }
-      .map {
-        case (triggerType, seq) =>
-          val actorType2Count = seq.map { case (tp, (actorType, count)) => (actorType, count) }
-          triggerType -> actorType2Count
-      }
+    val triggerType2MaxMessagesPerActorType = temp.groupBy { case (triggerType, _) => triggerType }.map {
+      case (triggerType, seq) =>
+        val actorType2Count = seq.map { case (tp, (actorType, count)) => (actorType, count) }
+        triggerType -> actorType2Count
+    }
     val thresholds = triggerType2MaxMessagesPerActorType.map {
       case (triggerType, seq) =>
         val maxTime = triggerTypeToOccurrence(Class.forName(triggerType)).max
@@ -163,8 +161,7 @@ class TriggerMeasurer(val cfg: BeamConfig.Beam.Debug.TriggerMeasurer) extends La
         threshold.copy(
           markAsStuckAfterMs = finalMaxTime,
           triggerType = triggerType,
-          actorTypeToMaxNumberOfMessages = actorMax
-        )
+          actorTypeToMaxNumberOfMessages = actorMax)
     }.toList
 
     val sortedByTriggerType = thresholds.sortBy(x => x.triggerType)

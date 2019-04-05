@@ -2,7 +2,7 @@ package beam.replanning
 
 import javax.inject.Inject
 
-import org.matsim.api.core.v01.population.{HasPlansAndId, Leg, Person, Plan}
+import org.matsim.api.core.v01.population.{ HasPlansAndId, Leg, Person, Plan }
 import org.matsim.core.config.Config
 import org.slf4j.LoggerFactory
 

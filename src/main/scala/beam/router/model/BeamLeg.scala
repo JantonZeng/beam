@@ -7,12 +7,12 @@ import beam.router.Modes.BeamMode.WALK
 import beam.utils.TravelTimeUtils
 
 /**
-  *
-  * @param startTime  time in seconds from base midnight
-  * @param mode       BeamMode
-  * @param duration   period in seconds
-  * @param travelPath BeamPath
-  */
+ *
+ * @param startTime  time in seconds from base midnight
+ * @param mode       BeamMode
+ * @param duration   period in seconds
+ * @param travelPath BeamPath
+ */
 case class BeamLeg(startTime: Int, mode: BeamMode, duration: Int, travelPath: BeamPath) {
   val endTime: Int = startTime + duration
 
@@ -21,39 +21,25 @@ case class BeamLeg(startTime: Int, mode: BeamMode, duration: Int, travelPath: Be
 
   def updateStartTime(newStartTime: Int): BeamLeg = {
     val newTravelPath = this.travelPath.updateStartTime(newStartTime)
-    this
-      .copy(
-        startTime = newStartTime,
-        travelPath = newTravelPath
-      )
+    this.copy(startTime = newStartTime, travelPath = newTravelPath)
   }
 
   def scaleToNewDuration(newDuration: Int): BeamLeg = {
-    val newTravelPath = this.travelPath.copy(
-      linkTravelTime =
-        TravelTimeUtils.scaleTravelTime(newDuration, this.travelPath.linkTravelTime.sum, this.travelPath.linkTravelTime)
-    )
-    this
-      .copy(
-        duration = newDuration,
-        travelPath = newTravelPath
-      )
+    val newTravelPath = this.travelPath.copy(linkTravelTime =
+      TravelTimeUtils.scaleTravelTime(newDuration, this.travelPath.linkTravelTime.sum, this.travelPath.linkTravelTime))
+    this.copy(duration = newDuration, travelPath = newTravelPath)
   }
 
   def scaleLegDuration(scaleBy: Double): BeamLeg = {
     val newTravelPath = this.travelPath.scaleTravelTimes(scaleBy)
-    this
-      .copy(
-        duration = newTravelPath.duration,
-        travelPath = newTravelPath
-      )
+    this.copy(duration = newTravelPath.duration, travelPath = newTravelPath)
 
   }
 
   /**
-    * This will append nextLeg to the current leg and update the times in the merged leg to be consistent.
-    * The mode of the resulting leg will be based on this leg. Transit stops are not merged, they take the base leg value.
-    */
+   * This will append nextLeg to the current leg and update the times in the merged leg to be consistent.
+   * The mode of the resulting leg will be based on this leg. Transit stops are not merged, they take the base leg value.
+   */
   def appendLeg(nextLeg: BeamLeg): BeamLeg = {
     val newTravelPath = BeamPath(
       travelPath.linkIds ++ nextLeg.travelPath.linkIds,
@@ -61,8 +47,7 @@ case class BeamLeg(startTime: Int, mode: BeamMode, duration: Int, travelPath: Be
       travelPath.transitStops,
       travelPath.startPoint,
       nextLeg.travelPath.endPoint,
-      travelPath.distanceInM + nextLeg.travelPath.distanceInM
-    )
+      travelPath.distanceInM + nextLeg.travelPath.distanceInM)
     this.copy(travelPath = newTravelPath).updateStartTime(startTime)
   }
 
@@ -77,8 +62,8 @@ object BeamLeg {
       0,
       mode,
       0,
-      BeamPath(Vector(), Vector(), None, SpaceTime(location, startTime), SpaceTime(location, startTime), 0)
-    ).updateStartTime(startTime)
+      BeamPath(Vector(), Vector(), None, SpaceTime(location, startTime), SpaceTime(location, startTime), 0))
+      .updateStartTime(startTime)
 
   def makeLegsConsistent(legs: List[Option[BeamLeg]]): List[Option[BeamLeg]] = {
     if (legs.filter(_.isDefined).size > 0) {
@@ -88,7 +73,9 @@ object BeamLeg {
         runningStartTime = newLeg.map(_.endTime).getOrElse(runningStartTime)
         newLeg
       }
-    } else { legs }
+    } else {
+      legs
+    }
   }
 
   def makeVectorLegsConsistentAsTrip(legs: Vector[BeamLeg]): Vector[BeamLeg] = {

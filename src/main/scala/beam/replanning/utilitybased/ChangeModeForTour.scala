@@ -8,9 +8,9 @@ import beam.agentsim.agents.choice.mode.TransitFareDefaults
 import beam.agentsim.agents.modalbehaviors.ModeChoiceCalculator
 import beam.agentsim.agents.vehicles.BeamVehicleType
 import beam.router.Modes.BeamMode
-import beam.router.Modes.BeamMode.{BUS, CAR, DRIVE_TRANSIT, FERRY, RAIL, RIDE_HAIL, SUBWAY, WALK, WALK_TRANSIT}
+import beam.router.Modes.BeamMode.{ BUS, CAR, DRIVE_TRANSIT, FERRY, RAIL, RIDE_HAIL, SUBWAY, WALK, WALK_TRANSIT }
 import beam.sim.BeamServices
-import beam.sim.population.{AttributesOfIndividual, HouseholdAttributes, PopulationAdjustment}
+import beam.sim.population.{ AttributesOfIndividual, HouseholdAttributes, PopulationAdjustment }
 import org.apache.commons.math3.distribution.EnumeratedDistribution
 import org.apache.commons.math3.random.MersenneTwister
 import org.apache.commons.math3.util.Pair
@@ -19,16 +19,14 @@ import org.matsim.api.core.v01.population._
 import org.matsim.core.population.PersonUtils
 import org.matsim.core.population.algorithms.PlanAlgorithm
 import org.matsim.core.router.TripStructureUtils.Subtour
-import org.matsim.core.router.{CompositeStageActivityTypes, TripRouter, TripStructureUtils}
+import org.matsim.core.router.{ CompositeStageActivityTypes, TripRouter, TripStructureUtils }
 
 import scala.collection.JavaConverters._
-import scala.collection.{mutable, JavaConverters}
+import scala.collection.{ mutable, JavaConverters }
 import scala.util.Random
 
-class ChangeModeForTour(
-  beamServices: BeamServices,
-  chainBasedTourVehicleAllocator: ChainBasedTourVehicleAllocator
-) extends PlanAlgorithm {
+class ChangeModeForTour(beamServices: BeamServices, chainBasedTourVehicleAllocator: ChainBasedTourVehicleAllocator)
+    extends PlanAlgorithm {
 
   val rng = new MersenneTwister(3004568) // Random.org
   val random = new Random(3004568)
@@ -40,10 +38,7 @@ class ChangeModeForTour(
         new Pair[BeamMode, java.lang.Double](BUS, 0.8),
         new Pair[BeamMode, java.lang.Double](SUBWAY, 0.15),
         new Pair[BeamMode, java.lang.Double](FERRY, 0.005),
-        new Pair[BeamMode, java.lang.Double](RAIL, 0.045)
-      )
-    )
-  )
+        new Pair[BeamMode, java.lang.Double](RAIL, 0.045))))
   private val rideHailConfig =
     beamServices.beamConfig.beam.agentsim.agents.rideHail
 
@@ -54,17 +49,11 @@ class ChangeModeForTour(
 
   def findAlternativesForTour(tour: Subtour, person: Person): Vector[BeamMode] = {
     val res = weightedRandom.sample(1, Array())
-    chainBasedTourVehicleAllocator.identifyChainBasedModesForAgent(person.getId) ++ Vector[
-      BeamMode
-    ](res(0)) ++
+    chainBasedTourVehicleAllocator.identifyChainBasedModesForAgent(person.getId) ++ Vector[BeamMode](res(0)) ++
     Vector[BeamMode](WALK, RIDE_HAIL)
   }
 
-  def scoreTour(
-    tour: Subtour,
-    person: Person,
-    modeChoiceCalculator: ModeChoiceCalculator
-  ): Map[BeamMode, Double] = {
+  def scoreTour(tour: Subtour, person: Person, modeChoiceCalculator: ModeChoiceCalculator): Map[BeamMode, Double] = {
     val alternativesForTour = findAlternativesForTour(tour, person)
     (for { alt <- alternativesForTour } yield {
       alt -> JavaConverters
@@ -78,8 +67,7 @@ class ChangeModeForTour(
               else WALK_TRANSIT,
               timeDist._1,
               timeDist._2,
-              numTransfers = rng.nextInt(4) + 1
-            )
+              numTransfers = rng.nextInt(4) + 1)
           } else {
             modeChoiceCalculator.utilityOf(alt, timeDist._1, timeDist._2)
           }
@@ -88,15 +76,11 @@ class ChangeModeForTour(
     }).toMap
   }
 
-  def getCostAndTimeForMode(
-    beamMode: BeamMode,
-    origin: Activity,
-    dest: Activity
-  ): (Double, Double) = {
+  def getCostAndTimeForMode(beamMode: BeamMode, origin: Activity, dest: Activity): (Double, Double) = {
     val originCoord = origin.getCoord
     val destCoord = dest.getCoord
-    val tripDistanceInMeters = beamServices.geo
-      .distLatLon2Meters(beamServices.geo.utm2Wgs(originCoord), beamServices.geo.utm2Wgs(destCoord))
+    val tripDistanceInMeters =
+      beamServices.geo.distLatLon2Meters(beamServices.geo.utm2Wgs(originCoord), beamServices.geo.utm2Wgs(destCoord))
     val distanceCost = distanceScaling(beamMode, tripDistanceInMeters)
     val timeCost = timeScaling(beamMode, tripDistanceInMeters)
     (distanceCost, timeCost)
@@ -130,15 +114,10 @@ class ChangeModeForTour(
     }
   }
 
-  def rankAlternatives(
-    plan: Plan,
-    attributesOfIndividual: AttributesOfIndividual
-  ): Map[Int, Map[BeamMode, Double]] = {
+  def rankAlternatives(plan: Plan, attributesOfIndividual: AttributesOfIndividual): Map[Int, Map[BeamMode, Double]] = {
     val modeChoiceCalculator =
       beamServices.modeChoiceCalculatorFactory(attributesOfIndividual)
-    val subTours = JavaConverters.collectionAsScalaIterable(
-      TripStructureUtils.getSubtours(plan, stageActivityTypes)
-    )
+    val subTours = JavaConverters.collectionAsScalaIterable(TripStructureUtils.getSubtours(plan, stageActivityTypes))
     subTours.zipWithIndex
       .map({
         case (tour, idx) =>
@@ -150,11 +129,7 @@ class ChangeModeForTour(
   def changeModeForTour(subtour: Subtour, plan: Plan, mode: BeamMode): Unit = {
     val trips = JavaConverters.collectionAsScalaIterable(subtour.getTrips)
 
-    val legs = trips.flatMap(
-      trip =>
-        JavaConverters
-          .collectionAsScalaIterable(trip.getLegsOnly)
-    )
+    val legs = trips.flatMap(trip => JavaConverters.collectionAsScalaIterable(trip.getLegsOnly))
 
     if (legs.isEmpty) {
       for { trip <- trips } yield {
@@ -163,19 +138,14 @@ class ChangeModeForTour(
           trip.getOriginActivity,
           trip.getDestinationActivity,
           mode.toString,
-          chainBasedTourVehicleAllocator.population.getFactory
-        )
+          chainBasedTourVehicleAllocator.population.getFactory)
       }
     }
 
     if (mode.isTransit) {
       legs.foreach(leg => leg.setMode(WALK_TRANSIT.value))
     } else {
-      chainBasedTourVehicleAllocator.allocateChainBasedModesforHouseholdMember(
-        plan.getPerson.getId,
-        subtour,
-        plan
-      )
+      chainBasedTourVehicleAllocator.allocateChainBasedModesforHouseholdMember(plan.getPerson.getId, subtour, plan)
     }
   }
 
@@ -188,32 +158,22 @@ class ChangeModeForTour(
   }
 
   def insertEmptyTrip(
-    plan: Plan,
-    fromActivity: Activity,
-    toActivity: Activity,
-    mainMode: String,
-    pf: PopulationFactory
-  ): Unit = {
+      plan: Plan,
+      fromActivity: Activity,
+      toActivity: Activity,
+      mainMode: String,
+      pf: PopulationFactory): Unit = {
     val list: util.List[Leg] = Collections.singletonList(pf.createLeg(mainMode))
     TripRouter.insertTrip(plan, fromActivity, list, toActivity)
   }
 
   def addTripsBetweenActivities(plan: Plan): Unit = {
-    val activities = JavaConverters
-      .collectionAsScalaIterable(TripStructureUtils.getActivities(plan, stageActivityTypes))
-      .toIndexedSeq
+    val activities =
+      JavaConverters.collectionAsScalaIterable(TripStructureUtils.getActivities(plan, stageActivityTypes)).toIndexedSeq
     activities
       .sliding(2)
-      .foreach(
-        acts =>
-          insertEmptyTrip(
-            plan,
-            acts(0),
-            acts(1),
-            "car",
-            chainBasedTourVehicleAllocator.population.getFactory
-        )
-      )
+      .foreach(acts =>
+        insertEmptyTrip(plan, acts(0), acts(1), "car", chainBasedTourVehicleAllocator.population.getFactory))
   }
 
   override def run(plan: Plan): Unit = {
@@ -226,8 +186,7 @@ class ChangeModeForTour(
       Population.getVehiclesFromHousehold(household, beamServices)
 
     val modalityStyle =
-      Option(person.getSelectedPlan.getAttributes.getAttribute("modality-style"))
-        .map(_.asInstanceOf[String])
+      Option(person.getSelectedPlan.getAttributes.getAttribute("modality-style")).map(_.asInstanceOf[String])
 
     val valueOfTime: Double =
       beamServices.matsimServices.getScenario.getPopulation.getPersonAttributes
@@ -245,8 +204,7 @@ class ChangeModeForTour(
     val income = Option(
       beamServices.matsimServices.getScenario.getPopulation.getPersonAttributes
         .getAttribute(person.getId.toString, "income")
-        .asInstanceOf[Int]
-    )
+        .asInstanceOf[Int])
 
     val attributesOfIndividual =
       AttributesOfIndividual(
@@ -258,16 +216,14 @@ class ChangeModeForTour(
         Option(PersonUtils.getAge(person)),
         income.map { x =>
           x
-        }
-      )
+        })
 
     person.getCustomAttributes.put("beam-attributes", attributesOfIndividual)
 
     val rankedAlternatives = rankAlternatives(plan, attributesOfIndividual)
 
-    val tours: Seq[Subtour] = JavaConverters
-      .collectionAsScalaIterable(TripStructureUtils.getSubtours(plan, stageActivityTypes))
-      .toIndexedSeq
+    val tours: Seq[Subtour] =
+      JavaConverters.collectionAsScalaIterable(TripStructureUtils.getSubtours(plan, stageActivityTypes)).toIndexedSeq
 
     rankedAlternatives.foreach({
       case (tourIdx, alts) =>
@@ -275,10 +231,7 @@ class ChangeModeForTour(
         val altIter = alts.map { x =>
           new Pair[BeamMode, java.lang.Double](x._1, Math.exp(x._2) / denom)
         }
-        val dist = new EnumeratedDistribution[BeamMode](
-          rng,
-          JavaConverters.bufferAsJavaList(altIter.toBuffer)
-        )
+        val dist = new EnumeratedDistribution[BeamMode](rng, JavaConverters.bufferAsJavaList(altIter.toBuffer))
         val choice = dist.sample()
         val subtour: Subtour = tours(tourIdx)
         changeModeForTour(subtour, plan, choice)
@@ -289,9 +242,7 @@ class ChangeModeForTour(
   }
 
   private def maybeFixPlans(plan: Plan): Unit = {
-    if (JavaConverters
-          .collectionAsScalaIterable(TripStructureUtils.getLegs(plan))
-          .isEmpty) {
+    if (JavaConverters.collectionAsScalaIterable(TripStructureUtils.getLegs(plan)).isEmpty) {
       addTripsBetweenActivities(plan)
     }
     plan.getPlanElements.asScala.foreach {

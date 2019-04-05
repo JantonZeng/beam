@@ -4,16 +4,16 @@ import beam.agentsim.events.SpaceTime
 import beam.sim.config.BeamConfig
 import beam.utils.logging.ExponentialLazyLogging
 import com.conveyal.r5.profile.StreetMode
-import com.conveyal.r5.streets.{Split, StreetLayer}
-import com.google.inject.{ImplementedBy, Inject}
+import com.conveyal.r5.streets.{ Split, StreetLayer }
+import com.google.inject.{ ImplementedBy, Inject }
 import com.vividsolutions.jts.geom.Envelope
 import org.matsim.api.core.v01.Coord
 import org.matsim.api.core.v01.network.Link
 import org.matsim.core.utils.geometry.transformations.GeotoolsTransformation
 
 /**
-  * Created by sfeygin on 4/2/17.
-  */
+ * Created by sfeygin on 4/2/17.
+ */
 
 @ImplementedBy(classOf[GeoUtilsImpl])
 trait GeoUtils extends ExponentialLazyLogging {
@@ -57,11 +57,11 @@ trait GeoUtils extends ExponentialLazyLogging {
   def distLatLon2Meters(x1: Double, y1: Double, x2: Double, y2: Double): Double =
     GeoUtils.distLatLon2Meters(x1, y1, x2, y2)
 
-  def getNearestR5EdgeToUTMCoord(streetLayer: StreetLayer, coordUTM: Coord, maxRadius: Double = 1E5): Int = {
+  def getNearestR5EdgeToUTMCoord(streetLayer: StreetLayer, coordUTM: Coord, maxRadius: Double = 1e5): Int = {
     getNearestR5Edge(streetLayer, utm2Wgs(coordUTM), maxRadius)
   }
 
-  def getNearestR5Edge(streetLayer: StreetLayer, coordWGS: Coord, maxRadius: Double = 1E5): Int = {
+  def getNearestR5Edge(streetLayer: StreetLayer, coordWGS: Coord, maxRadius: Double = 1e5): Int = {
     val theSplit = getR5Split(streetLayer, coordWGS, maxRadius, StreetMode.WALK)
     if (theSplit == null) {
       Int.MinValue
@@ -76,25 +76,23 @@ trait GeoUtils extends ExponentialLazyLogging {
   }
 
   def snapToR5Edge(
-    streetLayer: StreetLayer,
-    coordWGS: Coord,
-    maxRadius: Double = 1E5,
-    streetMode: StreetMode = StreetMode.WALK
-  ): Coord = {
+      streetLayer: StreetLayer,
+      coordWGS: Coord,
+      maxRadius: Double = 1e5,
+      streetMode: StreetMode = StreetMode.WALK): Coord = {
     val theSplit = getR5Split(streetLayer, coordWGS, maxRadius, streetMode)
     if (theSplit == null) {
       coordWGS
     } else {
-      new Coord(theSplit.fixedLon.toDouble / 1.0E7, theSplit.fixedLat.toDouble / 1.0E7)
+      new Coord(theSplit.fixedLon.toDouble / 1.0e7, theSplit.fixedLat.toDouble / 1.0e7)
     }
   }
 
   def getR5Split(
-    streetLayer: StreetLayer,
-    coord: Coord,
-    maxRadius: Double = 1E5,
-    streetMode: StreetMode = StreetMode.WALK
-  ): Split = {
+      streetLayer: StreetLayer,
+      coord: Coord,
+      maxRadius: Double = 1e5,
+      streetMode: StreetMode = StreetMode.WALK): Split = {
     var radius = 10.0
     var theSplit: Split = null
     while (theSplit == null && radius <= maxRadius) {
@@ -150,9 +148,8 @@ object GeoUtils {
     val earthRadius = 6371000
     val distX = Math.toRadians(x2 - x1)
     val distY = Math.toRadians(y2 - y1)
-    val a = Math.sin(distX / 2) * Math.sin(distX / 2) + Math.cos(Math.toRadians(x1)) * Math.cos(
-      Math.toRadians(x2)
-    ) * Math.sin(distY / 2) * Math.sin(distY / 2)
+    val a = Math.sin(distX / 2) * Math.sin(distX / 2) + Math.cos(Math.toRadians(x1)) * Math.cos(Math.toRadians(x2)) * Math
+        .sin(distY / 2) * Math.sin(distY / 2)
     val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     val dist = earthRadius * c
     dist
@@ -169,11 +166,11 @@ object GeoUtils {
   case object HardRight extends TurningDirection
 
   /**
-    * Get the desired direction to be taken , based on the angle between the coordinates
-    * @param source source coordinates
-    * @param destination destination coordinates
-    * @return Direction to be taken ( L / SL / HL / R / HR / SR / S)
-    */
+   * Get the desired direction to be taken , based on the angle between the coordinates
+   * @param source source coordinates
+   * @param destination destination coordinates
+   * @return Direction to be taken ( L / SL / HL / R / HR / SR / S)
+   */
   def getDirection(source: Coord, destination: Coord): TurningDirection = {
     val radians = computeAngle(source, destination)
     radians match {
@@ -189,28 +186,26 @@ object GeoUtils {
   }
 
   /**
-    * Generate the vector coordinates from the link nodes
-    * @param link link in the network
-    * @return vector coordinates
-    */
+   * Generate the vector coordinates from the link nodes
+   * @param link link in the network
+   * @return vector coordinates
+   */
   def vectorFromLink(link: Link): Coord = {
     new Coord(
       link.getToNode.getCoord.getX - link.getFromNode.getCoord.getX,
-      link.getToNode.getCoord.getY - link.getFromNode.getCoord.getY
-    )
+      link.getToNode.getCoord.getY - link.getFromNode.getCoord.getY)
   }
 
   /**
-    * Computes the angle between two coordinates
-    * @param source source coordinates
-    * @param destination destination coordinates
-    * @return angle between the coordinates (in radians).
-    */
+   * Computes the angle between two coordinates
+   * @param source source coordinates
+   * @param destination destination coordinates
+   * @return angle between the coordinates (in radians).
+   */
   def computeAngle(source: Coord, destination: Coord): Double = {
     val rad = Math.atan2(
       source.getX * destination.getY - source.getY * destination.getX,
-      source.getX * destination.getX - source.getY * destination.getY
-    )
+      source.getX * destination.getX - source.getY * destination.getY)
     if (rad < 0) {
       rad + 3.141593 * 2.0
     } else {

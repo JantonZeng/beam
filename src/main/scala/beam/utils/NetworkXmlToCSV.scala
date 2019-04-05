@@ -1,17 +1,16 @@
 package beam.utils
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 import scala.collection.mutable
 
 object NetworkXmlToCSV {
 
   def networkXmlParser(
-    path: String,
-    delimiter: String,
-    nodeOutput: String,
-    linkOutput: String,
-    mergeOutput: String
-  ): Unit = {
+      path: String,
+      delimiter: String,
+      nodeOutput: String,
+      linkOutput: String,
+      mergeOutput: String): Unit = {
 
     val physimElement = scala.xml.XML.loadFile(path)
 
@@ -34,8 +33,8 @@ object NetworkXmlToCSV {
       List("@id", "@from", "@to", "@length", "@freespeed", "@capacity", "@permlanes", "@oneway", "@modes")
 
     val linkHeader = linkAttribute
-      .map(_.replace("@", "link_"))
-      .mkString(delimiter) + delimiter + "attributeOrigId" + delimiter + "attributeOrigType"
+        .map(_.replace("@", "link_"))
+        .mkString(delimiter) + delimiter + "attributeOrigId" + delimiter + "attributeOrigType"
 
     linkWriter.write(linkHeader + "\n")
     (physimElement \ "links" \ "link").foreach { link =>

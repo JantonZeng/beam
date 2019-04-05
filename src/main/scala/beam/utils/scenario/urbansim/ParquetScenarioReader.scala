@@ -2,7 +2,7 @@ package beam.utils.scenario.urbansim
 
 import beam.utils.scenario.InputType
 import beam.utils.scenario.urbansim.DataExchange._
-import beam.utils.{ParquetReader, ProfilingUtils}
+import beam.utils.{ ParquetReader, ProfilingUtils }
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.avro.generic.GenericRecord
 
@@ -46,8 +46,7 @@ object ParquetScenarioReader extends UrbanSimScenarioReader with LazyLogging {
   }
 
   private[utils] def readAs[T](path: String, what: String, mapper: GenericRecord => T)(
-    implicit ct: ClassTag[T]
-  ): Array[T] = {
+      implicit ct: ClassTag[T]): Array[T] = {
     val (it, toClose) = ParquetReader.read(path)
     ProfilingUtils.timed(what, x => logger.info(x)) {
       try {
@@ -86,8 +85,7 @@ object ParquetScenarioReader extends UrbanSimScenarioReader with LazyLogging {
       x = x,
       y = y,
       endTime = endTime,
-      mode = mode
-    )
+      mode = mode)
   }
 
   private[scenario] def toPersonInfo(rec: GenericRecord): PersonInfo = {

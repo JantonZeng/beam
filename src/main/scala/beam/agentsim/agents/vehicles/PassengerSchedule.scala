@@ -10,8 +10,8 @@ import beam.agentsim.agents.vehicles.PassengerSchedule.Manifest
 import scala.collection.immutable.TreeMap
 
 /**
-  * Holds information about the numbers and identities of agents in the model
-  */
+ * Holds information about the numbers and identities of agents in the model
+ */
 case class PassengerSchedule(schedule: TreeMap[BeamLeg, Manifest]) {
 
   def addLegs(legs: Seq[BeamLeg]): PassengerSchedule = {
@@ -20,17 +20,17 @@ case class PassengerSchedule(schedule: TreeMap[BeamLeg, Manifest]) {
 
   def addPassenger(passenger: VehiclePersonId, legs: Seq[BeamLeg]): PassengerSchedule = {
     var newSchedule = schedule ++ legs.map(leg => {
-      val manifest: Manifest = schedule.getOrElse(leg, Manifest())
-      (leg, manifest.copy(riders = manifest.riders + passenger))
-    })
+        val manifest: Manifest = schedule.getOrElse(leg, Manifest())
+        (leg, manifest.copy(riders = manifest.riders + passenger))
+      })
     newSchedule = newSchedule ++ legs.headOption.map(boardLeg => {
-      val manifest: Manifest = newSchedule.getOrElse(boardLeg, Manifest())
-      (boardLeg, manifest.copy(boarders = manifest.boarders + passenger))
-    })
+        val manifest: Manifest = newSchedule.getOrElse(boardLeg, Manifest())
+        (boardLeg, manifest.copy(boarders = manifest.boarders + passenger))
+      })
     newSchedule = newSchedule ++ legs.lastOption.map(alightLeg => {
-      val manifest: Manifest = newSchedule.getOrElse(alightLeg, Manifest())
-      (alightLeg, manifest.copy(alighters = manifest.alighters + passenger))
-    })
+        val manifest: Manifest = newSchedule.getOrElse(alightLeg, Manifest())
+        (alightLeg, manifest.copy(alighters = manifest.alighters + passenger))
+      })
     PassengerSchedule(newSchedule)
   }
 
@@ -84,18 +84,13 @@ object PassengerSchedule {
     new PassengerSchedule(TreeMap[BeamLeg, Manifest]()(BeamLegOrdering))
 
   case class Manifest(
-    riders: Set[VehiclePersonId] = Set.empty,
-    boarders: Set[VehiclePersonId] = Set.empty,
-    alighters: Set[VehiclePersonId] = Set.empty
-  ) {
+      riders: Set[VehiclePersonId] = Set.empty,
+      boarders: Set[VehiclePersonId] = Set.empty,
+      alighters: Set[VehiclePersonId] = Set.empty) {
     override def toString: String = {
       s"[${riders.size}riders;${boarders.size}boarders;${alighters.size}alighters]"
     }
   }
 }
 
-case class VehiclePersonId(
-  vehicleId: Id[Vehicle],
-  personId: Id[Person],
-  personRef: ActorRef
-)
+case class VehiclePersonId(vehicleId: Id[Vehicle], personId: Id[Person], personRef: ActorRef)

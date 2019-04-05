@@ -2,7 +2,7 @@ package beam.utils
 
 import java.util
 
-import org.matsim.utils.objectattributes.{ObjectAttributes, ObjectAttributesXmlReader}
+import org.matsim.utils.objectattributes.{ ObjectAttributes, ObjectAttributesXmlReader }
 
 object ObjectAttributesUtils {
 
@@ -27,10 +27,9 @@ object ObjectAttributesUtils {
   }
 
   def merge(
-    objectIds: util.Collection[String],
-    objAttrA: ObjectAttributes,
-    objAttrB: ObjectAttributes
-  ): ObjectAttributes = {
+      objectIds: util.Collection[String],
+      objAttrA: ObjectAttributes,
+      objAttrB: ObjectAttributes): ObjectAttributes = {
     val result = new ObjectAttributes()
 
     /*
@@ -43,12 +42,8 @@ object ObjectAttributesUtils {
     result
   }
 
-  def getAllAttributeNames(
-    attributes: ObjectAttributes,
-    objectId: String
-  ): util.Collection[String] = {
-    org.matsim.utils.objectattributes.ObjectAttributesUtils
-      .getAllAttributeNames(attributes, objectId)
+  def getAllAttributeNames(attributes: ObjectAttributes, objectId: String): util.Collection[String] = {
+    org.matsim.utils.objectattributes.ObjectAttributesUtils.getAllAttributeNames(attributes, objectId)
   }
 
 }

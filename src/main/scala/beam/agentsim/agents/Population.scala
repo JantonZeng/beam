@@ -3,39 +3,39 @@ package beam.agentsim.agents
 import java.util.concurrent.TimeUnit
 
 import akka.actor.SupervisorStrategy.Stop
-import akka.actor.{Actor, ActorLogging, ActorRef, Identify, OneForOneStrategy, Props, Terminated}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Identify, OneForOneStrategy, Props, Terminated }
 import akka.pattern._
 import akka.util.Timeout
 import beam.agentsim.agents.BeamAgent.Finish
 import beam.agentsim.agents.household.HouseholdActor
 import beam.agentsim.agents.vehicles.BeamVehicle
-import beam.router.{BeamSkimmer, RouteHistory}
+import beam.router.{ BeamSkimmer, RouteHistory }
 import beam.router.osm.TollCalculator
 import beam.sim.BeamServices
 import com.conveyal.r5.transit.TransportNetwork
-import org.matsim.api.core.v01.population.{Activity, Leg, Person}
-import org.matsim.api.core.v01.{Coord, Id, Scenario}
+import org.matsim.api.core.v01.population.{ Activity, Leg, Person }
+import org.matsim.api.core.v01.{ Coord, Id, Scenario }
 import org.matsim.core.api.experimental.events.EventsManager
 import org.matsim.households.Household
 
 import scala.collection.JavaConverters._
-import scala.collection.{mutable, JavaConverters}
-import scala.concurrent.{Await, Future}
+import scala.collection.{ mutable, JavaConverters }
+import scala.concurrent.{ Await, Future }
 
 class Population(
-  val scenario: Scenario,
-  val beamServices: BeamServices,
-  val scheduler: ActorRef,
-  val transportNetwork: TransportNetwork,
-  val tollCalculator: TollCalculator,
-  val router: ActorRef,
-  val rideHailManager: ActorRef,
-  val parkingManager: ActorRef,
-  val sharedVehicleFleets: Seq[ActorRef],
-  val eventsManager: EventsManager,
-  val routeHistory: RouteHistory,
-  val beamSkimmer: BeamSkimmer
-) extends Actor
+    val scenario: Scenario,
+    val beamServices: BeamServices,
+    val scheduler: ActorRef,
+    val transportNetwork: TransportNetwork,
+    val tollCalculator: TollCalculator,
+    val router: ActorRef,
+    val rideHailManager: ActorRef,
+    val parkingManager: ActorRef,
+    val sharedVehicleFleets: Seq[ActorRef],
+    val eventsManager: EventsManager,
+    val routeHistory: RouteHistory,
+    val beamSkimmer: BeamSkimmer)
+    extends Actor
     with ActorLogging {
 
   // Our PersonAgents have their own explicit error state into which they recover
@@ -50,8 +50,7 @@ class Population(
   private val personToHouseholdId: mutable.Map[Id[Person], Id[Household]] =
     mutable.Map()
   scenario.getHouseholds.getHouseholds.forEach { (householdId, matSimHousehold) =>
-    personToHouseholdId ++= matSimHousehold.getMemberIds.asScala
-      .map(personId => personId -> householdId)
+    personToHouseholdId ++= matSimHousehold.getMemberIds.asScala.map(personId => personId -> householdId)
   }
 
   initHouseholds()
@@ -86,15 +85,11 @@ class Population(
           //TODO a good example where projection should accompany the data
           if (scenario.getHouseholds.getHouseholdAttributes
                 .getAttribute(household.getId.toString, "homecoordx") == null) {
-            log.error(
-              s"Cannot find homeCoordX for household ${household.getId} which will be interpreted at 0.0"
-            )
+            log.error(s"Cannot find homeCoordX for household ${household.getId} which will be interpreted at 0.0")
           }
           if (scenario.getHouseholds.getHouseholdAttributes
                 .getAttribute(household.getId.toString.toLowerCase(), "homecoordy") == null) {
-            log.error(
-              s"Cannot find homeCoordY for household ${household.getId} which will be interpreted at 0.0"
-            )
+            log.error(s"Cannot find homeCoordY for household ${household.getId} which will be interpreted at 0.0")
           }
           val homeCoord = new Coord(
             scenario.getHouseholds.getHouseholdAttributes
@@ -102,8 +97,7 @@ class Population(
               .asInstanceOf[Double],
             scenario.getHouseholds.getHouseholdAttributes
               .getAttribute(household.getId.toString, "homecoordy")
-              .asInstanceOf[Double]
-          )
+              .asInstanceOf[Double])
 
           val householdVehicles: Map[Id[BeamVehicle], BeamVehicle] = JavaConverters
             .collectionAsScalaIterable(household.getVehicleIds)
@@ -129,10 +123,8 @@ class Population(
               homeCoord,
               sharedVehicleFleets,
               routeHistory,
-              beamSkimmer
-            ),
-            household.getId.toString
-          )
+              beamSkimmer),
+            household.getId.toString)
 
           context.watch(householdActor)
           householdActor ? Identify(0)
@@ -152,35 +144,27 @@ object Population {
   val defaultVehicleRange = 500e3
   val refuelRateLimitInWatts: Option[_] = None
 
-  def getVehiclesFromHousehold(
-    household: Household,
-    beamServices: BeamServices
-  ): Map[Id[BeamVehicle], BeamVehicle] = {
+  def getVehiclesFromHousehold(household: Household, beamServices: BeamServices): Map[Id[BeamVehicle], BeamVehicle] = {
     val houseHoldVehicles = JavaConverters.collectionAsScalaIterable(household.getVehicleIds)
     houseHoldVehicles.map(i => Id.create(i, classOf[BeamVehicle]) -> beamServices.privateVehicles(i)).toMap
   }
 
   def personInitialLocation(person: Person): Coord =
-    person.getSelectedPlan.getPlanElements
-      .iterator()
-      .next()
-      .asInstanceOf[Activity]
-      .getCoord
+    person.getSelectedPlan.getPlanElements.iterator().next().asInstanceOf[Activity].getCoord
 
   def props(
-    scenario: Scenario,
-    services: BeamServices,
-    scheduler: ActorRef,
-    transportNetwork: TransportNetwork,
-    tollCalculator: TollCalculator,
-    router: ActorRef,
-    rideHailManager: ActorRef,
-    parkingManager: ActorRef,
-    sharedVehicleFleets: Seq[ActorRef],
-    eventsManager: EventsManager,
-    routeHistory: RouteHistory,
-    beamSkimmer: BeamSkimmer
-  ): Props = {
+      scenario: Scenario,
+      services: BeamServices,
+      scheduler: ActorRef,
+      transportNetwork: TransportNetwork,
+      tollCalculator: TollCalculator,
+      router: ActorRef,
+      rideHailManager: ActorRef,
+      parkingManager: ActorRef,
+      sharedVehicleFleets: Seq[ActorRef],
+      eventsManager: EventsManager,
+      routeHistory: RouteHistory,
+      beamSkimmer: BeamSkimmer): Props = {
     Props(
       new Population(
         scenario,
@@ -194,8 +178,6 @@ object Population {
         sharedVehicleFleets,
         eventsManager,
         routeHistory,
-        beamSkimmer
-      )
-    )
+        beamSkimmer))
   }
 }

@@ -3,8 +3,8 @@ package beam.agentsim.agents.planning
 import beam.router.Modes.BeamMode
 
 /**
-  * BEAM
-  */
+ * BEAM
+ */
 object Strategy {
 
   sealed trait Strategy

@@ -82,7 +82,7 @@ object NyuDataTazConverter extends App {
 
     val tazVizArray = featuresRes.map { f =>
       val gid = f.properties.id
-      val taz: Long = Try(f.properties.taz.toLong).getOrElse(0l)
+      val taz: Long = Try(f.properties.taz.toLong).getOrElse(0L)
       val nhood = "East Bay"
       val sq_mile = 1
       val coordinates = Array(Array(f.geometry.coordinates.map { coordinates =>
@@ -96,7 +96,7 @@ object NyuDataTazConverter extends App {
     println(s"Res:")
     println(s"$featuresRes")
 
-    val tazVizJson = Json.toJson(tazVizArray.filter(_.taz > 0l))
+    val tazVizJson = Json.toJson(tazVizArray.filter(_.taz > 0L))
     println(s"Converted: ${tazVizJson.toString()}")
 
     new PrintWriter("d:\\output.json") { write(tazVizJson.toString()); close() }

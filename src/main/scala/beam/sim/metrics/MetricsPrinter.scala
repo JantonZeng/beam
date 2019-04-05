@@ -2,14 +2,14 @@ package beam.sim.metrics
 
 import java.nio.LongBuffer
 
-import akka.actor.{Actor, Props}
-import beam.sim.metrics.MetricsPrinter.{Print, Subscribe}
+import akka.actor.{ Actor, Props }
+import beam.sim.metrics.MetricsPrinter.{ Print, Subscribe }
 import com.typesafe.scalalogging.LazyLogging
 import kamon.Kamon
 import kamon.metric.SubscriptionsDispatcher.TickMetricSnapshot
 import kamon.metric.instrument.CollectionContext
-import kamon.metric.instrument.Time.{Milliseconds, Nanoseconds}
-import kamon.metric.{Entity, EntitySnapshot}
+import kamon.metric.instrument.Time.{ Milliseconds, Nanoseconds }
+import kamon.metric.{ Entity, EntitySnapshot }
 
 class MetricsPrinter(val includes: Seq[String], val excludes: Seq[String]) extends Actor with LazyLogging {
   var iterationNumber = 0

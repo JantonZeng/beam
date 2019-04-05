@@ -3,26 +3,26 @@ package beam.agentsim.events
 import java.util
 
 import beam.agentsim.infrastructure.ParkingStall
-import beam.agentsim.infrastructure.ParkingStall.{ChargingType, ParkingType, PricingModel}
+import beam.agentsim.infrastructure.ParkingStall.{ ChargingType, ParkingType, PricingModel }
 import beam.agentsim.infrastructure.TAZTreeMap.TAZ
-import org.matsim.api.core.v01.events.{Event, GenericEvent}
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.events.{ Event, GenericEvent }
+import org.matsim.api.core.v01.{ Coord, Id }
 import org.matsim.vehicles.Vehicle
 
 import collection.JavaConverters._
 
 /**HasPersonId is added as Matsim ScoringFunction for population requires it**/
 case class ParkEvent(
-  time: Double,
-  driverId: String,
-  vehicleId: Id[Vehicle],
-  tazId: Id[TAZ],
-  cost: Double,
-  locationUTM: Coord,
-  parkingType: ParkingType,
-  pricingModel: PricingModel,
-  chargingType: ChargingType
-) extends Event(time)
+    time: Double,
+    driverId: String,
+    vehicleId: Id[Vehicle],
+    tazId: Id[TAZ],
+    cost: Double,
+    locationUTM: Coord,
+    parkingType: ParkingType,
+    pricingModel: PricingModel,
+    chargingType: ChargingType)
+    extends Event(time)
     with ScalaEvent {
   import ParkEvent._
 
@@ -70,8 +70,7 @@ object ParkEvent {
       stall.locationUTM,
       stall.attributes.parkingType,
       stall.attributes.pricingModel,
-      stall.attributes.chargingType
-    )
+      stall.attributes.chargingType)
 
   def apply(genericEvent: GenericEvent): ParkEvent = {
     assert(genericEvent.getEventType == EVENT_TYPE)

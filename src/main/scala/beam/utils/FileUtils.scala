@@ -2,13 +2,13 @@ package beam.utils
 
 import java.io._
 import java.net.URL
-import java.nio.file.{Files, Paths}
+import java.nio.file.{ Files, Paths }
 import java.text.SimpleDateFormat
 import java.util.stream
 
 import beam.sim.config.BeamConfig
 import com.typesafe.scalalogging.LazyLogging
-import org.apache.commons.io.FileUtils.{copyURLToFile, getTempDirectoryPath}
+import org.apache.commons.io.FileUtils.{ copyURLToFile, getTempDirectoryPath }
 import org.apache.commons.io.FilenameUtils.getName
 import org.matsim.core.config.Config
 import org.matsim.core.utils.io.IOUtils
@@ -16,8 +16,8 @@ import org.matsim.core.utils.io.IOUtils
 import scala.language.reflectiveCalls
 
 /**
-  * Created by sfeygin on 1/30/17.
-  */
+ * Created by sfeygin on 1/30/17.
+ */
 object FileUtils extends LazyLogging {
 
   val runStartTime: String = getDateString
@@ -26,14 +26,11 @@ object FileUtils extends LazyLogging {
     val baseOutputDir = Paths.get(beamConfig.beam.outputs.baseOutputDirectory)
     if (!Files.exists(baseOutputDir)) baseOutputDir.toFile.mkdir()
 
-    val optionalSuffix: String = getOptionalOutputPathSuffix(
-      beamConfig.beam.outputs.addTimestampToOutputDirectory
-    )
+    val optionalSuffix: String = getOptionalOutputPathSuffix(beamConfig.beam.outputs.addTimestampToOutputDirectory)
 
     val outputDir = Paths
       .get(
-        beamConfig.beam.outputs.baseOutputDirectory + File.separator + beamConfig.beam.agentsim.simulationName + optionalSuffix
-      )
+        beamConfig.beam.outputs.baseOutputDirectory + File.separator + beamConfig.beam.agentsim.simulationName + optionalSuffix)
       .toFile
     outputDir.mkdir()
     logger.debug(s"Beam output directory is: ${outputDir.getAbsolutePath}")
@@ -42,17 +39,14 @@ object FileUtils extends LazyLogging {
   }
 
   def getConfigOutputFile(
-    outputDirectoryBasePath: String,
-    simulationName: String,
-    addTimestampToOutputDirectory: Boolean
-  ): String = {
+      outputDirectoryBasePath: String,
+      simulationName: String,
+      addTimestampToOutputDirectory: Boolean): String = {
     val baseOutputDir = Paths.get(outputDirectoryBasePath)
     if (!Files.exists(baseOutputDir)) baseOutputDir.toFile.mkdir()
 
     val optionalSuffix: String = getOptionalOutputPathSuffix(addTimestampToOutputDirectory)
-    val outputDir = Paths
-      .get(outputDirectoryBasePath + File.separator + simulationName + "_" + optionalSuffix)
-      .toFile
+    val outputDir = Paths.get(outputDirectoryBasePath + File.separator + simulationName + "_" + optionalSuffix).toFile
     logger.debug(s"Beam output directory is: ${outputDir.getAbsolutePath}")
     outputDir.mkdir()
     outputDir.getAbsolutePath
@@ -106,12 +100,12 @@ object FileUtils extends LazyLogging {
   }
 
   /**
-    * Writes data to the output file at specified path.
-    * @param filePath path of the output file to write data to
-    * @param fileHeader an optional header to be appended (if any)
-    * @param data data to be written to the file
-    * @param fileFooter an optional footer to be appended (if any)
-    */
+   * Writes data to the output file at specified path.
+   * @param filePath path of the output file to write data to
+   * @param fileHeader an optional header to be appended (if any)
+   * @param data data to be written to the file
+   * @param fileFooter an optional footer to be appended (if any)
+   */
   def writeToFile(filePath: String, fileHeader: Option[String], data: String, fileFooter: Option[String]): Unit = {
     val bw = IOUtils.getBufferedWriter(filePath) //new BufferedWriter(new FileWriter(filePath))
     try {
@@ -141,18 +135,17 @@ object FileUtils extends LazyLogging {
   }
 
   /**
-    * Writes data to the output file at specified path.
-    * @param filePath path of the output file to write data to
-    * @param fileHeader an optional header to be appended (if any)
-    * @param data data to be written to the file
-    * @param fileFooter an optional footer to be appended (if any)
-    */
+   * Writes data to the output file at specified path.
+   * @param filePath path of the output file to write data to
+   * @param fileHeader an optional header to be appended (if any)
+   * @param data data to be written to the file
+   * @param fileFooter an optional footer to be appended (if any)
+   */
   def writeToFileJava(
-    filePath: String,
-    fileHeader: java.util.Optional[String],
-    data: String,
-    fileFooter: java.util.Optional[String]
-  ): Unit = {
+      filePath: String,
+      fileHeader: java.util.Optional[String],
+      data: String,
+      fileFooter: java.util.Optional[String]): Unit = {
     val bw = IOUtils.getBufferedWriter(filePath) //new BufferedWriter(new FileWriter(filePath))
     try {
       if (fileHeader.isPresent)

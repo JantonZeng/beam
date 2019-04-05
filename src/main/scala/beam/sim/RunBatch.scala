@@ -1,7 +1,7 @@
 package beam.sim
 
 import java.io.File
-import java.nio.file.{Files, Path}
+import java.nio.file.{ Files, Path }
 
 import beam.utils.BeamConfigUtils
 

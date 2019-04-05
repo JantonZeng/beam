@@ -3,7 +3,7 @@ package beam.utils.scenario
 import java.util.Random
 
 import beam.agentsim.agents.vehicles.EnergyEconomyAttributes.Powertrain
-import beam.agentsim.agents.vehicles.{BeamVehicle, BeamVehicleType, VehicleCategory}
+import beam.agentsim.agents.vehicles.{ BeamVehicle, BeamVehicleType, VehicleCategory }
 import beam.router.Modes.BeamMode
 import beam.sim.BeamServices
 import beam.sim.vehicles.VehiclesAdjustment
@@ -12,20 +12,17 @@ import beam.utils.plan.sampling.AvailableModeUtils
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.math3.distribution.UniformRealDistribution
 import org.matsim.api.core.v01.population.Population
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.{ Coord, Id }
 import org.matsim.core.population.PopulationUtils
 import org.matsim.core.scenario.MutableScenario
 import org.matsim.households._
-import org.matsim.vehicles.{Vehicle, VehicleType, VehicleUtils}
+import org.matsim.vehicles.{ Vehicle, VehicleType, VehicleUtils }
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 
-class ScenarioLoader(
-  var scenario: MutableScenario,
-  var beamServices: BeamServices,
-  val scenarioSource: ScenarioSource
-) extends LazyLogging {
+class ScenarioLoader(var scenario: MutableScenario, var beamServices: BeamServices, val scenarioSource: ScenarioSource)
+    extends LazyLogging {
 
   val population: Population = scenario.getPopulation
 
@@ -58,11 +55,8 @@ class ScenarioLoader(
     // beamServices.privateVehicles is properly populated here, after `applyHousehold` call
 
     // We have to override personHouseholds because we just loaded new households
-    beamServices.personHouseholds = scenario.getHouseholds.getHouseholds
-      .values()
-      .asScala
-      .flatMap(h => h.getMemberIds.asScala.map(_ -> h))
-      .toMap
+    beamServices.personHouseholds =
+      scenario.getHouseholds.getHouseholds.values().asScala.flatMap(h => h.getMemberIds.asScala.map(_ -> h)).toMap
     // beamServices.personHouseholds is used later on in PopulationAdjustment.createAttributesOfIndividual when we
     logger.info("Applying persons...")
     applyPersons(personsWithPlans)
@@ -83,9 +77,8 @@ class ScenarioLoader(
   }
 
   private[utils] def getPersonsWithPlan(
-    persons: Iterable[PersonInfo],
-    plans: Iterable[PlanElement]
-  ): Iterable[PersonInfo] = {
+      persons: Iterable[PersonInfo],
+      plans: Iterable[PlanElement]): Iterable[PersonInfo] = {
     val personIdsWithPlan = plans.map(_.personId).toSet
     persons.filter(person => personIdsWithPlan.contains(person.personId))
   }
@@ -95,9 +88,8 @@ class ScenarioLoader(
   }
 
   private[utils] def applyHousehold(
-    households: Iterable[HouseholdInfo],
-    householdIdToPersons: Map[HouseholdId, Iterable[PersonInfo]]
-  ): Unit = {
+      households: Iterable[HouseholdInfo],
+      householdIdToPersons: Map[HouseholdId, Iterable[PersonInfo]]): Unit = {
     val scenarioHouseholdAttributes = scenario.getHouseholds.getHouseholdAttributes
     val scenarioHouseholds = scenario.getHouseholds.getHouseholds
 
@@ -139,15 +131,13 @@ class ScenarioLoader(
             householdSize = household.getMemberIds.size,
             householdPopulation = null,
             householdLocation = coord,
-            realDistribution
-          )
+            realDistribution)
           .toBuffer
 
         vehicleTypes.append(
           beamServices.vehicleTypes.values
             .find(_.vehicleCategory == VehicleCategory.Bike)
-            .getOrElse(BeamVehicleType.defaultBikeBeamVehicleType)
-        )
+            .getOrElse(BeamVehicleType.defaultBikeBeamVehicleType))
         initialVehicleCounter += householdInfo.cars.toInt
         totalCarCount += vehicleTypes.count(_.vehicleCategory.toString == "Car")
         val vehicleIds = new java.util.ArrayList[Id[Vehicle]]
@@ -168,8 +158,7 @@ class ScenarioLoader(
 
     }
     logger.info(
-      s"Created $totalCarCount vehicles, scaling initial value of $initialVehicleCounter by a factor of $scaleFactor"
-    )
+      s"Created $totalCarCount vehicles, scaling initial value of $initialVehicleCounter by a factor of $scaleFactor")
   }
 
   // Iterable[(HouseholdInfo, List[BeamVehicleType])]
@@ -214,8 +203,7 @@ class ScenarioLoader(
           nVehiclesOut += drawFromBinomial(
             rand,
             household.cars.toInt,
-            beamServices.beamConfig.beam.agentsim.agents.vehicles.fractionOfInitialVehicleFleet
-          )
+            beamServices.beamConfig.beam.agentsim.agents.vehicles.fractionOfInitialVehicleFleet)
         }
         households.zip(nVehiclesOut)
     }
@@ -264,9 +252,7 @@ class ScenarioLoader(
           }
           val activityType = planInfo.activityType.getOrElse(
             throw new IllegalStateException(
-              s"planElement is `activity`, but `activityType` is None. planInfo: $planInfo"
-            )
-          )
+              s"planElement is `activity`, but `activityType` is None. planInfo: $planInfo"))
           val act = PopulationUtils.createAndAddActivityFromCoord(plan, activityType, coord)
           planInfo.endTime.foreach { endTime =>
             act.setEndTime(endTime * 60 * 60)

@@ -1,7 +1,7 @@
 package beam.replanning
 
 import beam.sim.MapStringDouble
-import org.matsim.api.core.v01.population.{HasPlansAndId, Person, Plan}
+import org.matsim.api.core.v01.population.{ HasPlansAndId, Person, Plan }
 import org.matsim.core.replanning.selectors.PlanSelector
 import scala.language.existentials
 
@@ -14,8 +14,7 @@ class TryToKeepOneOfEachClass extends PlanSelector[Plan, Person] {
       .shuffle(
         member.getPlans.asScala
           .groupBy(plan => plan.getAttributes.getAttribute("modality-style").toString)
-          .filter(e => e._2.size > 1)
-      )
+          .filter(e => e._2.size > 1))
       .head
 
     val worstPlanOfThatClassWithRespectToThatClass = thosePlans
@@ -23,12 +22,7 @@ class TryToKeepOneOfEachClass extends PlanSelector[Plan, Person] {
         plan =>
           (
             plan,
-            plan.getAttributes
-              .getAttribute("scores")
-              .asInstanceOf[MapStringDouble]
-              .data(someClassWithMoreThanOnePlan)
-        )
-      )
+            plan.getAttributes.getAttribute("scores").asInstanceOf[MapStringDouble].data(someClassWithMoreThanOnePlan)))
       .minBy(_._2)
       ._1
 

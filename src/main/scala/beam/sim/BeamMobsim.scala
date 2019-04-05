@@ -3,20 +3,20 @@ package beam.sim
 import java.util.concurrent.TimeUnit
 
 import akka.actor.Status.Success
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Cancellable, DeadLetter, Identify, Props, Terminated}
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Cancellable, DeadLetter, Identify, Props, Terminated }
 import akka.pattern.ask
 import akka.util.Timeout
 import beam.agentsim.agents.BeamAgent.Finish
-import beam.agentsim.agents.ridehail.RideHailManager.{BufferedRideHailRequestsTrigger, RideHailRepositioningTrigger}
-import beam.agentsim.agents.ridehail.{RideHailIterationHistory, RideHailManager, RideHailSurgePricingManager}
-import beam.agentsim.agents.{BeamAgent, InitializeTrigger, Population}
+import beam.agentsim.agents.ridehail.RideHailManager.{ BufferedRideHailRequestsTrigger, RideHailRepositioningTrigger }
+import beam.agentsim.agents.ridehail.{ RideHailIterationHistory, RideHailManager, RideHailSurgePricingManager }
+import beam.agentsim.agents.{ BeamAgent, InitializeTrigger, Population }
 import beam.agentsim.infrastructure.ParkingManager.ParkingStockAttributes
 import beam.agentsim.infrastructure.ZonalParkingManager
 import beam.agentsim.scheduler.BeamAgentScheduler
-import beam.agentsim.scheduler.BeamAgentScheduler.{CompletionNotice, ScheduleTrigger, StartSchedule}
+import beam.agentsim.scheduler.BeamAgentScheduler.{ CompletionNotice, ScheduleTrigger, StartSchedule }
 import beam.router.BeamRouter.InitTransit
 import beam.router.osm.TollCalculator
-import beam.router.{BeamSkimmer, FreeFlowTravelTime, RouteHistory}
+import beam.router.{ BeamSkimmer, FreeFlowTravelTime, RouteHistory }
 import beam.sim.config.BeamConfig.Beam
 import beam.sim.metrics.MetricsSupport
 import beam.sim.monitoring.ErrorListener
@@ -25,7 +25,7 @@ import beam.utils._
 import com.conveyal.r5.transit.TransportNetwork
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
-import org.matsim.api.core.v01.{Id, Scenario}
+import org.matsim.api.core.v01.{ Id, Scenario }
 import org.matsim.core.api.experimental.events.EventsManager
 import org.matsim.core.mobsim.framework.Mobsim
 import org.matsim.core.utils.misc.Time
@@ -34,22 +34,22 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
-  * AgentSim.
-  *
-  * Created by sfeygin on 2/8/17.
-  */
+ * AgentSim.
+ *
+ * Created by sfeygin on 2/8/17.
+ */
 class BeamMobsim @Inject()(
-  val beamServices: BeamServices,
-  val transportNetwork: TransportNetwork,
-  val tollCalculator: TollCalculator,
-  val scenario: Scenario,
-  val eventsManager: EventsManager,
-  val actorSystem: ActorSystem,
-  val rideHailSurgePricingManager: RideHailSurgePricingManager,
-  val rideHailIterationHistory: RideHailIterationHistory,
-  val routeHistory: RouteHistory,
-  val beamSkimmer: BeamSkimmer
-) extends Mobsim
+    val beamServices: BeamServices,
+    val transportNetwork: TransportNetwork,
+    val tollCalculator: TollCalculator,
+    val scenario: Scenario,
+    val eventsManager: EventsManager,
+    val actorSystem: ActorSystem,
+    val rideHailSurgePricingManager: RideHailSurgePricingManager,
+    val rideHailIterationHistory: RideHailIterationHistory,
+    val routeHistory: RouteHistory,
+    val beamSkimmer: BeamSkimmer)
+    extends Mobsim
     with LazyLogging
     with MetricsSupport {
   private implicit val timeout: Timeout = Timeout(50000, TimeUnit.SECONDS)
@@ -71,180 +71,166 @@ class BeamMobsim @Inject()(
       logger.info(DebugLib.gcAndGetMemoryLogMessage("run.start (after GC): "))
     beamServices.startNewIteration()
     eventsManager.initProcessing()
-    val iteration = actorSystem.actorOf(
-      Props(new Actor with ActorLogging {
-        var runSender: ActorRef = _
-        private val errorListener = context.actorOf(ErrorListener.props())
-        context.watch(errorListener)
-        context.system.eventStream.subscribe(errorListener, classOf[BeamAgent.TerminatedPrematurelyEvent])
-        private val scheduler = context.actorOf(
-          Props(
-            classOf[BeamAgentScheduler],
-            beamServices.beamConfig,
-            Time.parseTime(beamServices.beamConfig.matsim.modules.qsim.endTime).toInt,
-            config.schedulerParallelismWindow,
-            new StuckFinder(beamServices.beamConfig.beam.debug.stuckAgentDetection)
-          ),
-          "scheduler"
-        )
-        context.system.eventStream.subscribe(errorListener, classOf[DeadLetter])
-        context.watch(scheduler)
+    val iteration =
+      actorSystem.actorOf(
+        Props(new Actor with ActorLogging {
+          var runSender: ActorRef = _
+          private val errorListener = context.actorOf(ErrorListener.props())
+          context.watch(errorListener)
+          context.system.eventStream.subscribe(errorListener, classOf[BeamAgent.TerminatedPrematurelyEvent])
+          private val scheduler = context.actorOf(
+            Props(
+              classOf[BeamAgentScheduler],
+              beamServices.beamConfig,
+              Time.parseTime(beamServices.beamConfig.matsim.modules.qsim.endTime).toInt,
+              config.schedulerParallelismWindow,
+              new StuckFinder(beamServices.beamConfig.beam.debug.stuckAgentDetection)),
+            "scheduler")
+          context.system.eventStream.subscribe(errorListener, classOf[DeadLetter])
+          context.watch(scheduler)
 
-        private val envelopeInUTM =
-          beamServices.geo.wgs2Utm(transportNetwork.streetLayer.envelope)
-        envelopeInUTM.expandBy(beamServices.beamConfig.beam.spatial.boundingBoxBuffer)
+          private val envelopeInUTM =
+            beamServices.geo.wgs2Utm(transportNetwork.streetLayer.envelope)
+          envelopeInUTM.expandBy(beamServices.beamConfig.beam.spatial.boundingBoxBuffer)
 
-        private val parkingManager = context.actorOf(
-          ZonalParkingManager
-            .props(beamServices, beamServices.beamRouter, ParkingStockAttributes(100)),
-          "ParkingManager"
-        )
-        context.watch(parkingManager)
+          private val parkingManager = context.actorOf(
+            ZonalParkingManager.props(beamServices, beamServices.beamRouter, ParkingStockAttributes(100)),
+            "ParkingManager")
+          context.watch(parkingManager)
 
-        private val rideHailManager = context.actorOf(
-          Props(
-            new RideHailManager(
-              Id.create("GlobalRHM", classOf[RideHailManager]),
+          private val rideHailManager = context.actorOf(
+            Props(
+              new RideHailManager(
+                Id.create("GlobalRHM", classOf[RideHailManager]),
+                beamServices,
+                transportNetwork,
+                tollCalculator,
+                scenario,
+                eventsManager,
+                scheduler,
+                beamServices.beamRouter,
+                parkingManager,
+                envelopeInUTM,
+                rideHailSurgePricingManager,
+                rideHailIterationHistory.oscillationAdjustedTNCIterationStats,
+                beamSkimmer,
+                routeHistory)),
+            "RideHailManager")
+          context.watch(rideHailManager)
+          Await.result(rideHailManager ? Identify(0), timeout.duration)
+
+          if (beamServices.beamConfig.beam.debug.debugActorTimerIntervalInSec > 0) {
+            debugActorWithTimerActorRef =
+              context.actorOf(Props(classOf[DebugActorWithTimer], rideHailManager, scheduler))
+            debugActorWithTimerCancellable = prepareMemoryLoggingTimerActor(
+              beamServices.beamConfig.beam.debug.debugActorTimerIntervalInSec,
+              context.system,
+              debugActorWithTimerActorRef)
+          }
+
+          private val sharedVehicleFleets = config.agents.vehicles.sharedFleets.map { fleetConfig =>
+            context.actorOf(Fleets.lookup(fleetConfig).props(beamServices, parkingManager), fleetConfig.name)
+          }
+          sharedVehicleFleets.foreach(context.watch)
+          sharedVehicleFleets.foreach(scheduler ! ScheduleTrigger(InitializeTrigger(0), _))
+
+          private val population = context.actorOf(
+            Population.props(
+              scenario,
               beamServices,
+              scheduler,
               transportNetwork,
               tollCalculator,
-              scenario,
-              eventsManager,
-              scheduler,
               beamServices.beamRouter,
+              rideHailManager,
               parkingManager,
-              envelopeInUTM,
-              rideHailSurgePricingManager,
-              rideHailIterationHistory.oscillationAdjustedTNCIterationStats,
-              beamSkimmer,
-              routeHistory
-            )
-          ),
-          "RideHailManager"
-        )
-        context.watch(rideHailManager)
-        Await.result(rideHailManager ? Identify(0), timeout.duration)
+              sharedVehicleFleets,
+              eventsManager,
+              routeHistory,
+              beamSkimmer),
+            "population")
+          context.watch(population)
+          Await.result(population ? Identify(0), timeout.duration)
+          Await.result(beamServices.beamRouter ? InitTransit(scheduler, parkingManager), timeout.duration)
 
-        if (beamServices.beamConfig.beam.debug.debugActorTimerIntervalInSec > 0) {
-          debugActorWithTimerActorRef = context.actorOf(Props(classOf[DebugActorWithTimer], rideHailManager, scheduler))
-          debugActorWithTimerCancellable = prepareMemoryLoggingTimerActor(
-            beamServices.beamConfig.beam.debug.debugActorTimerIntervalInSec,
-            context.system,
-            debugActorWithTimerActorRef
-          )
-        }
+          log.info("Transit schedule has been initialized")
 
-        private val sharedVehicleFleets = config.agents.vehicles.sharedFleets.map { fleetConfig =>
-          context.actorOf(Fleets.lookup(fleetConfig).props(beamServices, parkingManager), fleetConfig.name)
-        }
-        sharedVehicleFleets.foreach(context.watch)
-        sharedVehicleFleets.foreach(scheduler ! ScheduleTrigger(InitializeTrigger(0), _))
+          if (beamServices.iterationNumber == 0) {
+            val maxHour = TimeUnit.SECONDS.toHours(scenario.getConfig.travelTimeCalculator().getMaxTime).toInt
+            val warmStart = BeamWarmStart(beamServices.beamConfig, maxHour)
+            warmStart.warmStartTravelTime(beamServices.beamRouter, scenario)
 
-        private val population = context.actorOf(
-          Population.props(
-            scenario,
-            beamServices,
-            scheduler,
-            transportNetwork,
-            tollCalculator,
-            beamServices.beamRouter,
-            rideHailManager,
-            parkingManager,
-            sharedVehicleFleets,
-            eventsManager,
-            routeHistory,
-            beamSkimmer
-          ),
-          "population"
-        )
-        context.watch(population)
-        Await.result(population ? Identify(0), timeout.duration)
-        Await.result(beamServices.beamRouter ? InitTransit(scheduler, parkingManager), timeout.duration)
-
-        log.info("Transit schedule has been initialized")
-
-        if (beamServices.iterationNumber == 0) {
-          val maxHour = TimeUnit.SECONDS.toHours(scenario.getConfig.travelTimeCalculator().getMaxTime).toInt
-          val warmStart = BeamWarmStart(beamServices.beamConfig, maxHour)
-          warmStart.warmStartTravelTime(beamServices.beamRouter, scenario)
-
-          if (!beamServices.beamConfig.beam.warmStart.enabled && beamServices.beamConfig.beam.physsim.initializeRouterWithFreeFlowTimes) {
-            FreeFlowTravelTime.initializeRouterFreeFlow(beamServices, scenario)
+            if (!beamServices.beamConfig.beam.warmStart.enabled && beamServices.beamConfig.beam.physsim.initializeRouterWithFreeFlowTimes) {
+              FreeFlowTravelTime.initializeRouterFreeFlow(beamServices, scenario)
+            }
           }
-        }
 
-        scheduleRideHailManagerTimerMessages()
+          scheduleRideHailManagerTimerMessages()
 
-        def prepareMemoryLoggingTimerActor(
-          timeoutInSeconds: Int,
-          system: ActorSystem,
-          memoryLoggingTimerActorRef: ActorRef
-        ): Cancellable = {
-          import system.dispatcher
+          def prepareMemoryLoggingTimerActor(
+              timeoutInSeconds: Int,
+              system: ActorSystem,
+              memoryLoggingTimerActorRef: ActorRef): Cancellable = {
+            import system.dispatcher
 
-          val cancellable = system.scheduler.schedule(
-            0.milliseconds,
-            (timeoutInSeconds * 1000).milliseconds,
-            memoryLoggingTimerActorRef,
-            Tick
-          )
+            val cancellable = system.scheduler
+              .schedule(0.milliseconds, (timeoutInSeconds * 1000).milliseconds, memoryLoggingTimerActorRef, Tick)
 
-          cancellable
-        }
+            cancellable
+          }
 
-        override def receive: PartialFunction[Any, Unit] = {
+          override def receive: PartialFunction[Any, Unit] = {
 
-          case CompletionNotice(_, _) =>
-            log.info("Scheduler is finished.")
-            endSegment("agentsim-execution", "agentsim")
-            log.info("Ending Agentsim")
-            log.info("Processing Agentsim Events (Start)")
-            startSegment("agentsim-events", "agentsim")
+            case CompletionNotice(_, _) =>
+              log.info("Scheduler is finished.")
+              endSegment("agentsim-execution", "agentsim")
+              log.info("Ending Agentsim")
+              log.info("Processing Agentsim Events (Start)")
+              startSegment("agentsim-events", "agentsim")
 
-            population ! Finish
-            rideHailManager ! Finish
-            context.stop(scheduler)
-            context.stop(errorListener)
-            context.stop(parkingManager)
-            sharedVehicleFleets.foreach(context.stop)
-            if (beamServices.beamConfig.beam.debug.debugActorTimerIntervalInSec > 0) {
-              debugActorWithTimerCancellable.cancel()
-              context.stop(debugActorWithTimerActorRef)
-            }
-            if (beamServices.beamConfig.beam.debug.memoryConsumptionDisplayTimeoutInSec > 0) {
-              //              memoryLoggingTimerCancellable.cancel()
-              //              context.stop(memoryLoggingTimerActorRef)
-            }
-          case Terminated(_) =>
-            if (context.children.isEmpty) {
-              context.stop(self)
-              runSender ! Success("Ran.")
-            } else {
-              log.debug("Remaining: {}", context.children)
-            }
+              population ! Finish
+              rideHailManager ! Finish
+              context.stop(scheduler)
+              context.stop(errorListener)
+              context.stop(parkingManager)
+              sharedVehicleFleets.foreach(context.stop)
+              if (beamServices.beamConfig.beam.debug.debugActorTimerIntervalInSec > 0) {
+                debugActorWithTimerCancellable.cancel()
+                context.stop(debugActorWithTimerActorRef)
+              }
+              if (beamServices.beamConfig.beam.debug.memoryConsumptionDisplayTimeoutInSec > 0) {
+                //              memoryLoggingTimerCancellable.cancel()
+                //              context.stop(memoryLoggingTimerActorRef)
+              }
+            case Terminated(_) =>
+              if (context.children.isEmpty) {
+                context.stop(self)
+                runSender ! Success("Ran.")
+              } else {
+                log.debug("Remaining: {}", context.children)
+              }
 
-          case "Run!" =>
-            runSender = sender
-            log.info("Running BEAM Mobsim")
-            endSegment("iteration-preparation", "mobsim")
+            case "Run!" =>
+              runSender = sender
+              log.info("Running BEAM Mobsim")
+              endSegment("iteration-preparation", "mobsim")
 
-            log.info("Preparing new Iteration (End)")
-            log.info("Starting Agentsim")
-            startSegment("agentsim-execution", "agentsim")
+              log.info("Preparing new Iteration (End)")
+              log.info("Starting Agentsim")
+              startSegment("agentsim-execution", "agentsim")
 
-            scheduler ! StartSchedule(beamServices.iterationNumber)
-        }
+              scheduler ! StartSchedule(beamServices.iterationNumber)
+          }
 
-        private def scheduleRideHailManagerTimerMessages(): Unit = {
-          if (config.agents.rideHail.allocationManager.repositionTimeoutInSeconds > 0)
-            scheduler ! ScheduleTrigger(RideHailRepositioningTrigger(0), rideHailManager)
-          if (config.agents.rideHail.allocationManager.requestBufferTimeoutInSeconds > 0)
-            scheduler ! ScheduleTrigger(BufferedRideHailRequestsTrigger(0), rideHailManager)
-        }
+          private def scheduleRideHailManagerTimerMessages(): Unit = {
+            if (config.agents.rideHail.allocationManager.repositionTimeoutInSeconds > 0)
+              scheduler ! ScheduleTrigger(RideHailRepositioningTrigger(0), rideHailManager)
+            if (config.agents.rideHail.allocationManager.requestBufferTimeoutInSeconds > 0)
+              scheduler ! ScheduleTrigger(BufferedRideHailRequestsTrigger(0), rideHailManager)
+          }
 
-      }),
-      "BeamMobsim.iteration"
-    )
+        }),
+        "BeamMobsim.iteration")
     Await.result(iteration ? "Run!", timeout.duration)
 
     logger.info("Agentsim finished.")

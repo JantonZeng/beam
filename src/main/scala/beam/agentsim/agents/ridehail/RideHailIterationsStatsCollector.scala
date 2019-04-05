@@ -1,12 +1,12 @@
 package beam.agentsim.agents.ridehail
 
-import beam.agentsim.events.{ModeChoiceEvent, PathTraversalEvent}
+import beam.agentsim.events.{ ModeChoiceEvent, PathTraversalEvent }
 import beam.sim.BeamServices
 import beam.utils.GeoUtils
 import com.conveyal.r5.transit.TransportNetwork
 import com.typesafe.scalalogging.LazyLogging
 import org.matsim.api.core.v01.Coord
-import org.matsim.api.core.v01.events.{ActivityEndEvent, Event, PersonEntersVehicleEvent}
+import org.matsim.api.core.v01.events.{ ActivityEndEvent, Event, PersonEntersVehicleEvent }
 import org.matsim.core.api.experimental.events.EventsManager
 import org.matsim.core.events.handler.BasicEventHandler
 import org.matsim.core.utils.misc.Time
@@ -16,40 +16,37 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.Try
 
 /**
-  * numberOfRides: -> passengers =1 (sum of rides)
-  * customerWaitTime -> sum and average
-  *
-  * idleTimes = count in each bin according to how much time remaining
-  * agent arrives in a time 1000 and leaves at time 2000
-  * bin Size=100 -> count as idle in 10 bins (from 1000 to 2000)
-  * idleTime[TAZId,binNumber] // bin 10, 11, 12,...19 we do +1
-  *
-  * @param sumOfRequestedRides Total number of ride requests
-  * @param sumOfWaitingTimes   Sum of waiting times
-  * @param sumOfIdlingVehicles total number of idling vehicles
-  */
+ * numberOfRides: -> passengers =1 (sum of rides)
+ * customerWaitTime -> sum and average
+ *
+ * idleTimes = count in each bin according to how much time remaining
+ * agent arrives in a time 1000 and leaves at time 2000
+ * bin Size=100 -> count as idle in 10 bins (from 1000 to 2000)
+ * idleTime[TAZId,binNumber] // bin 10, 11, 12,...19 we do +1
+ *
+ * @param sumOfRequestedRides Total number of ride requests
+ * @param sumOfWaitingTimes   Sum of waiting times
+ * @param sumOfIdlingVehicles total number of idling vehicles
+ */
 case class RideHailStatsEntry(
-  sumOfRequestedRides: Long,
-  sumOfWaitingTimes: Long,
-  sumOfIdlingVehicles: Long,
-  sumOfActivityEndEvents: Long
-) {
+    sumOfRequestedRides: Long,
+    sumOfWaitingTimes: Long,
+    sumOfIdlingVehicles: Long,
+    sumOfActivityEndEvents: Long) {
 
   def aggregate(other: RideHailStatsEntry): RideHailStatsEntry =
     RideHailStatsEntry(
       sumOfRequestedRides + other.sumOfRequestedRides,
       sumOfWaitingTimes + other.sumOfWaitingTimes,
       sumOfIdlingVehicles + other.sumOfIdlingVehicles,
-      sumOfActivityEndEvents + other.sumOfActivityEndEvents
-    )
+      sumOfActivityEndEvents + other.sumOfActivityEndEvents)
 
   def average(other: RideHailStatsEntry): RideHailStatsEntry = {
     RideHailStatsEntry(
       (sumOfRequestedRides + other.sumOfRequestedRides) / 2,
       (sumOfWaitingTimes + other.sumOfWaitingTimes) / 2,
       (sumOfIdlingVehicles + other.sumOfIdlingVehicles) / 2,
-      (sumOfActivityEndEvents + other.sumOfActivityEndEvents) / 2
-    )
+      (sumOfActivityEndEvents + other.sumOfActivityEndEvents) / 2)
   }
 
   def getDemandEstimate: Double = {
@@ -65,28 +62,22 @@ object RideHailStatsEntry {
   def empty: RideHailStatsEntry = RideHailStatsEntry()
 
   def apply(
-    sumOfRequestedRides: Long = 0,
-    sumOfWaitingTimes: Long = 0,
-    sumOfIdlingVehicles: Long = 0,
-    sumOfActivityEndEvents: Long = 0
-  ): RideHailStatsEntry =
-    new RideHailStatsEntry(
-      sumOfRequestedRides,
-      sumOfWaitingTimes,
-      sumOfIdlingVehicles,
-      sumOfActivityEndEvents
-    )
+      sumOfRequestedRides: Long = 0,
+      sumOfWaitingTimes: Long = 0,
+      sumOfIdlingVehicles: Long = 0,
+      sumOfActivityEndEvents: Long = 0): RideHailStatsEntry =
+    new RideHailStatsEntry(sumOfRequestedRides, sumOfWaitingTimes, sumOfIdlingVehicles, sumOfActivityEndEvents)
 
   def aggregate(first: RideHailStatsEntry, second: RideHailStatsEntry): RideHailStatsEntry =
     first.aggregate(second)
 }
 
 class RideHailIterationsStatsCollector(
-  eventsManager: EventsManager,
-  beamServices: BeamServices,
-  rideHailIterationHistoryActor: RideHailIterationHistory,
-  transportNetwork: TransportNetwork
-) extends BasicEventHandler
+    eventsManager: EventsManager,
+    beamServices: BeamServices,
+    rideHailIterationHistoryActor: RideHailIterationHistory,
+    transportNetwork: TransportNetwork)
+    extends BasicEventHandler
     with LazyLogging {
 
   private val beamConfig = beamServices.beamConfig
@@ -96,8 +87,8 @@ class RideHailIterationsStatsCollector(
   private val rideHailConfig = beamConfig.beam.agentsim.agents.rideHail
   private val timeBinSizeInSec = rideHailConfig.iterationStats.timeBinSizeInSec
   private val numberOfTimeBins = Math
-    .floor(Time.parseTime(beamConfig.matsim.modules.qsim.endTime) / timeBinSizeInSec)
-    .toInt + 1
+      .floor(Time.parseTime(beamConfig.matsim.modules.qsim.endTime) / timeBinSizeInSec)
+      .toInt + 1
 
   private val rideHailModeChoiceEvents = mutable.Map[String, ModeChoiceEvent]()
   private val rideHailEventsTuples =
@@ -115,13 +106,8 @@ class RideHailIterationsStatsCollector(
   def tellHistoryToRideHailIterationHistoryActorAndReset(): Unit = {
     updateStatsForIdlingVehicles()
 
-    rideHailIterationHistoryActor updateRideHailStats
-    TNCIterationStats(
-      rideHailStats.mapValues(_.toList),
-      beamServices.tazTreeMap,
-      timeBinSizeInSec,
-      numberOfTimeBins
-    )
+    rideHailIterationHistoryActor.updateRideHailStats(
+      TNCIterationStats(rideHailStats.mapValues(_.toList), beamServices.tazTreeMap, timeBinSizeInSec, numberOfTimeBins))
 
     clearStats()
   }
@@ -142,9 +128,7 @@ class RideHailIterationsStatsCollector(
       val endTazId = getEndTazId(lastEvent)
       val endTime = lastEvent.arrivalTime
       val endingBin = getTimeBin(endTime)
-      idlingBins ++= ((endingBin + 1) until numberOfTimeBins)
-        .map((_, endTazId))
-        .toMap
+      idlingBins ++= ((endingBin + 1) until numberOfTimeBins).map((_, endTazId)).toMap
     })
 
     addMissingTaz()
@@ -173,14 +157,9 @@ class RideHailIterationsStatsCollector(
 
   private def addMissingTaz(): Unit = {
     val remainingTaz =
-      vehicleIdlingBins
-        .flatMap(_._2.values)
-        .filter(!rideHailStats.contains(_))
-        .toSet
+      vehicleIdlingBins.flatMap(_._2.values).filter(!rideHailStats.contains(_)).toSet
     rideHailStats ++= remainingTaz.map(
-      _ -> mutable.ArrayBuffer
-        .fill[Option[RideHailStatsEntry]](numberOfTimeBins)(None)
-    )
+      _ -> mutable.ArrayBuffer.fill[Option[RideHailStatsEntry]](numberOfTimeBins)(None))
   }
 
   private def logIdlingStats(): Unit = {
@@ -195,8 +174,7 @@ class RideHailIterationsStatsCollector(
       "{} rideHail vehicles (out of {}) were never moved and {} vehicles were moved without a passenger, during whole day.",
       numAlwaysIdleVehicles,
       vehicles.size,
-      numIdleVehiclesWithoutPassenger
-    )
+      numIdleVehiclesWithoutPassenger)
 //    logger.info(
 //      "Ride hail vehicles with no passengers: {}",
 //      vehicles.filter(_._2 == 0).keys.mkString(", ")
@@ -264,14 +242,8 @@ class RideHailIterationsStatsCollector(
   }
 
   def isSameCoords(currentEvent: PathTraversalEvent, lastEvent: PathTraversalEvent): Boolean = {
-    val lastCoord = (
-      lastEvent.endX,
-      lastEvent.endY
-    )
-    val currentCoord = (
-      currentEvent.startX,
-      currentEvent.startY
-    )
+    val lastCoord = (lastEvent.endX, lastEvent.endY)
+    val currentCoord = (currentEvent.startX, currentEvent.startY)
     lastCoord == currentCoord
   }
 
@@ -291,9 +263,7 @@ class RideHailIterationsStatsCollector(
     }
   }
 
-  private def collectPersonEntersEvents(
-    personEntersVehicleEvent: PersonEntersVehicleEvent
-  ): Unit = {
+  private def collectPersonEntersEvents(personEntersVehicleEvent: PersonEntersVehicleEvent): Unit = {
     val personId = personEntersVehicleEvent.getPersonId.toString
     val vehicleId = personEntersVehicleEvent.getVehicleId.toString
     if (vehicleId.contains("rideHail")) {
@@ -343,8 +313,7 @@ class RideHailIterationsStatsCollector(
         val tazBins = rideHailStats.get(tazId) match {
           case Some(bins) => bins
           case None =>
-            val bins = mutable.ArrayBuffer
-              .fill[Option[RideHailStatsEntry]](numberOfTimeBins)(None)
+            val bins = mutable.ArrayBuffer.fill[Option[RideHailStatsEntry]](numberOfTimeBins)(None)
             rideHailStats += (tazId -> bins)
             bins
         }
@@ -355,12 +324,7 @@ class RideHailIterationsStatsCollector(
               if (numPassengers > 0) entry.sumOfWaitingTimes + waitingTime
               else entry.sumOfWaitingTimes
             val numOfRequestedRides = entry.sumOfRequestedRides + 1
-            Some(
-              entry.copy(
-                sumOfRequestedRides = numOfRequestedRides,
-                sumOfWaitingTimes = sumOfWaitingTimes
-              )
-            )
+            Some(entry.copy(sumOfRequestedRides = numOfRequestedRides, sumOfWaitingTimes = sumOfWaitingTimes))
           case None =>
             Some(RideHailStatsEntry(1, waitingTime))
         }
@@ -442,8 +406,7 @@ class RideHailIterationsStatsCollector(
     val tazBins = rideHailStats.get(tazId) match {
       case Some(bins) => bins
       case None =>
-        val bins = mutable.ArrayBuffer
-          .fill[Option[RideHailStatsEntry]](numberOfTimeBins)(None)
+        val bins = mutable.ArrayBuffer.fill[Option[RideHailStatsEntry]](numberOfTimeBins)(None)
         rideHailStats += (tazId -> bins)
         bins
     }

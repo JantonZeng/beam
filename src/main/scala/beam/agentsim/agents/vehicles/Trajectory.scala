@@ -9,12 +9,12 @@ import org.matsim.core.utils.geometry.CoordinateTransformation
 import org.matsim.core.utils.geometry.geotools.MGC
 import org.matsim.core.utils.geometry.transformations.TransformationFactory
 
-import scala.collection.Searching.{Found, InsertionPoint, _}
+import scala.collection.Searching.{ Found, InsertionPoint, _ }
 
 object Trajectory {
 
-  lazy val transformer: CoordinateTransformation = TransformationFactory
-    .getCoordinateTransformation(TransformationFactory.WGS84, defaultCoordinateSystem)
+  lazy val transformer: CoordinateTransformation =
+    TransformationFactory.getCoordinateTransformation(TransformationFactory.WGS84, defaultCoordinateSystem)
 
   @Inject
   var beamConfig: BeamConfig = _
@@ -28,8 +28,8 @@ object Trajectory {
 }
 
 /**
-  * Describe trajectory as vector of coordinates with time for each coordinate
-  */
+ * Describe trajectory as vector of coordinates with time for each coordinate
+ */
 class Trajectory(val path: Vector[SpaceTime]) {
 
   private var _path: Vector[SpaceTime] = path
@@ -56,10 +56,8 @@ class Trajectory(val path: Vector[SpaceTime]) {
       val timeFunction = _path.slice(prev, next).map(_.time.toDouble).toArray
       val xFunc = trajectorySegment.map(_.loc.getX)
       val yFunc = trajectorySegment.map(_.loc.getY)
-      val xInterpolator = new LinearInterpolator()
-        .interpolate(timeFunction, xFunc)
-      val yInterpolator = new LinearInterpolator()
-        .interpolate(timeFunction, yFunc)
+      val xInterpolator = new LinearInterpolator().interpolate(timeFunction, xFunc)
+      val yInterpolator = new LinearInterpolator().interpolate(timeFunction, yFunc)
       SpaceTime(xInterpolator.value(time), yInterpolator.value(time), time)
     } else if (closestPosition == _path.size) {
       SpaceTime(_path.last.loc, time)

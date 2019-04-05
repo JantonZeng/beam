@@ -2,7 +2,7 @@ package beam.agentsim.agents
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ActorRef, FSM, LoggingFSM, Stash}
+import akka.actor.{ ActorRef, FSM, LoggingFSM, Stash }
 import akka.util
 import beam.agentsim.agents.BeamAgent._
 import beam.agentsim.scheduler.Trigger
@@ -40,8 +40,7 @@ trait BeamAgent[T] extends LoggingFSM[BeamAgentState, T] with Stash with HasTick
       reason match {
         case FSM.Shutdown =>
           log.error(
-            "Got Shutdown. This means actorRef.stop() was called externally, e.g. by supervisor because of an exception.\n"
-          )
+            "Got Shutdown. This means actorRef.stop() was called externally, e.g. by supervisor because of an exception.\n")
         case _ =>
       }
       log.error("State: {} Event: {}", currentState, event.toString)

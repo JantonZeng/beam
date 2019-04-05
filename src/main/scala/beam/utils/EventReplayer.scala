@@ -5,7 +5,7 @@ import beam.sim.BeamHelper
 import beam.sim.config.BeamConfig
 import org.matsim.api.core.v01.events.Event
 import org.matsim.core.events.handler.BasicEventHandler
-import org.matsim.core.events.{EventsUtils, MatsimEventsReader}
+import org.matsim.core.events.{ EventsUtils, MatsimEventsReader }
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -45,8 +45,7 @@ object EventReplayer extends BeamHelper {
     val avg = total.toDouble / maxIter
 
     println(
-      s"DelayMetricAnalysis processed ${events.size}. Total time $total ms, average $avg ms, number of iterations $maxIter"
-    )
+      s"DelayMetricAnalysis processed ${events.size}. Total time $total ms, average $avg ms, number of iterations $maxIter")
   }
   private def readEvents(path: String): IndexedSeq[Event] = {
     val eventsManager = EventsUtils.createEventsManager()

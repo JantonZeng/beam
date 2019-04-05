@@ -1,23 +1,20 @@
 package beam.agentsim.agents.choice.logit
 
-import beam.agentsim.agents.choice.logit.UtilityParam.{Intercept, Multiplier, UtilityParamType}
+import beam.agentsim.agents.choice.logit.UtilityParam.{ Intercept, Multiplier, UtilityParamType }
 import com.typesafe.scalalogging.LazyLogging
 import org.supercsv.cellprocessor.constraint.NotNull
 import org.supercsv.cellprocessor.ift.CellProcessor
-import org.supercsv.cellprocessor.{Optional, ParseDouble}
+import org.supercsv.cellprocessor.{ Optional, ParseDouble }
 
 import scala.beans.BeanProperty
 import scala.util.Random
 
 /**
-  * BEAM
-  */
+ * BEAM
+ */
 case class MultinomialLogit(alternativeParams: Map[String, AlternativeParams]) extends LazyLogging {
 
-  def sampleAlternative(
-    alternatives: Vector[AlternativeAttributes],
-    random: Random
-  ): Option[String] = {
+  def sampleAlternative(alternatives: Vector[AlternativeAttributes], random: Random): Option[String] = {
     val expV = alternatives.map(alt => Math.exp(getUtilityOfAlternative(alt)))
     // If any is +Inf then choose that as the certain alternative
     val indsOfPosInf = for (theExpV <- expV.zipWithIndex if theExpV._1 == Double.PositiveInfinity)
@@ -45,11 +42,10 @@ case class MultinomialLogit(alternativeParams: Map[String, AlternativeParams]) e
 
   def getUtilityOfAlternative(alternative: AlternativeAttributes): Double = {
     if (!alternativeParams.contains(alternative.alternativeName)) {
-      -1E100
+      -1e100
     } else {
       (alternativeParams.getOrElse("COMMON", AlternativeParams.empty).params ++ alternativeParams(
-        alternative.alternativeName
-      ).params)
+        alternative.alternativeName).params)
         .map { theParam =>
           if (alternative.attributes.contains(theParam._1)) {
             theParam._2.paramType match {
@@ -58,12 +54,10 @@ case class MultinomialLogit(alternativeParams: Map[String, AlternativeParams]) e
               case Intercept =>
                 theParam._2.paramValue.toDouble
             }
-          } else if (theParam._1.equalsIgnoreCase("intercept") || theParam._1.equalsIgnoreCase(
-                       "asc"
-                     )) {
+          } else if (theParam._1.equalsIgnoreCase("intercept") || theParam._1.equalsIgnoreCase("asc")) {
             theParam._2.paramValue.toDouble
           } else {
-            -1E100
+            -1e100
           }
         }
         .toVector
@@ -81,16 +75,12 @@ object MultinomialLogit {
         UtilityParam(
           paramData.paramName,
           paramData.paramValue,
-          UtilityParam.StringToUtilityParamType(paramData.paramType)
-        )
+          UtilityParam.StringToUtilityParamType(paramData.paramType))
       }
     }
     MultinomialLogit(theParams.map {
       case (altName, utilParams) =>
-        altName -> AlternativeParams(
-          altName,
-          utilParams.map(utilParam => utilParam.paramName -> utilParam).toMap
-        )
+        altName -> AlternativeParams(altName, utilParams.map(utilParam => utilParam.paramName -> utilParam).toMap)
     })
   }
 
@@ -104,11 +94,11 @@ object MultinomialLogit {
   }*/
 
   class MnlData(
-    @BeanProperty var alternative: String = "COMMON",
-    @BeanProperty var paramName: String = "",
-    @BeanProperty var paramType: String = "",
-    @BeanProperty var paramValue: Double = Double.NaN
-  ) extends Cloneable {
+      @BeanProperty var alternative: String = "COMMON",
+      @BeanProperty var paramName: String = "",
+      @BeanProperty var paramType: String = "",
+      @BeanProperty var paramValue: Double = Double.NaN)
+      extends Cloneable {
     override def clone(): AnyRef = new MnlData(alternative, paramName, paramType, paramValue)
   }
 }

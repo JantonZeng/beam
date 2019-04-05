@@ -6,8 +6,8 @@ import beam.sim.BeamServices
 import org.matsim.api.core.v01.Id
 
 /**
-  * BEAM
-  */
+ * BEAM
+ */
 object DrivingCost {
 
   def estimateDrivingCost(leg: BeamLeg, vehicleTypeId: Id[BeamVehicleType], services: BeamServices): Double = {

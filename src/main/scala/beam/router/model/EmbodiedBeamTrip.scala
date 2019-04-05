@@ -29,9 +29,7 @@ case class EmbodiedBeamTrip(legs: IndexedSeq[EmbodiedBeamLeg]) {
   lazy val vehiclesInTrip: IndexedSeq[Id[Vehicle]] = determineVehiclesInTrip(legs)
 
   @transient
-  lazy val requiresReservationConfirmation: Boolean = tripClassifier != WALK && legs.exists(
-    !_.asDriver
-  )
+  lazy val requiresReservationConfirmation: Boolean = tripClassifier != WALK && legs.exists(!_.asDriver)
 
   val totalTravelTimeInSecs: Int = legs.lastOption.map(_.beamLeg.endTime - legs.head.beamLeg.startTime).getOrElse(0)
 

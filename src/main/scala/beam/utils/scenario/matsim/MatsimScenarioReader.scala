@@ -1,6 +1,6 @@
 package beam.utils.scenario.matsim
 
-import beam.utils.{FileUtils, ProfilingUtils}
+import beam.utils.{ FileUtils, ProfilingUtils }
 import beam.utils.scenario._
 import com.typesafe.scalalogging.LazyLogging
 import org.supercsv.io.CsvMapReader
@@ -30,8 +30,7 @@ object CsvScenarioReader extends MatsimScenarioReader with LazyLogging {
   }
 
   private[matsim] def readAs[T](path: String, what: String, mapper: java.util.Map[String, String] => T)(
-    implicit ct: ClassTag[T]
-  ): Array[T] = {
+      implicit ct: ClassTag[T]): Array[T] = {
     ProfilingUtils.timed(what, x => logger.info(x)) {
       FileUtils.using(new CsvMapReader(FileUtils.readerFromFile(path), CsvPreference.STANDARD_PREFERENCE)) { csvRdr =>
         val header = csvRdr.getHeader(true)
@@ -67,8 +66,7 @@ object CsvScenarioReader extends MatsimScenarioReader with LazyLogging {
       x = x,
       y = y,
       endTime = endTime,
-      mode = mode
-    )
+      mode = mode)
   }
 
   private def toPersonInfo(rec: java.util.Map[String, String]): PersonInfo = {

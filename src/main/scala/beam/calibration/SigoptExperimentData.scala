@@ -2,20 +2,20 @@ package beam.calibration
 
 import java.nio.file.Paths
 
-import beam.calibration.BeamSigoptTuner.{createExperiment, fetchExperiment}
+import beam.calibration.BeamSigoptTuner.{ createExperiment, fetchExperiment }
 import beam.experiment.ExperimentDef
 import com.sigopt.model.Experiment
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.Try
 
 case class SigoptExperimentData(
-  experimentDef: ExperimentDef,
-  benchmarkFileLoc: String,
-  experimentId: String,
-  development: Boolean = false
-) extends LazyLogging {
+    experimentDef: ExperimentDef,
+    benchmarkFileLoc: String,
+    experimentId: String,
+    development: Boolean = false)
+    extends LazyLogging {
 
   val baseConfig: Config =
     ConfigFactory

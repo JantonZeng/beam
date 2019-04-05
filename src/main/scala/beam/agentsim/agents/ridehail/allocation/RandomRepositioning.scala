@@ -20,10 +20,8 @@ class RandomRepositioning(val rideHailManager: RideHailManager)
     if (rideHailManager.vehicleManager.getIdleVehicles.size >= 2) {
       val origin = rideHailManager.vehicleManager.getIdleVehicles.values.toVector
       val destination = scala.util.Random.shuffle(origin)
-      (for ((o, d) <- origin zip destination)
-        yield (o.vehicleId, d.currentLocationUTM.loc))
-        .splitAt(numVehiclesToReposition)
-        ._1
+      (for ((o, d) <- origin.zip(destination))
+        yield (o.vehicleId, d.currentLocationUTM.loc)).splitAt(numVehiclesToReposition)._1
     } else {
       Vector()
     }

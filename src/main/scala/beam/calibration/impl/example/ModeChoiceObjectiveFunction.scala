@@ -8,7 +8,7 @@ import scala.util.Try
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.parser._
-import org.apache.http.client.fluent.{Content, Request}
+import org.apache.http.client.fluent.{ Content, Request }
 import beam.calibration.impl.example.ModeChoiceObjectiveFunction.ModeChoiceStats
 
 class ModeChoiceObjectiveFunction(benchmarkDataFileLoc: String) {
@@ -67,19 +67,15 @@ class ModeChoiceObjectiveFunction(benchmarkDataFileLoc: String) {
   }
 
   def minLevelRepresentationOfMode(
-    runModeStats: Map[String, Double],
-    benchmarkData: Map[String, Double],
-    minLevelRepresentationOfMode: Double,
-    mode: String
-  ): Boolean = {
+      runModeStats: Map[String, Double],
+      benchmarkData: Map[String, Double],
+      minLevelRepresentationOfMode: Double,
+      mode: String): Boolean = {
     runModeStats.contains(mode) && (runModeStats(mode)
     - benchmarkData(mode) * minLevelRepresentationOfMode) > 0
   }
 
-  def compareStatsAbsolutError(
-    benchmarkData: Map[String, Double],
-    runData: Map[String, Double]
-  ): Double = {
+  def compareStatsAbsolutError(benchmarkData: Map[String, Double], runData: Map[String, Double]): Double = {
     val res =
       runData
         .map({
@@ -92,16 +88,13 @@ class ModeChoiceObjectiveFunction(benchmarkDataFileLoc: String) {
   }
 
   /**
-    * Computes MPE between run data and benchmark data on a mode-to-mode basis.
-    *
-    * @param benchmarkData target values of mode shares
-    * @param runData       output values of mode shares given current suggestion.
-    * @return the '''negative''' RMSPE value (since we '''maximize''' the objective).
-    */
-  def compareStatsRMSPE(
-    benchmarkData: Map[String, Double],
-    runData: Map[String, Double]
-  ): Double = {
+   * Computes MPE between run data and benchmark data on a mode-to-mode basis.
+   *
+   * @param benchmarkData target values of mode shares
+   * @param runData       output values of mode shares given current suggestion.
+   * @return the '''negative''' RMSPE value (since we '''maximize''' the objective).
+   */
+  def compareStatsRMSPE(benchmarkData: Map[String, Double], runData: Map[String, Double]): Double = {
     val res = -Math.sqrt(
       runData
         .map({
@@ -109,8 +102,7 @@ class ModeChoiceObjectiveFunction(benchmarkDataFileLoc: String) {
             val y = benchmarkData(k)
             Math.pow((y - y_hat) / y, 2)
         })
-        .sum / runData.size
-    )
+        .sum / runData.size)
     res
   }
 
@@ -125,8 +117,8 @@ class ModeChoiceObjectiveFunction(benchmarkDataFileLoc: String) {
 
   def getStatsFromMTC(mtcBenchmarkEndPoint: URI): Map[String, Double] = {
     (for {
-      mtcContent         <- getMTCContent(mtcBenchmarkEndPoint)
-      parsedData         <- parseMTCRequest(mtcContent)
+      mtcContent <- getMTCContent(mtcBenchmarkEndPoint)
+      parsedData <- parseMTCRequest(mtcContent)
       modeChoiceStatList <- jsonToModechoiceStats(parsedData)
     } yield {
       modeChoiceStatList.map { stat =>
@@ -157,13 +149,12 @@ class ModeChoiceObjectiveFunction(benchmarkDataFileLoc: String) {
 object ModeChoiceObjectiveFunction {
 
   case class ModeChoiceStats(
-    year: String,
-    source: String,
-    region: String,
-    share: Double,
-    mode: String,
-    data_type: String
-  )
+      year: String,
+      source: String,
+      region: String,
+      share: Double,
+      mode: String,
+      data_type: String)
 
 }
 

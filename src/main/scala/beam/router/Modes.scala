@@ -16,7 +16,7 @@ import beam.router.Modes.BeamMode.{
   TRANSIT,
   WALK
 }
-import com.conveyal.r5.api.util.{LegMode, TransitModes}
+import com.conveyal.r5.api.util.{ LegMode, TransitModes }
 import com.conveyal.r5.profile.StreetMode
 import enumeratum.values._
 import org.matsim.api.core.v01.TransportMode
@@ -25,19 +25,19 @@ import scala.collection.immutable
 import scala.language.implicitConversions
 
 /**
-  * [[ValueEnum]] containing all of the translations b/w BEAM <==> R5[[LegMode]] MATSim [[TransportMode]].
-  *
-  * Note: There is an implicit conversion
-  *
-  * Created by sfeygin on 4/5/17.
-  */
+ * [[ValueEnum]] containing all of the translations b/w BEAM <==> R5[[LegMode]] MATSim [[TransportMode]].
+ *
+ * Note: There is an implicit conversion
+ *
+ * Created by sfeygin on 4/5/17.
+ */
 object Modes {
 
   sealed abstract class BeamMode(
-    val value: String,
-    val r5Mode: Option[Either[LegMode, TransitModes]],
-    val matsimMode: String
-  ) extends StringEnumEntry {
+      val value: String,
+      val r5Mode: Option[Either[LegMode, TransitModes]],
+      val matsimMode: String)
+      extends StringEnumEntry {
 
     def isTransit: Boolean = isR5TransitMode(this)
     def isMassTransit: Boolean = this == SUBWAY || this == RAIL || this == FERRY || this == TRAM
@@ -87,25 +87,13 @@ object Modes {
 
     // Transit-specific
     case object WALK_TRANSIT
-        extends BeamMode(
-          value = "walk_transit",
-          Some(Right(TransitModes.TRANSIT)),
-          TransportMode.transit_walk
-        )
+        extends BeamMode(value = "walk_transit", Some(Right(TransitModes.TRANSIT)), TransportMode.transit_walk)
 
     case object DRIVE_TRANSIT
-        extends BeamMode(
-          value = "drive_transit",
-          Some(Right(TransitModes.TRANSIT)),
-          TransportMode.pt
-        )
+        extends BeamMode(value = "drive_transit", Some(Right(TransitModes.TRANSIT)), TransportMode.pt)
 
     case object RIDE_HAIL_TRANSIT
-        extends BeamMode(
-          value = "ride_hail_transit",
-          Some(Right(TransitModes.TRANSIT)),
-          TransportMode.pt
-        )
+        extends BeamMode(value = "ride_hail_transit", Some(Right(TransitModes.TRANSIT)), TransportMode.pt)
 
     val chainBasedModes = Seq(CAR, BIKE)
 
@@ -115,18 +103,7 @@ object Modes {
     val massTransitModes: List[BeamMode] = List(FERRY, TRANSIT, RAIL, SUBWAY, TRAM)
 
     val allModes: Seq[BeamMode] =
-      Seq(
-        CAR,
-        CAV,
-        WALK,
-        BIKE,
-        TRANSIT,
-        RIDE_HAIL,
-        RIDE_HAIL_POOLED,
-        RIDE_HAIL_TRANSIT,
-        DRIVE_TRANSIT,
-        WALK_TRANSIT
-      )
+      Seq(CAR, CAV, WALK, BIKE, TRANSIT, RIDE_HAIL, RIDE_HAIL_POOLED, RIDE_HAIL_TRANSIT, DRIVE_TRANSIT, WALK_TRANSIT)
 
     def fromString(stringMode: String): Option[BeamMode] = {
       if (stringMode.equals("")) {

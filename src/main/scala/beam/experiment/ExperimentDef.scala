@@ -1,7 +1,7 @@
 package beam.experiment
 
-import java.nio.file.{Files, Path, Paths}
-import java.util.{Collections, List => JavaList, Map => JavaMap}
+import java.nio.file.{ Files, Path, Paths }
+import java.util.{ Collections, List => JavaList, Map => JavaMap }
 import java.util
 
 import com.google.common.base.Charsets
@@ -10,12 +10,11 @@ import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
 
 case class ExperimentDef(
-  @BeanProperty var runExperimentScript: String,
-  @BeanProperty var batchRunScript: String,
-  @BeanProperty var header: Header,
-  @BeanProperty var defaultParams: java.util.Map[String, Object],
-  @BeanProperty var factors: java.util.List[Factor]
-) {
+    @BeanProperty var runExperimentScript: String,
+    @BeanProperty var batchRunScript: String,
+    @BeanProperty var header: Header,
+    @BeanProperty var defaultParams: java.util.Map[String, Object],
+    @BeanProperty var factors: java.util.List[Factor]) {
 
   lazy val projectRoot: Path = {
     if (System.getenv("BEAM_ROOT") != null) {
@@ -47,14 +46,12 @@ case class ExperimentDef(
   }
 
   /**
-    *
-    * @return list of distinct (factor_title, param_name)
-    */
+   *
+   * @return list of distinct (factor_title, param_name)
+   */
   def getDynamicParamNamesPerFactor: List[(String, String)] = {
     factors.asScala
-      .flatMap(
-        f => f.levels.asScala.flatMap(l => l.params.keySet().asScala.map(pname => (f.title, pname)))
-      )
+      .flatMap(f => f.levels.asScala.flatMap(l => l.params.keySet().asScala.map(pname => (f.title, pname))))
       .distinct
       .toList
   }
@@ -109,18 +106,14 @@ case class ExperimentRun(experiment: ExperimentDef, combinations: Seq[(Level, Fa
 }
 
 case class Header(
-  @BeanProperty var title: String,
-  @BeanProperty var author: String,
-  @BeanProperty var beamTemplateConfPath: String,
-  @BeanProperty var modeChoiceTemplate: String,
-  @BeanProperty var numWorkers: String,
-  @BeanProperty var deployParams: java.util.Map[String, Object]
-) {
+    @BeanProperty var title: String,
+    @BeanProperty var author: String,
+    @BeanProperty var beamTemplateConfPath: String,
+    @BeanProperty var modeChoiceTemplate: String,
+    @BeanProperty var numWorkers: String,
+    @BeanProperty var deployParams: java.util.Map[String, Object]) {
   def this() = this("", "", "", "", "", new java.util.HashMap())
 }
-case class BaseScenario(
-  @BeanProperty var title: String,
-  @BeanProperty var params: java.util.Map[String, Object]
-) {
+case class BaseScenario(@BeanProperty var title: String, @BeanProperty var params: java.util.Map[String, Object]) {
   def this() = this("", new java.util.HashMap())
 }

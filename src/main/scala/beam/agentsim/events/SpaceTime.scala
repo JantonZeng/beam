@@ -1,7 +1,7 @@
 package beam.agentsim.events
 
 import beam.utils.MathUtils
-import io.circe.{Encoder, Json}
+import io.circe.{ Encoder, Json }
 import org.matsim.api.core.v01.Coord
 
 case class SpaceTime(loc: Coord, time: Int)
@@ -18,9 +18,7 @@ object SpaceTime {
       Seq[Json](
         Json.fromDoubleOrNull(MathUtils.roundDouble(a.loc.getX, 5)), // TODO: Hardcoded. Should this be configurable?
         Json.fromDoubleOrNull(MathUtils.roundDouble(a.loc.getY, 5)), // TODO: Ditto.
-        Json.fromLong(a.time)
-      )
-    )
+        Json.fromLong(a.time)))
   }
 
   implicit val orderingByTime: Ordering[SpaceTime] = (x: SpaceTime, y: SpaceTime) => {

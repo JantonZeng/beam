@@ -2,7 +2,7 @@ package beam.calibration.utils
 
 import beam.calibration.BeamSigoptTuner
 import com.sigopt.Sigopt
-import com.sigopt.model.{Experiment, Pagination, Suggestion}
+import com.sigopt.model.{ Experiment, Pagination, Suggestion }
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.JavaConverters._
