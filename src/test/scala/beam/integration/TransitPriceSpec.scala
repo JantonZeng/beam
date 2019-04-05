@@ -2,12 +2,12 @@ package beam.integration
 
 import beam.sim.BeamHelper
 import com.typesafe.config.ConfigValueFactory
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{ Matchers, WordSpecLike }
 
 /**
-  * Created by fdariasm on 29/08/2017
-  *
-  */
+ * Created by fdariasm on 29/08/2017
+ *
+ */
 class TransitPriceSpec extends WordSpecLike with Matchers with BeamHelper with IntegrationSpecCommon {
 
   "Running beam with modeChoice ModeChoiceMultinomialLogit and increasing transitPrice value" must {
@@ -19,16 +19,10 @@ class TransitPriceSpec extends WordSpecLike with Matchers with BeamHelper with I
             baseConfig
               .withValue(
                 TestConstants.KEY_AGENT_MODAL_BEHAVIORS_MODE_CHOICE_CLASS,
-                ConfigValueFactory.fromAnyRef(TestConstants.MODE_CHOICE_MULTINOMIAL_LOGIT)
-              )
-              .withValue("beam.agentsim.tuning.transitPrice", ConfigValueFactory.fromAnyRef(tc))
-          ).groupedCount
-      )
+                ConfigValueFactory.fromAnyRef(TestConstants.MODE_CHOICE_MULTINOMIAL_LOGIT))
+              .withValue("beam.agentsim.tuning.transitPrice", ConfigValueFactory.fromAnyRef(tc))).groupedCount)
 
-      val tc = modeChoice
-        .map(_.get("transit"))
-        .filter(_.isDefined)
-        .map(_.get)
+      val tc = modeChoice.map(_.get("transit")).filter(_.isDefined).map(_.get)
 
       isOrdered(tc)((a, b) => a >= b) shouldBe true
     }

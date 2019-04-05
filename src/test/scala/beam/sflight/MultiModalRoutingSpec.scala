@@ -4,8 +4,8 @@ import beam.agentsim.agents.vehicles.BeamVehicleType
 import beam.agentsim.agents.vehicles.VehicleProtocol.StreetVehicle
 import beam.agentsim.events.SpaceTime
 import beam.router.BeamRouter._
-import beam.router.{BeamRouter, Modes}
-import org.matsim.api.core.v01.{Coord, Id}
+import beam.router.{ BeamRouter, Modes }
+import org.matsim.api.core.v01.{ Coord, Id }
 
 import scala.language.postfixOps
 
@@ -30,10 +30,7 @@ class MultiModalRoutingSpec extends AbstractSfLightSpec("MultiModalRoutingSpec")
             BeamVehicleType.defaultHumanBodyBeamVehicleType.id,
             new SpaceTime(new Coord(origin.getX, origin.getY), time),
             Modes.BeamMode.WALK,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       val response = expectMsgType[RoutingResponse]
       val routedStartTime = response.itineraries.head.beamLegs().head.startTime
       assert(routedStartTime >= 100 && routedStartTime <= 200)

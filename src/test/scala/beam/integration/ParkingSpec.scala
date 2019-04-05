@@ -2,13 +2,13 @@ package beam.integration
 
 import java.io.File
 
-import beam.agentsim.events.{LeavingParkingEvent, ModeChoiceEvent, ParkEvent, PathTraversalEvent}
+import beam.agentsim.events.{ LeavingParkingEvent, ModeChoiceEvent, ParkEvent, PathTraversalEvent }
 import beam.integration.EventReader._
 import beam.sim.BeamHelper
-import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
+import com.typesafe.config.{ ConfigFactory, ConfigValueFactory }
 import org.apache.commons.io.FileUtils
 import org.matsim.api.core.v01.events.Event
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -29,59 +29,44 @@ class ParkingSpec extends WordSpecLike with BeforeAndAfterAll with Matchers with
         |   {type = strategysettings, disableAfterIteration = -1, strategyName = SelectExpBeta , weight = 0.3},
         | ]
         |}
-      """.stripMargin
-    )
+      """.stripMargin)
 
     val config = baseConfig
       .withValue("beam.outputs.events.fileOutputFormats", ConfigValueFactory.fromAnyRef("xml,csv"))
       .withValue(
         TestConstants.KEY_AGENT_MODAL_BEHAVIORS_MODE_CHOICE_CLASS,
-        ConfigValueFactory.fromAnyRef(TestConstants.MODE_CHOICE_MULTINOMIAL_LOGIT)
-      )
+        ConfigValueFactory.fromAnyRef(TestConstants.MODE_CHOICE_MULTINOMIAL_LOGIT))
       .withValue(
         "beam.agentsim.agents.modalBehaviors.mulitnomialLogit.params.car_intercept",
-        ConfigValueFactory.fromAnyRef(1.0)
-      )
+        ConfigValueFactory.fromAnyRef(1.0))
       .withValue(
         "beam.agentsim.agents.modalBehaviors.mulitnomialLogit.params.walk_transit_intercept",
-        ConfigValueFactory.fromAnyRef(0.0)
-      )
+        ConfigValueFactory.fromAnyRef(0.0))
       .withValue(
         "beam.agentsim.agents.modalBehaviors.mulitnomialLogit.params.drive_transit_intercept",
-        ConfigValueFactory.fromAnyRef(0.0)
-      )
+        ConfigValueFactory.fromAnyRef(0.0))
       .withValue(
         "beam.agentsim.agents.modalBehaviors.mulitnomialLogit.params.ride_hail_transit_intercept",
-        ConfigValueFactory.fromAnyRef(0.0)
-      )
+        ConfigValueFactory.fromAnyRef(0.0))
       .withValue(
         "beam.agentsim.agents.modalBehaviors.mulitnomialLogit.params.ride_hail_intercept",
-        ConfigValueFactory.fromAnyRef(0.0)
-      )
+        ConfigValueFactory.fromAnyRef(0.0))
       .withValue(
         "beam.agentsim.agents.modalBehaviors.mulitnomialLogit.params.walk_intercept",
-        ConfigValueFactory.fromAnyRef(-5.0)
-      )
+        ConfigValueFactory.fromAnyRef(-5.0))
       .withValue(
         "beam.agentsim.agents.modalBehaviors.mulitnomialLogit.params.bike_intercept",
-        ConfigValueFactory.fromAnyRef(0.0)
-      )
+        ConfigValueFactory.fromAnyRef(0.0))
       .withValue("matsim.modules.strategy.ModuleProbability_1", ConfigValueFactory.fromAnyRef(0.3))
       .withValue("matsim.modules.strategy.ModuleProbability_2", ConfigValueFactory.fromAnyRef(0.7))
       .withValue(
         "beam.agentsim.taz.parkingFilePath",
-        ConfigValueFactory.fromAnyRef(s"test/input/beamville/parking/taz-parking-$parkingScenario.csv")
-      )
+        ConfigValueFactory.fromAnyRef(s"test/input/beamville/parking/taz-parking-$parkingScenario.csv"))
       .withValue(
         "beam.outputs.events.overrideWritingLevels",
         ConfigValueFactory.fromAnyRef(
-          "beam.agentsim.events.ParkEvent:VERBOSE, beam.agentsim.events.LeavingParkingEvent:VERBOSE, org.matsim.api.core.v01.events.ActivityEndEvent:REGULAR, org.matsim.api.core.v01.events.ActivityStartEvent:REGULAR, org.matsim.api.core.v01.events.PersonEntersVehicleEvent:REGULAR, org.matsim.api.core.v01.events.PersonLeavesVehicleEvent:REGULAR, beam.agentsim.events.ModeChoiceEvent:VERBOSE, beam.agentsim.events.PathTraversalEvent:VERBOSE"
-        )
-      )
-      .withValue(
-        "matsim.modules.controler.lastIteration",
-        ConfigValueFactory.fromAnyRef(iterations)
-      )
+          "beam.agentsim.events.ParkEvent:VERBOSE, beam.agentsim.events.LeavingParkingEvent:VERBOSE, org.matsim.api.core.v01.events.ActivityEndEvent:REGULAR, org.matsim.api.core.v01.events.ActivityStartEvent:REGULAR, org.matsim.api.core.v01.events.PersonEntersVehicleEvent:REGULAR, org.matsim.api.core.v01.events.PersonLeavesVehicleEvent:REGULAR, beam.agentsim.events.ModeChoiceEvent:VERBOSE, beam.agentsim.events.PathTraversalEvent:VERBOSE"))
+      .withValue("matsim.modules.controler.lastIteration", ConfigValueFactory.fromAnyRef(iterations))
       .withFallback(param)
       .resolve()
 
@@ -147,7 +132,7 @@ class ParkingSpec extends WordSpecLike with BeforeAndAfterAll with Matchers with
           val leavingParkEventsWithoutFirst = leavingEvents.tail
 
           parkEventsWithoutLast.size shouldEqual leavingParkEventsWithoutFirst.size
-          (id, parkEventsWithoutLast zip leavingParkEventsWithoutFirst)
+          (id, parkEventsWithoutLast.zip(leavingParkEventsWithoutFirst))
       }
 
       res.collect {
@@ -158,13 +143,10 @@ class ParkingSpec extends WordSpecLike with BeforeAndAfterAll with Matchers with
                 ParkEvent.ATTRIBUTE_PARKING_TAZ,
                 ParkEvent.ATTRIBUTE_PARKING_TYPE,
                 ParkEvent.ATTRIBUTE_PRICING_MODEL,
-                ParkEvent.ATTRIBUTE_CHARGING_TYPE
-              ).foreach { k =>
+                ParkEvent.ATTRIBUTE_CHARGING_TYPE).foreach { k =>
                 evA.getAttributes.get(k) should equal(evB.getAttributes.get(k))
               }
-              evA.getAttributes.get("time").toDouble should be <= evB.getAttributes
-                .get("time")
-                .toDouble
+              evA.getAttributes.get("time").toDouble should be <= evB.getAttributes.get("time").toDouble
           }
       }
     }
@@ -185,7 +167,7 @@ class ParkingSpec extends WordSpecLike with BeforeAndAfterAll with Matchers with
         case (id, x) =>
           val (parkEvents, leavingEvents) =
             x.partition(e => ParkEvent.EVENT_TYPE.equals(e.getEventType))
-          (id, leavingEvents zip parkEvents)
+          (id, leavingEvents.zip(parkEvents))
       }
 
       val pathTraversalEvents =
@@ -217,9 +199,7 @@ class ParkingSpec extends WordSpecLike with BeforeAndAfterAll with Matchers with
       logger.debug("Default iterations ", defaultModeChoiceCarCount.mkString(","))
       logger.debug("Expensive iterations ", expensiveModeChoiceCarCount.mkString(","))
 
-      defaultModeChoiceCarCount
-        .takeRight(5)
-        .sum should be > expensiveModeChoiceCarCount.takeRight(5).sum
+      defaultModeChoiceCarCount.takeRight(5).sum should be > expensiveModeChoiceCarCount.takeRight(5).sum
     }
 
     "empty parking access should reduce driving" in {
@@ -229,9 +209,7 @@ class ParkingSpec extends WordSpecLike with BeforeAndAfterAll with Matchers with
       logger.debug("Default iterations", defaultModeChoiceCarCount.mkString(","))
       logger.debug("Empty iterations", emptyModeChoiceCarCount.mkString(","))
 
-      defaultModeChoiceCarCount
-        .takeRight(5)
-        .sum should be > emptyModeChoiceCarCount.takeRight(5).sum
+      defaultModeChoiceCarCount.takeRight(5).sum should be > emptyModeChoiceCarCount.takeRight(5).sum
     }
 
     "limited parking access should reduce driving" ignore {
@@ -241,9 +219,7 @@ class ParkingSpec extends WordSpecLike with BeforeAndAfterAll with Matchers with
       logger.debug(s"Default iterations ${defaultModeChoiceCarCount.mkString(",")}")
       logger.debug(s"Limited iterations ${limitedModeChoiceCarCount.mkString(",")}")
 
-      defaultModeChoiceCarCount
-        .takeRight(5)
-        .sum should be > limitedModeChoiceCarCount.takeRight(5).sum
+      defaultModeChoiceCarCount.takeRight(5).sum should be > limitedModeChoiceCarCount.takeRight(5).sum
     }
   }
 }

@@ -3,8 +3,8 @@ package beam.router
 import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ActorIdentity, ActorRef, ActorSystem, Identify}
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.actor.{ ActorIdentity, ActorRef, ActorSystem, Identify }
+import akka.testkit.{ ImplicitSender, TestKit }
 import beam.agentsim.agents.choice.mode.PtFares
 import beam.agentsim.agents.choice.mode.PtFares.FareRule
 import beam.agentsim.agents.vehicles.BeamVehicleType
@@ -19,25 +19,25 @@ import beam.router.gtfs.FareCalculator.BeamFareSegment
 import beam.router.osm.TollCalculator
 import beam.router.r5.DefaultNetworkCoordinator
 import beam.sim.common.GeoUtilsImpl
-import beam.sim.config.{BeamConfig, MatSimBeamConfigBuilder}
+import beam.sim.config.{ BeamConfig, MatSimBeamConfigBuilder }
 import beam.sim.population.DefaultPopulationAdjustment
-import beam.sim.{BeamHelper, BeamServices, BeamWarmStart}
+import beam.sim.{ BeamHelper, BeamServices, BeamWarmStart }
 import beam.utils.TestConfigUtils.testConfig
-import beam.utils.{DateUtils, FileUtils, NetworkHelperImpl}
-import com.typesafe.config.{Config, ConfigValueFactory}
+import beam.utils.{ DateUtils, FileUtils, NetworkHelperImpl }
+import com.typesafe.config.{ Config, ConfigValueFactory }
 import org.matsim.api.core.v01.population.Person
-import org.matsim.api.core.v01.{Id, Scenario}
+import org.matsim.api.core.v01.{ Id, Scenario }
 import org.matsim.core.config.ConfigUtils
 import org.matsim.core.config.groups.TravelTimeCalculatorConfigGroup
 import org.matsim.core.controler.AbstractModule
 import org.matsim.core.events.EventsManagerImpl
-import org.matsim.core.scenario.{MutableScenario, ScenarioUtils}
+import org.matsim.core.scenario.{ MutableScenario, ScenarioUtils }
 import org.matsim.households.Household
 import org.matsim.vehicles.Vehicle
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.duration._
@@ -50,13 +50,7 @@ class WarmStartRoutingSpec
         testConfig("test/input/beamville/beam.conf")
           .resolve()
           .withValue("beam.warmStart.enabled", ConfigValueFactory.fromAnyRef(true))
-          .withValue(
-            "beam.warmStart.path",
-            ConfigValueFactory
-              .fromAnyRef("test/input/beamville/test-data/")
-          )
-      )
-    )
+          .withValue("beam.warmStart.path", ConfigValueFactory.fromAnyRef("test/input/beamville/test-data/"))))
     with BeamHelper
     with WordSpecLike
     with Matchers
@@ -91,9 +85,7 @@ class WarmStartRoutingSpec
     when(services.dates).thenReturn(
       DateUtils(
         ZonedDateTime.parse(beamConfig.beam.routing.baseDate).toLocalDateTime,
-        ZonedDateTime.parse(beamConfig.beam.routing.baseDate)
-      )
-    )
+        ZonedDateTime.parse(beamConfig.beam.routing.baseDate)))
     when(services.vehicleTypes).thenReturn(Map[Id[BeamVehicleType], BeamVehicleType]())
     when(services.fuelTypePrices).thenReturn(Map[FuelType, Double]().withDefaultValue(0.0))
     var networkCoordinator = new DefaultNetworkCoordinator(beamConfig)
@@ -116,9 +108,7 @@ class WarmStartRoutingSpec
         new EventsManagerImpl(),
         scenario.getTransitVehicles,
         fareCalculator,
-        tollCalculator
-      )
-    )
+        tollCalculator))
 
     within(60 seconds) { // Router can take a while to initialize
       router ! Identify(0)
@@ -126,7 +116,7 @@ class WarmStartRoutingSpec
     }
 
     val path = beamConfig.beam.outputs.baseOutputDirectory + beamConfig.beam.agentsim.simulationName + FileUtils
-      .getOptionalOutputPathSuffix(true)
+        .getOptionalOutputPathSuffix(true)
 
     iterationConfig = config.withValue("beam.warmStart.path", ConfigValueFactory.fromAnyRef(path))
     val configBuilder = new MatSimBeamConfigBuilder(iterationConfig)
@@ -138,14 +128,11 @@ class WarmStartRoutingSpec
     networkCoordinator.convertFrequenciesToTrips()
 
     scenario = ScenarioUtils.loadScenario(matsimConfig).asInstanceOf[MutableScenario]
-    val injector = org.matsim.core.controler.Injector.createInjector(
-      matsimConfig,
-      new AbstractModule() {
-        override def install(): Unit = {
-          install(module(iterationConfig, scenario, networkCoordinator, networkHelper))
-        }
+    val injector = org.matsim.core.controler.Injector.createInjector(matsimConfig, new AbstractModule() {
+      override def install(): Unit = {
+        install(module(iterationConfig, scenario, networkCoordinator, networkHelper))
       }
-    )
+    })
     val bs = injector.getInstance(classOf[BeamServices])
     DefaultPopulationAdjustment(bs).update(scenario)
     bs.controler.run()
@@ -158,9 +145,7 @@ class WarmStartRoutingSpec
         new EventsManagerImpl(),
         scenario.getTransitVehicles,
         fareCalculator,
-        tollCalculator
-      )
-    )
+        tollCalculator))
     within(60 seconds) { // Router can take a while to initialize
       router1 ! Identify(0)
       expectMsgType[ActorIdentity]
@@ -184,10 +169,7 @@ class WarmStartRoutingSpec
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(origin, time),
             Modes.BeamMode.CAR,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       var response = expectMsgType[RoutingResponse]
       assert(response.itineraries.exists(_.tripClassifier == CAR))
       val carOption = response.itineraries.find(_.tripClassifier == CAR).get
@@ -206,10 +188,7 @@ class WarmStartRoutingSpec
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(origin, time),
             Modes.BeamMode.CAR,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       response = expectMsgType[RoutingResponse]
 
       assert(response.itineraries.exists(_.tripClassifier == CAR))
@@ -223,11 +202,8 @@ class WarmStartRoutingSpec
         BeamConfig(
           config.withValue(
             "beam.warmStart.path",
-            ConfigValueFactory.fromAnyRef("test/input/beamville/test-data/double-time")
-          )
-        ),
-        maxHour
-      ).warmStartTravelTime(router, scenario)
+            ConfigValueFactory.fromAnyRef("test/input/beamville/test-data/double-time"))),
+        maxHour).warmStartTravelTime(router, scenario)
 
       router ! RoutingRequest(
         origin,
@@ -240,10 +216,7 @@ class WarmStartRoutingSpec
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(origin, time),
             Modes.BeamMode.CAR,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       var response = expectMsgType[RoutingResponse]
       assert(response.itineraries.exists(_.tripClassifier == CAR))
       val carOption = response.itineraries.find(_.tripClassifier == CAR).get
@@ -261,10 +234,7 @@ class WarmStartRoutingSpec
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(origin, time),
             Modes.BeamMode.CAR,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       response = expectMsgType[RoutingResponse]
       assert(response.itineraries.exists(_.tripClassifier == CAR))
       val carOption2 = response.itineraries.find(_.tripClassifier == CAR).get
@@ -274,12 +244,9 @@ class WarmStartRoutingSpec
     "show an increase in travel time after three iterations if warm start times are cut in half" in {
 
       BeamWarmStart(
-        BeamConfig(
-          config
-            .withValue("beam.warmStart.path", ConfigValueFactory.fromAnyRef("test/input/beamville/test-data/half-time"))
-        ),
-        maxHour
-      ).warmStartTravelTime(router, scenario)
+        BeamConfig(config
+          .withValue("beam.warmStart.path", ConfigValueFactory.fromAnyRef("test/input/beamville/test-data/half-time"))),
+        maxHour).warmStartTravelTime(router, scenario)
 
       router ! RoutingRequest(
         origin,
@@ -292,10 +259,7 @@ class WarmStartRoutingSpec
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(origin, time),
             Modes.BeamMode.CAR,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       var response = expectMsgType[RoutingResponse]
       assert(response.itineraries.exists(_.tripClassifier == CAR))
       val carOption = response.itineraries.find(_.tripClassifier == CAR).get
@@ -312,10 +276,7 @@ class WarmStartRoutingSpec
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(origin, time),
             Modes.BeamMode.CAR,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       response = expectMsgType[RoutingResponse]
       assert(response.itineraries.exists(_.tripClassifier == CAR))
       val carOption2 = response.itineraries.find(_.tripClassifier == CAR).get
@@ -338,10 +299,7 @@ class WarmStartRoutingSpec
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(origin, time),
             Modes.BeamMode.CAR,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
 
       var response = expectMsgType[RoutingResponse]
       assert(response.itineraries.exists(_.tripClassifier == CAR))
@@ -353,11 +311,8 @@ class WarmStartRoutingSpec
         BeamConfig(
           config.withValue(
             "beam.warmStart.path",
-            ConfigValueFactory.fromAnyRef("test/input/beamville/test-data/reduce10x-time")
-          )
-        ),
-        maxHour
-      ).warmStartTravelTime(router, scenario)
+            ConfigValueFactory.fromAnyRef("test/input/beamville/test-data/reduce10x-time"))),
+        maxHour).warmStartTravelTime(router, scenario)
 
       router ! RoutingRequest(
         origin,
@@ -370,10 +325,7 @@ class WarmStartRoutingSpec
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(origin, time),
             Modes.BeamMode.CAR,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       response = expectMsgType[RoutingResponse]
 
       assert(response.itineraries.exists(_.tripClassifier == CAR))

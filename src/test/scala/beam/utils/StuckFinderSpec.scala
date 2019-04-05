@@ -1,7 +1,7 @@
 package beam.utils
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.testkit.{TestActors, TestKit}
+import akka.actor.{ ActorRef, ActorSystem }
+import akka.testkit.{ TestActors, TestKit }
 import beam.agentsim.agents.InitializeTrigger
 import beam.agentsim.agents.modalbehaviors.DrivesVehicle.BoardVehicleTrigger
 import beam.agentsim.scheduler.BeamAgentScheduler.ScheduledTrigger
@@ -10,7 +10,7 @@ import beam.sim.config.BeamConfig.Beam.Debug.StuckAgentDetection
 import beam.sim.config.BeamConfig.Beam.Debug.StuckAgentDetection.Thresholds$Elm
 import beam.sim.config.BeamConfig.Beam.Debug.StuckAgentDetection.Thresholds$Elm.ActorTypeToMaxNumberOfMessages
 import org.matsim.api.core.v01.Id
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 class StuckFinderSpec
     extends TestKit(ActorSystem("StuckFinderSpec"))
@@ -25,14 +25,12 @@ class StuckFinderSpec
   val threshold = Thresholds$Elm(
     ActorTypeToMaxNumberOfMessages(Some(100), Some(100), Some(100), Some(100)),
     100,
-    classOf[InitializeTrigger].getName
-  )
+    classOf[InitializeTrigger].getName)
 
   val threshold2 = Thresholds$Elm(
     ActorTypeToMaxNumberOfMessages(Some(3), Some(3), Some(3), Some(3)),
     100,
-    classOf[BoardVehicleTrigger].getName
-  )
+    classOf[BoardVehicleTrigger].getName)
 
   val stuckAgentDetectionCfg =
     StuckAgentDetection(
@@ -41,8 +39,7 @@ class StuckFinderSpec
       defaultTimeoutMs = 100,
       checkIntervalMs = 100,
       overallSimulationTimeoutMs = 60000,
-      thresholds = List(threshold, threshold2)
-    )
+      thresholds = List(threshold, threshold2))
 
   val devNull = system.actorOf(TestActors.blackholeProps)
   val st = ScheduledTrigger(TriggerWithId(InitializeTrigger(1), 1L), devNull, 1)
@@ -80,9 +77,7 @@ class StuckFinderSpec
           ValueWithTime(st.copy(priority = 5), 5),
           ValueWithTime(st.copy(priority = 7), 7),
           ValueWithTime(st.copy(priority = 9), 9),
-          ValueWithTime(st.copy(priority = 10), 10)
-        )
-      )
+          ValueWithTime(st.copy(priority = 10), 10)))
     }
 
     "should return stuck agent due to exceed number of messages only once" in {

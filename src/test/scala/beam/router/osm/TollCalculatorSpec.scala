@@ -1,6 +1,6 @@
 package beam.router.osm
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.{ Path, Paths }
 
 import beam.sim.config.BeamConfig
 import beam.utils.TestConfigUtils.testConfig

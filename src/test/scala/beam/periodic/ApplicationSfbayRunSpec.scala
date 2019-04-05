@@ -3,10 +3,10 @@ package beam.periodic
 import java.nio.file.Paths
 
 import beam.sim.BeamHelper
-import beam.tags.{ExcludeRegular, Periodic}
+import beam.tags.{ ExcludeRegular, Periodic }
 import beam.utils.BeamConfigUtils
-import com.typesafe.config.{Config, ConfigValueFactory}
-import org.scalatest.{BeforeAndAfterAllConfigMap, ConfigMap, Matchers, WordSpecLike}
+import com.typesafe.config.{ Config, ConfigValueFactory }
+import org.scalatest.{ BeforeAndAfterAllConfigMap, ConfigMap, Matchers, WordSpecLike }
 
 class ApplicationSfbayRunSpec extends WordSpecLike with Matchers with BeforeAndAfterAllConfigMap with BeamHelper {
 
@@ -37,15 +37,13 @@ class ApplicationSfbayRunSpec extends WordSpecLike with Matchers with BeforeAndA
 
       val itrDir = Paths.get(output, ITERS_DIR).toFile
 
-      outDir should be a 'directory
+      (outDir should be).a('directory)
       outDir.list should not be empty
       outDir.list should contain(ITERS_DIR)
-      itrDir.list should have length totalIterations
+      (itrDir.list should have).length(totalIterations)
       itrDir
         .listFiles()
-        .foreach(
-          itr => exactly(1, itr.list) should endWith(".events.csv").or(endWith(".events.csv.gz"))
-        )
+        .foreach(itr => exactly(1, itr.list) should endWith(".events.csv").or(endWith(".events.csv.gz")))
     }
   }
 }

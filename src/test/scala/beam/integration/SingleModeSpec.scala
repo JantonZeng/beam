@@ -3,18 +3,18 @@ package beam.integration
 import akka.actor._
 import beam.agentsim.agents.PersonTestUtil
 import beam.agentsim.agents.modalbehaviors.ModeChoiceCalculator
-import beam.agentsim.agents.ridehail.{RideHailIterationHistory, RideHailSurgePricingManager}
+import beam.agentsim.agents.ridehail.{ RideHailIterationHistory, RideHailSurgePricingManager }
 import beam.agentsim.events.PathTraversalEvent
-import beam.router.{BeamRouter, BeamSkimmer, RouteHistory}
+import beam.router.{ BeamRouter, BeamSkimmer, RouteHistory }
 import beam.router.Modes.BeamMode
-import beam.sim.{BeamMobsim, BeamServices, BeamServicesImpl}
+import beam.sim.{ BeamMobsim, BeamServices, BeamServicesImpl }
 import beam.utils.SimRunnerForTest
 import beam.utils.TestConfigUtils.testConfig
 import com.typesafe.config.ConfigFactory
-import org.matsim.api.core.v01.events.{ActivityEndEvent, Event, PersonDepartureEvent, PersonEntersVehicleEvent}
-import org.matsim.api.core.v01.population.{Activity, Leg}
+import org.matsim.api.core.v01.events.{ ActivityEndEvent, Event, PersonDepartureEvent, PersonEntersVehicleEvent }
+import org.matsim.api.core.v01.population.{ Activity, Leg }
 import org.matsim.core.events.handler.BasicEventHandler
-import org.matsim.core.events.{EventsManagerImpl, EventsUtils}
+import org.matsim.core.events.{ EventsManagerImpl, EventsUtils }
 import org.scalatest._
 import org.scalatest.mockito.MockitoSugar
 
@@ -46,13 +46,11 @@ class SingleModeSpec
     nextId += 1
     services = new BeamServicesImpl(injector)
     services.matsimServices = matsimSvc
-    services.modeChoiceCalculatorFactory = ModeChoiceCalculator(
-      services.beamConfig.beam.agentsim.agents.modalBehaviors.modeChoiceClass,
-      services
-    )
+    services.modeChoiceCalculatorFactory =
+      ModeChoiceCalculator(services.beamConfig.beam.agentsim.agents.modalBehaviors.modeChoiceClass, services)
 
-    scenario.getPopulation.getPersons.values.asScala
-      .foreach(p => PersonTestUtil.putDefaultBeamAttributes(p, BeamMode.allModes))
+    scenario.getPopulation.getPersons.values.asScala.foreach(p =>
+      PersonTestUtil.putDefaultBeamAttributes(p, BeamMode.allModes))
 
     router = system.actorOf(
       BeamRouter.props(
@@ -63,10 +61,8 @@ class SingleModeSpec
         new EventsManagerImpl(),
         scenario.getTransitVehicles,
         fareCalculator,
-        tollCalculator
-      ),
-      "router"
-    )
+        tollCalculator),
+      "router")
     services.beamRouter = router
   }
 
@@ -78,29 +74,25 @@ class SingleModeSpec
 
   "The agentsim" must {
     "let everybody walk when their plan says so" in {
-      scenario.getPopulation.getPersons
-        .values()
-        .forEach { person =>
-          {
-            person.getSelectedPlan.getPlanElements.asScala.collect {
-              case leg: Leg =>
-                leg.setMode("walk")
-            }
+      scenario.getPopulation.getPersons.values().forEach { person =>
+        {
+          person.getSelectedPlan.getPlanElements.asScala.collect {
+            case leg: Leg =>
+              leg.setMode("walk")
           }
         }
+      }
       val events = mutable.ListBuffer[Event]()
       val eventsManager = EventsUtils.createEventsManager()
-      eventsManager.addHandler(
-        new BasicEventHandler {
-          override def handleEvent(event: Event): Unit = {
-            event match {
-              case event: PersonDepartureEvent =>
-                events += event
-              case _ =>
-            }
+      eventsManager.addHandler(new BasicEventHandler {
+        override def handleEvent(event: Event): Unit = {
+          event match {
+            case event: PersonDepartureEvent =>
+              events += event
+            case _ =>
           }
         }
-      )
+      })
       val mobsim = new BeamMobsim(
         services,
         networkCoordinator.transportNetwork,
@@ -111,39 +103,33 @@ class SingleModeSpec
         new RideHailSurgePricingManager(services),
         new RideHailIterationHistory(),
         new RouteHistory(services.beamConfig),
-        new BeamSkimmer(services.beamConfig, services)
-      )
+        new BeamSkimmer(services.beamConfig, services))
       mobsim.run()
       events.foreach {
         case event: PersonDepartureEvent =>
           assert(
-            event.getLegMode == "walk" || event.getLegMode == "be_a_tnc_driver" || event.getLegMode == "be_a_household_cav_driver" || event.getLegMode == "cav"
-          )
+            event.getLegMode == "walk" || event.getLegMode == "be_a_tnc_driver" || event.getLegMode == "be_a_household_cav_driver" || event.getLegMode == "cav")
       }
     }
 
     "let everybody take transit when their plan says so" in {
-      scenario.getPopulation.getPersons
-        .values()
-        .forEach { person =>
-          person.getSelectedPlan.getPlanElements.asScala.collect {
-            case leg: Leg =>
-              leg.setMode("walk_transit")
-          }
+      scenario.getPopulation.getPersons.values().forEach { person =>
+        person.getSelectedPlan.getPlanElements.asScala.collect {
+          case leg: Leg =>
+            leg.setMode("walk_transit")
         }
+      }
       val events = mutable.ListBuffer[Event]()
       val eventsManager = EventsUtils.createEventsManager()
-      eventsManager.addHandler(
-        new BasicEventHandler {
-          override def handleEvent(event: Event): Unit = {
-            event match {
-              case event: PersonDepartureEvent =>
-                events += event
-              case _ =>
-            }
+      eventsManager.addHandler(new BasicEventHandler {
+        override def handleEvent(event: Event): Unit = {
+          event match {
+            case event: PersonDepartureEvent =>
+              events += event
+            case _ =>
           }
         }
-      )
+      })
       val mobsim = new BeamMobsim(
         services,
         networkCoordinator.transportNetwork,
@@ -154,14 +140,12 @@ class SingleModeSpec
         new RideHailSurgePricingManager(services),
         new RideHailIterationHistory(),
         new RouteHistory(services.beamConfig),
-        new BeamSkimmer(services.beamConfig, services)
-      )
+        new BeamSkimmer(services.beamConfig, services))
       mobsim.run()
       events.foreach {
         case event: PersonDepartureEvent =>
           assert(
-            event.getLegMode == "walk" || event.getLegMode == "walk_transit" || event.getLegMode == "be_a_tnc_driver" || event.getLegMode == "be_a_household_cav_driver" || event.getLegMode == "cav"
-          )
+            event.getLegMode == "walk" || event.getLegMode == "walk_transit" || event.getLegMode == "be_a_tnc_driver" || event.getLegMode == "be_a_household_cav_driver" || event.getLegMode == "cav")
       }
     }
 
@@ -169,43 +153,39 @@ class SingleModeSpec
       // Here, we only set the mode for the first leg of each tour -- prescribing a mode for the tour,
       // but not for individual legs except the first one.
       // We want to make sure that our car is returned home.
-      scenario.getPopulation.getPersons
-        .values()
-        .forEach { person =>
-          {
-            val newPlanElements = person.getSelectedPlan.getPlanElements.asScala.collect {
-              case activity: Activity if activity.getType == "Home" =>
-                Seq(activity, scenario.getPopulation.getFactory.createLeg("drive_transit"))
-              case activity: Activity =>
-                Seq(activity)
-              case leg: Leg =>
-                Nil
-            }.flatten
-            if (newPlanElements.last.isInstanceOf[Leg]) {
-              newPlanElements.remove(newPlanElements.size - 1)
-            }
-            person.getSelectedPlan.getPlanElements.clear()
-            newPlanElements.foreach {
-              case activity: Activity =>
-                person.getSelectedPlan.addActivity(activity)
-              case leg: Leg =>
-                person.getSelectedPlan.addLeg(leg)
-            }
+      scenario.getPopulation.getPersons.values().forEach { person =>
+        {
+          val newPlanElements = person.getSelectedPlan.getPlanElements.asScala.collect {
+            case activity: Activity if activity.getType == "Home" =>
+              Seq(activity, scenario.getPopulation.getFactory.createLeg("drive_transit"))
+            case activity: Activity =>
+              Seq(activity)
+            case leg: Leg =>
+              Nil
+          }.flatten
+          if (newPlanElements.last.isInstanceOf[Leg]) {
+            newPlanElements.remove(newPlanElements.size - 1)
+          }
+          person.getSelectedPlan.getPlanElements.clear()
+          newPlanElements.foreach {
+            case activity: Activity =>
+              person.getSelectedPlan.addActivity(activity)
+            case leg: Leg =>
+              person.getSelectedPlan.addLeg(leg)
           }
         }
+      }
       val events = mutable.ListBuffer[Event]()
       val eventsManager = EventsUtils.createEventsManager()
-      eventsManager.addHandler(
-        new BasicEventHandler {
-          override def handleEvent(event: Event): Unit = {
-            event match {
-              case event @ (_: PersonDepartureEvent | _: ActivityEndEvent) =>
-                events += event
-              case _ =>
-            }
+      eventsManager.addHandler(new BasicEventHandler {
+        override def handleEvent(event: Event): Unit = {
+          event match {
+            case event @ (_: PersonDepartureEvent | _: ActivityEndEvent) =>
+              events += event
+            case _ =>
           }
         }
-      )
+      })
       val mobsim = new BeamMobsim(
         services,
         networkCoordinator.transportNetwork,
@@ -216,24 +196,20 @@ class SingleModeSpec
         new RideHailSurgePricingManager(services),
         new RideHailIterationHistory(),
         new RouteHistory(services.beamConfig),
-        new BeamSkimmer(services.beamConfig, services)
-      )
+        new BeamSkimmer(services.beamConfig, services))
       mobsim.run()
       events.collect {
         case event: PersonDepartureEvent =>
           // drive_transit can fail -- maybe I don't have a car
           assert(
-            event.getLegMode == "walk" || event.getLegMode == "walk_transit" || event.getLegMode == "drive_transit" || event.getLegMode == "be_a_tnc_driver" || event.getLegMode == "be_a_household_cav_driver" || event.getLegMode == "cav"
-          )
+            event.getLegMode == "walk" || event.getLegMode == "walk_transit" || event.getLegMode == "drive_transit" || event.getLegMode == "be_a_tnc_driver" || event.getLegMode == "be_a_household_cav_driver" || event.getLegMode == "cav")
       }
       val eventsByPerson = events.groupBy(_.getAttributes.get("person"))
       val filteredEventsByPerson = eventsByPerson.filter {
         _._2
           .filter(_.isInstanceOf[ActivityEndEvent])
           .sliding(2)
-          .exists(
-            pair => pair.forall(activity => activity.asInstanceOf[ActivityEndEvent].getActType != "Home")
-          )
+          .exists(pair => pair.forall(activity => activity.asInstanceOf[ActivityEndEvent].getActType != "Home"))
       }
       eventsByPerson.map {
         _._2.span {
@@ -248,30 +224,26 @@ class SingleModeSpec
     }
 
     "let everybody drive when their plan says so" in {
-      scenario.getPopulation.getPersons
-        .values()
-        .forEach { person =>
-          {
-            person.getSelectedPlan.getPlanElements.asScala.collect {
-              case leg: Leg =>
-                leg.setMode("car")
-            }
+      scenario.getPopulation.getPersons.values().forEach { person =>
+        {
+          person.getSelectedPlan.getPlanElements.asScala.collect {
+            case leg: Leg =>
+              leg.setMode("car")
           }
         }
+      }
       val eventsManager = EventsUtils.createEventsManager()
       val events = mutable.ListBuffer[Event]()
-      eventsManager.addHandler(
-        new BasicEventHandler {
-          override def handleEvent(event: Event): Unit = {
-            event match {
-              case event @ (_: PersonDepartureEvent | _: ActivityEndEvent | _: PathTraversalEvent |
-                  _: PersonEntersVehicleEvent) =>
-                events += event
-              case _ =>
-            }
+      eventsManager.addHandler(new BasicEventHandler {
+        override def handleEvent(event: Event): Unit = {
+          event match {
+            case event @ (_: PersonDepartureEvent | _: ActivityEndEvent | _: PathTraversalEvent |
+                _: PersonEntersVehicleEvent) =>
+              events += event
+            case _ =>
           }
         }
-      )
+      })
 
       val mobsim = new BeamMobsim(
         services,
@@ -283,8 +255,7 @@ class SingleModeSpec
         new RideHailSurgePricingManager(services),
         new RideHailIterationHistory(),
         new RouteHistory(services.beamConfig),
-        new BeamSkimmer(services.beamConfig, services)
-      )
+        new BeamSkimmer(services.beamConfig, services))
       mobsim.run()
       events.collect {
         case event: PersonDepartureEvent =>
@@ -292,8 +263,7 @@ class SingleModeSpec
           // TODO: Find root cause, fix, and remove "walk" here.
           // See SfLightRouterSpec.
           assert(
-            event.getLegMode == "walk" || event.getLegMode == "car" || event.getLegMode == "be_a_tnc_driver" || event.getLegMode == "be_a_household_cav_driver" || event.getLegMode == "cav"
-          )
+            event.getLegMode == "walk" || event.getLegMode == "car" || event.getLegMode == "be_a_tnc_driver" || event.getLegMode == "be_a_household_cav_driver" || event.getLegMode == "cav")
       }
     }
   }

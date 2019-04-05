@@ -2,14 +2,14 @@ package beam.agentsim.agents.vehicles
 
 import beam.agentsim.events.SpaceTime
 import org.matsim.api.core.v01.Coord
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
 
 /**
-  * @author dserdiuk
-  */
+ * @author dserdiuk
+ */
 class TrajectoryTest extends FlatSpec with Matchers {
 
-  behavior of "Trajectory"
+  behavior.of("Trajectory")
 
   it should "interpolate coordinates" in {
     val route = Vector(SpaceTime(0.0, 0.0, 0), SpaceTime(4.0, 4.0, 4))

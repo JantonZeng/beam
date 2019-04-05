@@ -1,6 +1,6 @@
 package beam.utils
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{ Matchers, WordSpec }
 
 class StuckFinderHelperSpec extends WordSpec with Matchers {
   "A StuckFinderHelper" when {

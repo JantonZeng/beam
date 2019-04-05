@@ -41,8 +41,7 @@ class RideHailBufferedRidesSpec extends FlatSpec with BeamHelper with MockitoSug
         ConfigValueFactory.fromAnyRef(
           "beam.agentsim.agents.rideHail.allocation.examples.DummyRideHailDispatchWithBufferingRequests"
           //"DEFAULT_MANAGER"
-        )
-      )
+        ))
       .resolve()
 
     val matsimConfig = runBeamWithConfig(config)._1
@@ -71,8 +70,7 @@ class RideHailBufferedRidesSpec extends FlatSpec with BeamHelper with MockitoSug
         ConfigValueFactory.fromAnyRef(
           "beam.agentsim.agents.ridehail.allocation.examples.DummyRideHailDispatchWithBufferingRequestsWithoutReplacement"
           //"DEFAULT_MANAGER"
-        )
-      )
+        ))
       .resolve()
 
     val matsimConfig = runBeamWithConfig(config)._1

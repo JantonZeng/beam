@@ -3,11 +3,11 @@ package beam.integration
 import java.io.File
 
 import beam.agentsim.events._
-import org.matsim.api.core.v01.events.{Event, GenericEvent}
+import org.matsim.api.core.v01.events.{ Event, GenericEvent }
 import org.matsim.core.api.experimental.events.EventsManager
 import org.matsim.core.config.Config
 import org.matsim.core.events.handler.BasicEventHandler
-import org.matsim.core.events.{EventsUtils, MatsimEventsReader}
+import org.matsim.core.events.{ EventsUtils, MatsimEventsReader }
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -41,9 +41,7 @@ object EventReader {
   }
 
   def getEventsFilePath(matsimConfig: Config, extension: String, iteration: Int = 0): File = {
-    new File(
-      s"${matsimConfig.controler().getOutputDirectory}/ITERS/it.$iteration/$iteration.events.$extension"
-    )
+    new File(s"${matsimConfig.controler().getOutputDirectory}/ITERS/it.$iteration/$iteration.events.$extension")
   }
 
   def fixEvent(event: GenericEvent): Event = {

@@ -2,8 +2,8 @@ package beam.agentsim.infrastructure
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import akka.actor.{ ActorRef, ActorSystem, Props }
+import akka.testkit.{ ImplicitSender, TestActorRef, TestKit, TestProbe }
 import akka.util.Timeout
 import beam.agentsim.infrastructure.ParkingManager.{
   DepotParkingInquiry,
@@ -14,13 +14,13 @@ import beam.sim.BeamServices
 import beam.sim.common.GeoUtilsImpl
 import beam.sim.config.BeamConfig
 import beam.utils.TestConfigUtils.testConfig
-import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
-import org.matsim.api.core.v01.{Coord, Id}
+import com.typesafe.config.{ ConfigFactory, ConfigValueFactory }
+import org.matsim.api.core.v01.{ Coord, Id }
 import org.matsim.core.controler.MatsimServices
 import org.matsim.vehicles.Vehicle
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, FunSpecLike}
+import org.scalatest.{ BeforeAndAfterAll, FunSpecLike }
 
 class ZonalParkingManagerSpec
     extends TestKit(
@@ -30,9 +30,7 @@ class ZonalParkingManagerSpec
   akka.log-dead-letters = 10
   akka.actor.debug.fsm = true
   akka.loglevel = debug
-  """).withFallback(testConfig("test/input/beamville/beam.conf").resolve())
-      )
-    )
+  """).withFallback(testConfig("test/input/beamville/beam.conf").resolve())))
     with FunSpecLike
     with BeforeAndAfterAll
     with MockitoSugar
@@ -54,19 +52,12 @@ class ZonalParkingManagerSpec
     theServices
   }
 
-  describe(
-    "Depot parking in ZonalParkingManager should return parking stalls according to reservedFor field"
-  ) {
+  describe("Depot parking in ZonalParkingManager should return parking stalls according to reservedFor field") {
     ignore("should return only rideHailManager stalls when all parking are reservedFor RideHailManager") { //none parking stalls if all parking are reserved for RideHailManager and inquiry reserved field is Any
 
-      val config = BeamConfig(
-        system.settings.config.withValue(
-          "beam.agentsim.taz.parkingFilePath",
-          ConfigValueFactory.fromAnyRef(
-            "test/test-resources/beam/agentsim/infrastructure/taz-parking-reserved-rhm.csv"
-          )
-        )
-      )
+      val config = BeamConfig(system.settings.config.withValue(
+        "beam.agentsim.taz.parkingFilePath",
+        ConfigValueFactory.fromAnyRef("test/test-resources/beam/agentsim/infrastructure/taz-parking-reserved-rhm.csv")))
 
       val services = beamServices(config)
 
@@ -87,14 +78,9 @@ class ZonalParkingManagerSpec
 
     ignore("should return some stalls when all parking are reservedFor Any") {
 
-      val config = BeamConfig(
-        system.settings.config.withValue(
-          "beam.agentsim.taz.parkingFilePath",
-          ConfigValueFactory.fromAnyRef(
-            "test/test-resources/beam/agentsim/infrastructure/taz-parking-reserved-any.csv"
-          )
-        )
-      )
+      val config = BeamConfig(system.settings.config.withValue(
+        "beam.agentsim.taz.parkingFilePath",
+        ConfigValueFactory.fromAnyRef("test/test-resources/beam/agentsim/infrastructure/taz-parking-reserved-any.csv")))
 
       val zonalParkingManager = ZonalParkingManagerSpec.mockZonalParkingManager(beamServices(config))
       val location = new Coord(170572.95810126758, 2108.0402919341077)
@@ -119,10 +105,9 @@ class ZonalParkingManagerSpec
 object ZonalParkingManagerSpec {
 
   def mockZonalParkingManager(
-    beamServices: BeamServices,
-    routerOpt: Option[ActorRef] = None,
-    stockAttributesOpt: Option[ParkingStockAttributes] = None
-  )(implicit system: ActorSystem): ActorRef = {
+      beamServices: BeamServices,
+      routerOpt: Option[ActorRef] = None,
+      stockAttributesOpt: Option[ParkingStockAttributes] = None)(implicit system: ActorSystem): ActorRef = {
     val beamRouterProbe = routerOpt match {
       case Some(router) =>
         router
@@ -138,8 +123,7 @@ object ZonalParkingManagerSpec {
     val zonalParkingManagerProps = Props(
       new ZonalParkingManager(beamServices, beamRouterProbe, parkingStockAttributes) {
         override def fillInDefaultPooledResources() {} //Ignoring default initialization, just use input data
-      }
-    )
+      })
     TestActorRef[ZonalParkingManager](zonalParkingManagerProps)
   }
 }

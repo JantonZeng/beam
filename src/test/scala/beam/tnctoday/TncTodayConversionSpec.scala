@@ -1,8 +1,8 @@
 package beam.tnctoday
 
 import com.typesafe.scalalogging.StrictLogging
-import json.converter.{TazOutput, TncToday}
-import org.scalatest.{Matchers, WordSpecLike}
+import json.converter.{ TazOutput, TncToday }
+import org.scalatest.{ Matchers, WordSpecLike }
 
 class TncTodayConversionSpec extends WordSpecLike with Matchers with StrictLogging {
 
@@ -10,16 +10,16 @@ class TncTodayConversionSpec extends WordSpecLike with Matchers with StrictLoggi
   private lazy val statsTotals = TncToday.generateTotals(completedStats)
 
   private lazy val inputData = Seq(
-    TazOutput.TazStats(1l, 0, "00:00:00", 0.5, 0.9),
-    TazOutput.TazStats(1l, 0, "01:00:00", 0.2, 0.3),
-    TazOutput.TazStats(1l, 0, "02:00:00", 0.3, 0.7),
-    TazOutput.TazStats(1l, 0, "03:00:00", 0.4, 0.6),
-    TazOutput.TazStats(1l, 0, "04:00:00", 0.2, 0.2),
+    TazOutput.TazStats(1L, 0, "00:00:00", 0.5, 0.9),
+    TazOutput.TazStats(1L, 0, "01:00:00", 0.2, 0.3),
+    TazOutput.TazStats(1L, 0, "02:00:00", 0.3, 0.7),
+    TazOutput.TazStats(1L, 0, "03:00:00", 0.4, 0.6),
+    TazOutput.TazStats(1L, 0, "04:00:00", 0.2, 0.2),
     // dropOffs = 1.6 - pickups = 2.7
-    TazOutput.TazStats(1l, 1, "01:00:00", 0.2, 0.3),
-    TazOutput.TazStats(1l, 1, "02:00:00", 0.6, 0.6),
-    TazOutput.TazStats(1l, 1, "04:00:00", 0.1, 0.9),
-    TazOutput.TazStats(1l, 1, "07:00:00", 0.9, 0.0)
+    TazOutput.TazStats(1L, 1, "01:00:00", 0.2, 0.3),
+    TazOutput.TazStats(1L, 1, "02:00:00", 0.6, 0.6),
+    TazOutput.TazStats(1L, 1, "04:00:00", 0.1, 0.9),
+    TazOutput.TazStats(1L, 1, "07:00:00", 0.9, 0.0)
     // dropOffs = 1.8 - pickups = 1.8
   )
 
@@ -52,8 +52,7 @@ class TncTodayConversionSpec extends WordSpecLike with Matchers with StrictLoggi
         3 -> (0d, 0d),
         4 -> (0d, 0d),
         5 -> (0d, 0d),
-        6 -> (0d, 0d)
-      )
+        6 -> (0d, 0d))
       val totalsMap =
         statsTotals.map(e => (e.day_of_week, (e.dropoffs, e.pickups)))
       totalsMap should contain theSameElementsAs totals

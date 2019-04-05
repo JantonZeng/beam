@@ -3,10 +3,10 @@ import java.util.concurrent.ThreadLocalRandom
 
 import scala.util.Random
 
-import beam.sim.config.{BeamConfig, MatSimBeamConfigBuilder}
+import beam.sim.config.{ BeamConfig, MatSimBeamConfigBuilder }
 import beam.utils.TestConfigUtils.testConfig
 import com.typesafe.config.ConfigFactory
-import org.matsim.api.core.v01.network.{Link, Network, Node}
+import org.matsim.api.core.v01.network.{ Link, Network, Node }
 import org.matsim.api.core.v01.Id
 import org.matsim.core.config.ConfigUtils
 import org.matsim.core.network.NetworkUtils
@@ -27,13 +27,9 @@ class Hao2018CaccRoadCapacityAdjustmentFunctionTest extends FunSpec {
   private val config = ConfigFactory
     .parseMap(
       Map(
-        "beam.physsim.jdeqsim.cacc.minRoadCapacity"      -> minRoadCapacity,
-        "beam.physsim.jdeqsim.cacc.minSpeedMetersPerSec" -> minSpeedMetersPerSecond
-      ).asJava
-    )
-    .withFallback(
-      testConfig("test/input/sf-light/sf-light-1k.conf")
-    )
+        "beam.physsim.jdeqsim.cacc.minRoadCapacity" -> minRoadCapacity,
+        "beam.physsim.jdeqsim.cacc.minSpeedMetersPerSec" -> minSpeedMetersPerSecond).asJava)
+    .withFallback(testConfig("test/input/sf-light/sf-light-1k.conf"))
     .resolve()
 
   private val matsimConfig = new MatSimBeamConfigBuilder(config).buildMatSimConf()
@@ -41,11 +37,7 @@ class Hao2018CaccRoadCapacityAdjustmentFunctionTest extends FunSpec {
 
   private val beamConfig = BeamConfig(config)
 
-  private val capacityFunction = new Hao2018CaccRoadCapacityAdjustmentFunction(
-    beamConfig,
-    iterationNumber,
-    null,
-  )
+  private val capacityFunction = new Hao2018CaccRoadCapacityAdjustmentFunction(beamConfig, iterationNumber, null)
 
   private val mNetwork: Network = {
     val config = ConfigUtils.createConfig
@@ -53,17 +45,14 @@ class Hao2018CaccRoadCapacityAdjustmentFunctionTest extends FunSpec {
     sce.getNetwork
   }
 
-  private def buildLink(
-    capacity: Double,
-    freeSpeed: Double
-  ): Link = {
+  private def buildLink(capacity: Double, freeSpeed: Double): Link = {
     val edgeIndex: Long = javaRandom.nextInt()
     val length: Double = javaRandom.nextInt(0, 200)
     val fromNode: Node = NetworkUtils.createNode(Id.create(Random.alphanumeric.take(20).toString(), classOf[Node]))
     val toNode: Node = NetworkUtils.createNode(Id.create(Random.alphanumeric.take(20).toString(), classOf[Node]))
 
     val linkId = Id.createLinkId(edgeIndex)
-    NetworkUtils.createLink(linkId, fromNode, toNode, mNetwork, length, freeSpeed, capacity, 10D)
+    NetworkUtils.createLink(linkId, fromNode, toNode, mNetwork, length, freeSpeed, capacity, 10d)
   }
 
   describe("Hao2018CaccRoadCapacityAdjustmentFunction") {
@@ -76,8 +65,7 @@ class Hao2018CaccRoadCapacityAdjustmentFunctionTest extends FunSpec {
     }
 
     it(
-      "calculate capacity for cacc road as a function of fractionOnRoad and linkCapacity divided by seconds in one hour"
-    ) {
+      "calculate capacity for cacc road as a function of fractionOnRoad and linkCapacity divided by seconds in one hour") {
       val linkCapacity = minRoadCapacity + 1
       val link = buildLink(capacity = linkCapacity, freeSpeed = minSpeedMetersPerSecond + 1)
       val fractionOnRoad = javaRandom.nextDouble()

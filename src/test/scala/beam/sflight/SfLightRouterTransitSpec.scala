@@ -1,6 +1,6 @@
 package beam.sflight
 
-import java.io.{BufferedWriter, File, FileWriter}
+import java.io.{ BufferedWriter, File, FileWriter }
 
 import akka.actor._
 import akka.testkit.TestProbe
@@ -13,7 +13,7 @@ import beam.router.Modes.BeamMode._
 import beam.router.model.EmbodiedBeamTrip
 import com.typesafe.scalalogging.LazyLogging
 import org.matsim.api.core.v01.population.Person
-import org.matsim.api.core.v01.{Coord, Id}
+import org.matsim.api.core.v01.{ Coord, Id }
 import org.scalatest._
 
 import scala.concurrent.duration._
@@ -46,10 +46,7 @@ class SfLightRouterTransitSpec extends AbstractSfLightSpec("SfLightRouterTransit
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(origin, time),
             WALK,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       val response = expectMsgType[RoutingResponse]
 
       assert(response.itineraries.exists(_.tripClassifier == WALK))
@@ -82,17 +79,13 @@ class SfLightRouterTransitSpec extends AbstractSfLightSpec("SfLightRouterTransit
                     BeamVehicleType.defaultCarBeamVehicleType.id,
                     new SpaceTime(origin, 0),
                     CAR,
-                    asDriver = true
-                  ),
+                    asDriver = true),
                   StreetVehicle(
                     Id.createVehicleId("body-116378-2"),
                     BeamVehicleType.defaultCarBeamVehicleType.id,
                     new SpaceTime(new Coord(origin.getX, origin.getY), time),
                     WALK,
-                    asDriver = true
-                  )
-                )
-              )
+                    asDriver = true)))
               val response = expectMsgType[RoutingResponse]
 
               // writeResponseToFile(origin, destination, time, response)
@@ -123,10 +116,7 @@ class SfLightRouterTransitSpec extends AbstractSfLightSpec("SfLightRouterTransit
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(origin, time),
             WALK,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       val response = expectMsgType[RoutingResponse]
 
       assert(response.itineraries.exists(_.costEstimate == 2.75))
@@ -149,10 +139,7 @@ class SfLightRouterTransitSpec extends AbstractSfLightSpec("SfLightRouterTransit
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(origin, time),
             WALK,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       val response = expectMsgType[RoutingResponse]
 
       assert(response.itineraries.exists(_.costEstimate == 1.95))
@@ -164,63 +151,40 @@ class SfLightRouterTransitSpec extends AbstractSfLightSpec("SfLightRouterTransit
 
 //  Vector(itinerary ->, [x=550046.6183707184][y=4173684.1312090624], [x=551010.1423040839][y=4184361.3484820053], DiscreteTime(54960), WALK_TRANSIT, 18.70
 
-  private def printResponse(
-    origin: Location,
-    destination: Location,
-    time: Int,
-    response: RoutingResponse
-  ): Unit = {
+  private def printResponse(origin: Location, destination: Location, time: Int, response: RoutingResponse): Unit = {
     response.itineraries.foreach(
       it =>
-        logger.debug(
-          Vector(
-            "itinerary ->",
-            origin,
-            destination,
-            time,
-            it.tripClassifier,
-            it.costEstimate,
-            it.legs.zipWithIndex.map(
-              t =>
-                (
-                  t._1.beamLeg.mode,
-                  it.legs.zipWithIndex.filter(_._2 < t._2).map(_._1.beamLeg.duration).sum
-              )
-            )
-          ).toString()
-      )
-    )
+        logger.debug(Vector(
+          "itinerary ->",
+          origin,
+          destination,
+          time,
+          it.tripClassifier,
+          it.costEstimate,
+          it.legs.zipWithIndex.map(t =>
+            (t._1.beamLeg.mode, it.legs.zipWithIndex.filter(_._2 < t._2).map(_._1.beamLeg.duration).sum))).toString()))
   }
 
   private def writeResponseToFile(
-    personId: Id[Person],
-    origin: Location,
-    destination: Location,
-    time: Int,
-    response: RoutingResponse
-  ): Unit = {
+      personId: Id[Person],
+      origin: Location,
+      destination: Location,
+      time: Int,
+      response: RoutingResponse): Unit = {
     val writer = new BufferedWriter(new FileWriter(new File("d:/test-out.txt"), true))
     response.itineraries.foreach(
       it =>
-        writer.append(
-          Vector(
-            "itinerary ->",
-            personId.toString,
-            origin,
-            destination,
-            time,
-            it.tripClassifier,
-            it.costEstimate,
-            it.legs.zipWithIndex.map(
-              t =>
-                (
-                  t._1.beamLeg.mode,
-                  it.legs.zipWithIndex.filter(_._2 < t._2).map(_._1.beamLeg.duration).sum
-              )
-            )
-          ).toString() + "\n"
-      )
-    )
+        writer.append(Vector(
+          "itinerary ->",
+          personId.toString,
+          origin,
+          destination,
+          time,
+          it.tripClassifier,
+          it.costEstimate,
+          it.legs.zipWithIndex.map(t =>
+            (t._1.beamLeg.mode, it.legs.zipWithIndex.filter(_._2 < t._2).map(_._1.beamLeg.duration).sum)))
+          .toString() + "\n"))
     writer.close()
   }
 

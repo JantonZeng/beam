@@ -1,12 +1,12 @@
 package beam.agentsim.agents.ridehail.graph
 import beam.router.r5.DefaultNetworkCoordinator
-import beam.sim.{BeamHelper, BeamServices}
-import beam.sim.config.{BeamConfig, MatSimBeamConfigBuilder}
+import beam.sim.{ BeamHelper, BeamServices }
+import beam.sim.config.{ BeamConfig, MatSimBeamConfigBuilder }
 import beam.sim.population.DefaultPopulationAdjustment
-import beam.utils.{FileUtils, NetworkHelper, NetworkHelperImpl}
+import beam.utils.{ FileUtils, NetworkHelper, NetworkHelperImpl }
 import com.typesafe.config.Config
 import org.matsim.core.controler.AbstractModule
-import org.matsim.core.scenario.{MutableScenario, ScenarioUtils}
+import org.matsim.core.scenario.{ MutableScenario, ScenarioUtils }
 
 object GraphRunHelper {
 
@@ -33,11 +33,8 @@ class GraphRunHelper(childModule: AbstractModule, baseConfig: Config) extends Be
 
   private val networkHelper: NetworkHelper = new NetworkHelperImpl(networkCoordinator.network)
 
-  private lazy val injector = org.matsim.core.controler.Injector.createInjector(
-    scenario.getConfig,
-    module(baseConfig, scenario, networkCoordinator, networkHelper),
-    childModule
-  )
+  private lazy val injector = org.matsim.core.controler.Injector
+    .createInjector(scenario.getConfig, module(baseConfig, scenario, networkCoordinator, networkHelper), childModule)
 
   private lazy val beamServices: BeamServices = injector.getInstance(classOf[BeamServices])
 

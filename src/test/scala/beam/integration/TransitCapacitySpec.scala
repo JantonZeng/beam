@@ -2,12 +2,12 @@ package beam.integration
 
 import beam.sim.BeamHelper
 import com.typesafe.config.ConfigValueFactory
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{ Matchers, WordSpecLike }
 
 /**
-  * Created by fdariasm on 29/08/2017
-  *
-  */
+ * Created by fdariasm on 29/08/2017
+ *
+ */
 class TransitCapacitySpec extends WordSpecLike with Matchers with BeamHelper with IntegrationSpecCommon {
 
   "Running beam with modeChoice ModeChoiceTransitIfAvailable and increasing transitCapacity value" must {
@@ -19,16 +19,10 @@ class TransitCapacitySpec extends WordSpecLike with Matchers with BeamHelper wit
             baseConfig
               .withValue(
                 TestConstants.KEY_AGENT_MODAL_BEHAVIORS_MODE_CHOICE_CLASS,
-                ConfigValueFactory.fromAnyRef("ModeChoiceTransitIfAvailable")
-              )
-              .withValue("beam.agentsim.tuning.transitCapacity", ConfigValueFactory.fromAnyRef(tc))
-          ).groupedCount
-      )
+                ConfigValueFactory.fromAnyRef("ModeChoiceTransitIfAvailable"))
+              .withValue("beam.agentsim.tuning.transitCapacity", ConfigValueFactory.fromAnyRef(tc))).groupedCount)
 
-      val tc = modeChoice
-        .map(_.get("transit"))
-        .filter(_.isDefined)
-        .map(_.get)
+      val tc = modeChoice.map(_.get("transit")).filter(_.isDefined).map(_.get)
 
       isOrdered(tc)((a, b) => a <= b) shouldBe true
     }

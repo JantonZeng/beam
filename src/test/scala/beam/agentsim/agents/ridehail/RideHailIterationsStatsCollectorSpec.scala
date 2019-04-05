@@ -9,12 +9,8 @@ class RideHailIterationsStatsCollectorSpec extends GenericEventsSpec with Matche
   "A TNC Iterations Stats Collector " must {
     "collect stats" in {
       val events = EventsUtils.createEventsManager
-      val tncHandler = new RideHailIterationsStatsCollector(
-        events,
-        beamServices,
-        null,
-        networkCoordinator.transportNetwork
-      )
+      val tncHandler =
+        new RideHailIterationsStatsCollector(events, beamServices, null, networkCoordinator.transportNetwork)
 
       processHandlers(List(tncHandler))
 

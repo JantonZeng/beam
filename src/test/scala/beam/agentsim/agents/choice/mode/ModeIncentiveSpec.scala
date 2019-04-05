@@ -2,7 +2,7 @@ package beam.agentsim.agents.choice.mode
 
 import beam.agentsim.agents.choice.mode.ModeIncentive.loadIncentives
 import beam.router.Modes.BeamMode
-import org.scalatest.{BeforeAndAfterAll, FlatSpec}
+import org.scalatest.{ BeforeAndAfterAll, FlatSpec }
 
 class ModeIncentiveSpec extends FlatSpec with BeforeAndAfterAll {
   var ms: ModeIncentive = _

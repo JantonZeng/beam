@@ -4,10 +4,10 @@ import beam.agentsim.agents.vehicles.BeamVehicleType
 import beam.agentsim.events.SpaceTime
 import beam.router.Modes.BeamMode
 import beam.router.model.RoutingModel
-import beam.router.model.{BeamLeg, BeamPath, EmbodiedBeamLeg}
+import beam.router.model.{ BeamLeg, BeamPath, EmbodiedBeamLeg }
 import org.matsim.api.core.v01.Id
-import org.matsim.api.core.v01.events.{LinkEnterEvent, LinkLeaveEvent}
-import org.scalatest.{FlatSpec, Matchers}
+import org.matsim.api.core.v01.events.{ LinkEnterEvent, LinkLeaveEvent }
+import org.scalatest.{ FlatSpec, Matchers }
 
 class RoutingModelSpec extends FlatSpec with Matchers {
 
@@ -19,14 +19,12 @@ class RoutingModelSpec extends FlatSpec with Matchers {
         0,
         BeamMode.CAR,
         0,
-        BeamPath(Vector(1, 2, 3, 4, 5), Vector(), None, SpaceTime.zero, SpaceTime.zero, 10.0)
-      ),
+        BeamPath(Vector(1, 2, 3, 4, 5), Vector(), None, SpaceTime.zero, SpaceTime.zero, 10.0)),
       Id.createVehicleId(13),
       BeamVehicleType.defaultCarBeamVehicleType.id,
       asDriver = true,
       0,
-      unbecomeDriverOnCompletion = true
-    )
+      unbecomeDriverOnCompletion = true)
     RoutingModel
       .traverseStreetLeg(leg.beamLeg, leg.beamVehicleId, travelTime)
       .toStream should contain theSameElementsAs Vector(
@@ -37,8 +35,7 @@ class RoutingModelSpec extends FlatSpec with Matchers {
       new LinkLeaveEvent(2000.0, Id.createVehicleId(13), Id.createLinkId(3)),
       new LinkEnterEvent(2000.0, Id.createVehicleId(13), Id.createLinkId(4)),
       new LinkLeaveEvent(3000.0, Id.createVehicleId(13), Id.createLinkId(4)),
-      new LinkEnterEvent(3000.0, Id.createVehicleId(13), Id.createLinkId(5))
-    )
+      new LinkEnterEvent(3000.0, Id.createVehicleId(13), Id.createLinkId(5)))
   }
 
   it should "produce link events from a typical car leg, given a travel time function with congestion later in the day" in {
@@ -50,14 +47,12 @@ class RoutingModelSpec extends FlatSpec with Matchers {
         0,
         BeamMode.CAR,
         0,
-        BeamPath(Vector(1, 2, 3, 4, 5), Vector(), None, SpaceTime.zero, SpaceTime.zero, 10.0)
-      ),
+        BeamPath(Vector(1, 2, 3, 4, 5), Vector(), None, SpaceTime.zero, SpaceTime.zero, 10.0)),
       Id.createVehicleId(13),
       BeamVehicleType.defaultCarBeamVehicleType.id,
       asDriver = true,
       0,
-      unbecomeDriverOnCompletion = true
-    )
+      unbecomeDriverOnCompletion = true)
     RoutingModel
       .traverseStreetLeg(leg.beamLeg, leg.beamVehicleId, travelTime)
       .toStream should contain theSameElementsAs Vector(
@@ -68,32 +63,24 @@ class RoutingModelSpec extends FlatSpec with Matchers {
       new LinkLeaveEvent(2000.0, Id.createVehicleId(13), Id.createLinkId(3)),
       new LinkEnterEvent(2000.0, Id.createVehicleId(13), Id.createLinkId(4)),
       new LinkLeaveEvent(4000.0, Id.createVehicleId(13), Id.createLinkId(4)),
-      new LinkEnterEvent(4000.0, Id.createVehicleId(13), Id.createLinkId(5))
-    )
+      new LinkEnterEvent(4000.0, Id.createVehicleId(13), Id.createLinkId(5)))
   }
 
   it should "produce just one pair of link events for a leg which crosses just one node, spending no time" in {
     def travelTime(enterTime: Int, linkId: Int) = 1000
 
     val leg = EmbodiedBeamLeg(
-      BeamLeg(
-        0,
-        BeamMode.CAR,
-        0,
-        BeamPath(Vector(1, 2), Vector(), None, SpaceTime.zero, SpaceTime.zero, 10.0)
-      ),
+      BeamLeg(0, BeamMode.CAR, 0, BeamPath(Vector(1, 2), Vector(), None, SpaceTime.zero, SpaceTime.zero, 10.0)),
       Id.createVehicleId(13),
       BeamVehicleType.defaultCarBeamVehicleType.id,
       asDriver = true,
       0,
-      unbecomeDriverOnCompletion = true
-    )
+      unbecomeDriverOnCompletion = true)
     RoutingModel
       .traverseStreetLeg(leg.beamLeg, leg.beamVehicleId, travelTime)
       .toStream should contain theSameElementsAs Vector(
       new LinkLeaveEvent(0.0, Id.createVehicleId(13), Id.createLinkId(1)),
-      new LinkEnterEvent(0.0, Id.createVehicleId(13), Id.createLinkId(2))
-    )
+      new LinkEnterEvent(0.0, Id.createVehicleId(13), Id.createLinkId(2)))
   }
 
   it should "produce an empty sequence of link events from a car leg which stays on one link" in {
@@ -105,13 +92,8 @@ class RoutingModelSpec extends FlatSpec with Matchers {
       BeamVehicleType.defaultCarBeamVehicleType.id,
       asDriver = true,
       0,
-      unbecomeDriverOnCompletion = true
-    )
-    RoutingModel
-      .traverseStreetLeg(leg.beamLeg, leg.beamVehicleId, travelTime)
-      .toStream should be(
-      'empty
-    )
+      unbecomeDriverOnCompletion = true)
+    RoutingModel.traverseStreetLeg(leg.beamLeg, leg.beamVehicleId, travelTime).toStream should be('empty)
   }
 
   it should "produce an empty sequence of link events from a car leg which is empty" in {
@@ -123,13 +105,8 @@ class RoutingModelSpec extends FlatSpec with Matchers {
       BeamVehicleType.defaultCarBeamVehicleType.id,
       asDriver = true,
       cost = 0,
-      unbecomeDriverOnCompletion = true
-    )
-    RoutingModel
-      .traverseStreetLeg(leg.beamLeg, leg.beamVehicleId, travelTime)
-      .toStream should be(
-      'empty
-    )
+      unbecomeDriverOnCompletion = true)
+    RoutingModel.traverseStreetLeg(leg.beamLeg, leg.beamVehicleId, travelTime).toStream should be('empty)
   }
 
   it should "produce travel and distance estimates from links that match router" in {
@@ -140,11 +117,8 @@ class RoutingModelSpec extends FlatSpec with Matchers {
       BeamVehicleType.defaultCarBeamVehicleType.id,
       asDriver = true,
       cost = 0,
-      unbecomeDriverOnCompletion = true
-    )
-    RoutingModel.traverseStreetLeg(leg.beamLeg, leg.beamVehicleId, travelTime).toStream should be(
-      'empty
-    )
+      unbecomeDriverOnCompletion = true)
+    RoutingModel.traverseStreetLeg(leg.beamLeg, leg.beamVehicleId, travelTime).toStream should be('empty)
   }
 
 }

@@ -1,7 +1,7 @@
 package beam.agentsim.infrastructure
 import beam.agentsim.infrastructure.ParkingStall._
 import beam.sim.BeamServices
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{ Matchers, WordSpec }
 
 import scala.collection.JavaConverters._
 
@@ -19,21 +19,21 @@ class IndexerForZonalParkingManagerTest extends WordSpec with Matchers {
 
   def getMap(tazTreeMap: TAZTreeMap): Map[StallAttributes, StallValues] = {
     (for {
-      taz          <- tazes
-      parkingType  <- List(Residential, Workplace, Public)
+      taz <- tazes
+      parkingType <- List(Residential, Workplace, Public)
       pricingModel <- List(FlatFee, Block)
       chargingType <- List(NoCharger, Level1, Level2, DCFast, UltraFast)
-      reservedFor  <- List(ParkingStall.Any)
+      reservedFor <- List(ParkingStall.Any)
     } yield {
       val attrib = StallAttributes(taz.tazId, parkingType, pricingModel, chargingType, reservedFor)
       (attrib, StallValues(Int.MaxValue, 0))
     }).toMap ++ (
       for {
-        taz          <- tazes
-        parkingType  <- List(Workplace)
+        taz <- tazes
+        parkingType <- List(Workplace)
         pricingModel <- List(FlatFee)
         chargingType <- List(Level2, DCFast, UltraFast)
-        reservedFor  <- List(ParkingStall.RideHailManager)
+        reservedFor <- List(ParkingStall.RideHailManager)
       } yield {
         val attrib = StallAttributes(taz.tazId, parkingType, pricingModel, chargingType, reservedFor)
         (attrib, StallValues(0, 0))
@@ -79,8 +79,7 @@ class IndexerForZonalParkingManagerTest extends WordSpec with Matchers {
             tazId = attr.tazId,
             parkingType = attr.parkingType,
             pricingModel = attr.pricingModel,
-            reservedFor = attr.reservedFor
-          )
+            reservedFor = attr.reservedFor)
           idxForFind.contains(key) should be(true)
       }
     }

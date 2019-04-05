@@ -2,19 +2,19 @@ package beam.integration
 
 import beam.sim.BeamHelper
 import beam.sim.config.BeamConfig
-import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
+import com.typesafe.config.{ Config, ConfigFactory, ConfigValueFactory }
 import org.matsim.core.config.ConfigUtils
 import org.matsim.core.population.io.PopulationReader
 import org.matsim.core.scenario.ScenarioUtils
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.collection.JavaConverters._
 import scala.io.Source
 
 /**
-  * Created by zeeshan on 06/10/2018
-  *
-  */
+ * Created by zeeshan on 06/10/2018
+ *
+ */
 class ReplanningExpBetaModeChoiceSpec
     extends WordSpecLike
     with BeforeAndAfterAll
@@ -32,8 +32,7 @@ class ReplanningExpBetaModeChoiceSpec
       |   {type = strategysettings, disableAfterIteration = -1, strategyName = SelectExpBeta , weight = 0.8},
       | ]
       |}
-    """.stripMargin
-  )
+    """.stripMargin)
 
   private lazy val config: Config = baseConfig
     .withValue("matsim.modules.strategy.maxAgentPlanMemorySize", ConfigValueFactory.fromAnyRef(4))
@@ -68,9 +67,8 @@ class ReplanningExpBetaModeChoiceSpec
 
   private def getTotalPlans(iterationNum: Int) = {
     val scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig())
-    new PopulationReader(scenario).readFile(
-      s"${matsimConfig.controler().getOutputDirectory}/ITERS/it.$iterationNum/$iterationNum.plans.xml.gz"
-    )
+    new PopulationReader(scenario)
+      .readFile(s"${matsimConfig.controler().getOutputDirectory}/ITERS/it.$iterationNum/$iterationNum.plans.xml.gz")
 
     scenario.getPopulation.getPersons.values().asScala.map(_.getPlans.size()).sum
   }

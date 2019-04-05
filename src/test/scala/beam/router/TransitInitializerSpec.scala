@@ -4,12 +4,12 @@ import beam.integration.IntegrationSpecCommon
 import beam.router.Modes.BeamMode
 import beam.sim.BeamServices
 import beam.sim.config.BeamConfig
-import beam.utils.BeamVehicleUtils.{readBeamVehicleTypeFile, readFuelTypeFile, readVehiclesFile}
+import beam.utils.BeamVehicleUtils.{ readBeamVehicleTypeFile, readFuelTypeFile, readVehiclesFile }
 import com.conveyal.r5.transit.RouteInfo
 import com.typesafe.config.ConfigValueFactory
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{ Matchers, WordSpecLike }
 
 import scala.collection.concurrent.TrieMap
 
@@ -56,13 +56,9 @@ class TransitInitializerSpec extends WordSpecLike with Matchers with MockitoSuga
   private def init = {
     val services = mock[BeamServices](withSettings().stubOnly())
     val beamConfig = BeamConfig(
-      baseConfig
-        .withValue(
-          "beam.agentsim.agents.vehicles.transitVehicleTypesByRouteFile",
-          ConfigValueFactory
-            .fromAnyRef("test/test-resources/beam/router/transitVehicleTypesByRoute.csv")
-        )
-    )
+      baseConfig.withValue(
+        "beam.agentsim.agents.vehicles.transitVehicleTypesByRouteFile",
+        ConfigValueFactory.fromAnyRef("test/test-resources/beam/router/transitVehicleTypesByRoute.csv")))
     val vehicleTypes = {
       val fuelTypes = readFuelTypeFile(beamConfig.beam.agentsim.agents.vehicles.fuelTypesFilePath)
       readBeamVehicleTypeFile(beamConfig.beam.agentsim.agents.vehicles.vehicleTypesFilePath, fuelTypes)

@@ -1,7 +1,7 @@
 package beam.agentsim.agents.ridehail.graph
-import java.{lang, util}
+import java.{ lang, util }
 
-import beam.agentsim.agents.ridehail.graph.FuelUsageStatsGraphSpec.{FuelUsageStatsGraph, StatsValidationHandler}
+import beam.agentsim.agents.ridehail.graph.FuelUsageStatsGraphSpec.{ FuelUsageStatsGraph, StatsValidationHandler }
 import beam.agentsim.events.PathTraversalEvent
 import beam.analysis.PathTraversalSpatialTemporalTableGenerator
 import beam.analysis.plots.FuelUsageAnalysis
@@ -15,7 +15,7 @@ import org.matsim.core.controler.events.IterationEndsEvent
 import org.matsim.core.controler.listener.IterationEndsListener
 import org.matsim.core.events.handler.BasicEventHandler
 import org.matsim.core.utils.collections.Tuple
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{ Matchers, WordSpecLike }
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -92,11 +92,7 @@ class FuelUsageStatsGraphSpec extends WordSpecLike with Matchers with Integratio
         private val promise = Promise[java.util.Map[Integer, java.util.Map[String, lang.Double]]]()
 
         override def compute(
-          stat: Tuple[util.Map[
-            Integer,
-            util.Map[String, lang.Double]
-          ], util.Set[String]]
-        ): Array[Array[Double]] = {
+            stat: Tuple[util.Map[Integer, util.Map[String, lang.Double]], util.Set[String]]): Array[Array[Double]] = {
           promise.success(stat.getFirst)
           super.compute(stat)
         }
@@ -105,40 +101,30 @@ class FuelUsageStatsGraphSpec extends WordSpecLike with Matchers with Integratio
           val handler = new StatsValidationHandler
           parseEventFile(iteration, handler)
           promise.future.foreach { a =>
-            val modes = handler.counterValue
-              .groupBy(_._1)
-              .map {
-                case (mode, ms) =>
-                  mode -> MathUtils.roundDouble(ms.map(_._2).sum)
-              }
+            val modes = handler.counterValue.groupBy(_._1).map {
+              case (mode, ms) =>
+                mode -> MathUtils.roundDouble(ms.map(_._2).sum)
+            }
 
-            val all = a.asScala.values
-              .flatMap(_.asScala)
-              .groupBy(_._1)
-              .map {
-                case (s, is) =>
-                  s -> MathUtils.roundDouble(is.map(_._2.toDouble).sum)
-              }
+            val all = a.asScala.values.flatMap(_.asScala).groupBy(_._1).map {
+              case (s, is) =>
+                s -> MathUtils.roundDouble(is.map(_._2.toDouble).sum)
+            }
             modes shouldEqual all
           }
         }
       }
-      GraphRunHelper(
-        new AbstractModule() {
-          override def install(): Unit = {
-            addControlerListenerBinding().to(classOf[FuelUsageStatsGraph])
-          }
+      GraphRunHelper(new AbstractModule() {
+        override def install(): Unit = {
+          addControlerListenerBinding().to(classOf[FuelUsageStatsGraph])
+        }
 
-          @Provides def provideGraph(
-            eventsManager: EventsManager
-          ): FuelUsageStatsGraph = {
-            val graph = new FuelUsageStatsGraph(fuelUsageComputation)
-            eventsManager.addHandler(graph)
-            graph
-          }
-        },
-        baseConfig
-      ).run()
+        @Provides def provideGraph(eventsManager: EventsManager): FuelUsageStatsGraph = {
+          val graph = new FuelUsageStatsGraph(fuelUsageComputation)
+          eventsManager.addHandler(graph)
+          graph
+        }
+      }, baseConfig).run()
     }
   }
 }

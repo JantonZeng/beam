@@ -4,16 +4,16 @@ import scala.io.Source
 
 import beam.analysis.plots.PersonTravelTimeAnalysis
 import beam.router.r5.DefaultNetworkCoordinator
-import beam.sim.{BeamHelper, BeamServices}
-import beam.sim.config.{BeamConfig, MatSimBeamConfigBuilder}
+import beam.sim.{ BeamHelper, BeamServices }
+import beam.sim.config.{ BeamConfig, MatSimBeamConfigBuilder }
 import beam.sim.population.DefaultPopulationAdjustment
-import beam.utils.{FileUtils, NetworkHelper, NetworkHelperImpl}
+import beam.utils.{ FileUtils, NetworkHelper, NetworkHelperImpl }
 import beam.utils.TestConfigUtils.testConfig
 import com.typesafe.config.ConfigFactory
 import org.matsim.core.config.Config
-import org.matsim.core.controler.{AbstractModule, OutputDirectoryHierarchy}
-import org.matsim.core.scenario.{MutableScenario, ScenarioUtils}
-import org.scalatest.{BeforeAndAfterAllConfigMap, ConfigMap, Matchers, WordSpecLike}
+import org.matsim.core.controler.{ AbstractModule, OutputDirectoryHierarchy }
+import org.matsim.core.scenario.{ MutableScenario, ScenarioUtils }
+import org.scalatest.{ BeforeAndAfterAllConfigMap, ConfigMap, Matchers, WordSpecLike }
 
 class CaccSpec extends WordSpecLike with Matchers with BeamHelper with BeforeAndAfterAllConfigMap {
 
@@ -24,15 +24,12 @@ class CaccSpec extends WordSpecLike with Matchers with BeamHelper with BeforeAnd
   }
 
   private def runSimulationAndReturnAvgCarTravelTimes(caccEnabled: Boolean): Double = {
-    val config = ConfigFactory
-      .parseString(s"""
+    val config = ConfigFactory.parseString(s"""
                      |beam.outputs.events.fileOutputFormats = xml
                      |beam.agentsim.lastIteration = 1
                      |beam.physsim.jdeqsim.cacc.enabled = $caccEnabled
                      |beam.agentsim.agents.vehicles.vehiclesFilePath = $${beam.inputDirectory}"/sample/1k/vehicles-cav.csv"
-                   """.stripMargin)
-      .withFallback(testConfig("test/input/sf-light/sf-light-1k.conf"))
-      .resolve()
+                   """.stripMargin).withFallback(testConfig("test/input/sf-light/sf-light-1k.conf")).resolve()
 
     val matsimConfig = new MatSimBeamConfigBuilder(config).buildMatSimConf()
     matsimConfig.planCalcScore().setMemorizingExperiencedPlans(true)
@@ -48,15 +45,12 @@ class CaccSpec extends WordSpecLike with Matchers with BeamHelper with BeforeAnd
     val scenario = ScenarioUtils.loadScenario(matsimConfig).asInstanceOf[MutableScenario]
     scenario.setNetwork(networkCoordinator.network)
 
-    val injector = org.matsim.core.controler.Injector.createInjector(
-      scenario.getConfig,
-      new AbstractModule() {
-        override def install(): Unit = {
-          val networkHelper: NetworkHelper = new NetworkHelperImpl(networkCoordinator.network)
-          install(module(config, scenario, networkCoordinator, networkHelper))
-        }
+    val injector = org.matsim.core.controler.Injector.createInjector(scenario.getConfig, new AbstractModule() {
+      override def install(): Unit = {
+        val networkHelper: NetworkHelper = new NetworkHelperImpl(networkCoordinator.network)
+        install(module(config, scenario, networkCoordinator, networkHelper))
       }
-    )
+    })
     val services = injector.getInstance(classOf[BeamServices])
     DefaultPopulationAdjustment(services).update(scenario)
 
@@ -66,11 +60,7 @@ class CaccSpec extends WordSpecLike with Matchers with BeamHelper with BeforeAnd
     CaccSpec.avgCarModeFromCsv(extractFileName(matsimConfig, beamConfig, outputDir))
   }
 
-  private def extractFileName(
-    matsimConfig: Config,
-    beamConfig: BeamConfig,
-    outputDir: String
-  ): String = {
+  private def extractFileName(matsimConfig: Config, beamConfig: BeamConfig, outputDir: String): String = {
     val outputDirectoryHierarchy =
       new OutputDirectoryHierarchy(outputDir, OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles)
 
@@ -108,7 +98,7 @@ object CaccSpec {
       .tail
       .map(_.toDouble)
 
-    val relevantTimes = allHourAvg.filterNot(_ == 0D)
+    val relevantTimes = allHourAvg.filterNot(_ == 0d)
     relevantTimes.sum / relevantTimes.length
   }
 

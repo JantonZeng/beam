@@ -1,22 +1,22 @@
 package beam.integration
 
 import beam.router.r5.DefaultNetworkCoordinator
-import beam.sim.config.{BeamConfig, MatSimBeamConfigBuilder}
+import beam.sim.config.{ BeamConfig, MatSimBeamConfigBuilder }
 import beam.sim.population.DefaultPopulationAdjustment
-import beam.sim.{BeamHelper, BeamServices}
-import beam.tags.{ExcludeRegular, Periodic}
-import beam.utils.{FileUtils, NetworkHelper, NetworkHelperImpl}
+import beam.sim.{ BeamHelper, BeamServices }
+import beam.tags.{ ExcludeRegular, Periodic }
+import beam.utils.{ FileUtils, NetworkHelper, NetworkHelperImpl }
 import beam.utils.TestConfigUtils.testConfig
 import com.typesafe.config.ConfigValueFactory
-import org.matsim.api.core.v01.events.{Event, PersonArrivalEvent, PersonDepartureEvent}
+import org.matsim.api.core.v01.events.{ Event, PersonArrivalEvent, PersonDepartureEvent }
 import org.matsim.core.controler.AbstractModule
 import org.matsim.core.events.handler.BasicEventHandler
-import org.matsim.core.scenario.{MutableScenario, ScenarioUtils}
-import org.scalatest.{Matchers, WordSpecLike}
+import org.matsim.core.scenario.{ MutableScenario, ScenarioUtils }
+import org.scalatest.{ Matchers, WordSpecLike }
 
 /**
-  * Created by colinsheppard 2018-05-14
-  */
+ * Created by colinsheppard 2018-05-14
+ */
 class DriveTransitSpec extends WordSpecLike with Matchers with BeamHelper {
 
   /*
@@ -29,18 +29,14 @@ class DriveTransitSpec extends WordSpecLike with Matchers with BeamHelper {
         .resolve()
         .withValue(
           TestConstants.KEY_AGENT_MODAL_BEHAVIORS_MODE_CHOICE_CLASS,
-          ConfigValueFactory.fromAnyRef(TestConstants.MODE_CHOICE_MULTINOMIAL_LOGIT)
-        )
+          ConfigValueFactory.fromAnyRef(TestConstants.MODE_CHOICE_MULTINOMIAL_LOGIT))
         .withValue(
           "beam.agentsim.agents.modalBehaviors.mulitnomialLogit.params.drive_transit_intercept",
-          ConfigValueFactory.fromAnyRef(9999)
-        )
+          ConfigValueFactory.fromAnyRef(9999))
         .withValue(
           "beam.outputs.events.overrideWritingLevels",
           ConfigValueFactory.fromAnyRef(
-            "org.matsim.api.core.v01.events.ActivityEndEvent:REGULAR, org.matsim.api.core.v01.events.ActivityStartEvent:REGULAR, org.matsim.api.core.v01.events.PersonEntersVehicleEvent:REGULAR, org.matsim.api.core.v01.events.PersonLeavesVehicleEvent:REGULAR, beam.agentsim.events.ModeChoiceEvent:VERBOSE, beam.agentsim.events.PathTraversalEvent:VERBOSE, org.matsim.api.core.v01.events.PersonDepartureEvent:VERBOSE, org.matsim.api.core.v01.events.PersonArrivalEvent:VERBOSE"
-          )
-        )
+            "org.matsim.api.core.v01.events.ActivityEndEvent:REGULAR, org.matsim.api.core.v01.events.ActivityStartEvent:REGULAR, org.matsim.api.core.v01.events.PersonEntersVehicleEvent:REGULAR, org.matsim.api.core.v01.events.PersonLeavesVehicleEvent:REGULAR, beam.agentsim.events.ModeChoiceEvent:VERBOSE, beam.agentsim.events.PathTraversalEvent:VERBOSE, org.matsim.api.core.v01.events.PersonDepartureEvent:VERBOSE, org.matsim.api.core.v01.events.PersonArrivalEvent:VERBOSE"))
         .withValue("matsim.modules.controler.lastIteration", ConfigValueFactory.fromAnyRef(0))
       val configBuilder = new MatSimBeamConfigBuilder(config)
       val matsimConfig = configBuilder.buildMatSimConf()
@@ -58,25 +54,22 @@ class DriveTransitSpec extends WordSpecLike with Matchers with BeamHelper {
 
       var nDepartures = 0
       var nArrivals = 0
-      val injector = org.matsim.core.controler.Injector.createInjector(
-        scenario.getConfig,
-        new AbstractModule() {
-          override def install(): Unit = {
-            install(module(config, scenario, networkCoordinator, networkHelper))
-            addEventHandlerBinding().toInstance(new BasicEventHandler {
-              override def handleEvent(event: Event): Unit = {
-                event match {
-                  case depEvent: PersonDepartureEvent if depEvent.getLegMode.equalsIgnoreCase("drive_transit") =>
-                    nDepartures = nDepartures + 1
-                  case arrEvent: PersonArrivalEvent if arrEvent.getLegMode.equalsIgnoreCase("drive_transit") =>
-                    nArrivals = nArrivals + 1
-                  case _ =>
-                }
+      val injector = org.matsim.core.controler.Injector.createInjector(scenario.getConfig, new AbstractModule() {
+        override def install(): Unit = {
+          install(module(config, scenario, networkCoordinator, networkHelper))
+          addEventHandlerBinding().toInstance(new BasicEventHandler {
+            override def handleEvent(event: Event): Unit = {
+              event match {
+                case depEvent: PersonDepartureEvent if depEvent.getLegMode.equalsIgnoreCase("drive_transit") =>
+                  nDepartures = nDepartures + 1
+                case arrEvent: PersonArrivalEvent if arrEvent.getLegMode.equalsIgnoreCase("drive_transit") =>
+                  nArrivals = nArrivals + 1
+                case _ =>
               }
-            })
-          }
+            }
+          })
         }
-      )
+      })
 
       val services = injector.getInstance(classOf[BeamServices])
       DefaultPopulationAdjustment(services).update(scenario)

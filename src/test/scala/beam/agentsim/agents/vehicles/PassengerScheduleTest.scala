@@ -1,20 +1,20 @@
 package beam.agentsim.agents.vehicles
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.actor.{ ActorRef, ActorSystem }
+import akka.testkit.{ ImplicitSender, TestKit }
 import beam.router.Modes.BeamMode.WALK
-import beam.router.model.{BeamLeg, BeamPath}
+import beam.router.model.{ BeamLeg, BeamPath }
 import beam.sim.BeamServices
 import org.matsim.api.core.v01.Id
 import org.matsim.api.core.v01.population.Person
 import org.matsim.vehicles.Vehicle
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
-import org.scalatest.{FunSpecLike, Matchers, _}
+import org.scalatest.{ FunSpecLike, Matchers, _ }
 
 /**
-  *
-  */
+ *
+ */
 class PassengerScheduleTest
     extends TestKit(ActorSystem("PassengerScheduleTest"))
     with FunSpecLike
@@ -40,8 +40,8 @@ class PassengerScheduleTest
 
       val leg = BeamLeg(0, WALK, 1, BeamPath.empty)
 
-      val passengerSchedule: PassengerSchedule = PassengerSchedule()
-        .addPassenger(VehiclePersonId(vehicleId, passengerPersonId, ActorRef.noSender), Vector(leg))
+      val passengerSchedule: PassengerSchedule =
+        PassengerSchedule().addPassenger(VehiclePersonId(vehicleId, passengerPersonId, ActorRef.noSender), Vector(leg))
 
       passengerSchedule.schedule.size should be(1)
       passengerSchedule.schedule(leg).riders.size should ===(1)

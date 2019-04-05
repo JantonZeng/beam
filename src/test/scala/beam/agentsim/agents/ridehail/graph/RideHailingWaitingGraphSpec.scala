@@ -1,20 +1,23 @@
 package beam.agentsim.agents.ridehail.graph
-import java.{lang, util}
+import java.{ lang, util }
 
-import beam.agentsim.agents.ridehail.graph.RideHailingWaitingGraphSpec.{RideHailingWaitingGraph, StatsValidationHandler}
+import beam.agentsim.agents.ridehail.graph.RideHailingWaitingGraphSpec.{
+  RideHailingWaitingGraph,
+  StatsValidationHandler
+}
 import beam.agentsim.events.ModeChoiceEvent
 import beam.analysis.plots.RideHailWaitingAnalysis
 import beam.integration.IntegrationSpecCommon
 import beam.utils.MathUtils
 import com.google.inject.Provides
-import org.matsim.api.core.v01.events.{Event, PersonEntersVehicleEvent}
+import org.matsim.api.core.v01.events.{ Event, PersonEntersVehicleEvent }
 import org.matsim.core.api.experimental.events.EventsManager
 import org.matsim.core.controler.AbstractModule
 import org.matsim.core.controler.events.IterationEndsEvent
 import org.matsim.core.controler.listener.IterationEndsListener
 import org.matsim.core.events.handler.BasicEventHandler
 import org.matsim.core.utils.collections.Tuple
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{ Matchers, WordSpecLike }
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -22,9 +25,8 @@ import scala.concurrent.Promise
 
 object RideHailingWaitingGraphSpec {
 
-  class RideHailingWaitingGraph(
-    waitingComp: RideHailWaitingAnalysis.WaitingStatsComputation with EventAnalyzer
-  ) extends BasicEventHandler
+  class RideHailingWaitingGraph(waitingComp: RideHailWaitingAnalysis.WaitingStatsComputation with EventAnalyzer)
+      extends BasicEventHandler
       with IterationEndsListener {
 
     private lazy val railHailingStat =
@@ -104,16 +106,8 @@ class RideHailingWaitingGraphSpec extends WordSpecLike with Matchers with Integr
 
         private val promise = Promise[util.Map[Integer, util.List[lang.Double]]]()
 
-        override def compute(
-          stat: Tuple[util.List[
-            lang.Double
-          ], util.Map[Integer, util.List[
-            lang.Double
-          ]]]
-        ): Tuple[util.Map[
-          Integer,
-          util.Map[lang.Double, Integer]
-        ], Array[Array[Double]]] = {
+        override def compute(stat: Tuple[util.List[lang.Double], util.Map[Integer, util.List[lang.Double]]])
+            : Tuple[util.Map[Integer, util.Map[lang.Double, Integer]], Array[Array[Double]]] = {
           promise.success(stat.getSecond)
           super.compute(stat)
         }
@@ -137,22 +131,17 @@ class RideHailingWaitingGraphSpec extends WordSpecLike with Matchers with Integr
         }
       }
 
-      GraphRunHelper(
-        new AbstractModule() {
-          override def install(): Unit = {
-            addControlerListenerBinding().to(classOf[RideHailingWaitingGraph])
-          }
+      GraphRunHelper(new AbstractModule() {
+        override def install(): Unit = {
+          addControlerListenerBinding().to(classOf[RideHailingWaitingGraph])
+        }
 
-          @Provides def provideGraph(
-            eventsManager: EventsManager
-          ): RideHailingWaitingGraph = {
-            val graph = new RideHailingWaitingGraph(rideHailWaitingComputation)
-            eventsManager.addHandler(graph)
-            graph
-          }
-        },
-        baseConfig
-      ).run()
+        @Provides def provideGraph(eventsManager: EventsManager): RideHailingWaitingGraph = {
+          val graph = new RideHailingWaitingGraph(rideHailWaitingComputation)
+          eventsManager.addHandler(graph)
+          graph
+        }
+      }, baseConfig).run()
     }
   }
 }

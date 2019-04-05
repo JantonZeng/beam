@@ -1,29 +1,28 @@
 package beam.integration
 import beam.agentsim.agents.vehicles.BeamVehicleType
-import beam.agentsim.events.{ModeChoiceEvent, PathTraversalEvent, PersonCostEvent}
+import beam.agentsim.events.{ ModeChoiceEvent, PathTraversalEvent, PersonCostEvent }
 import beam.router.Modes.BeamMode
 import beam.router.r5.DefaultNetworkCoordinator
-import beam.sim.config.{BeamConfig, MatSimBeamConfigBuilder}
+import beam.sim.config.{ BeamConfig, MatSimBeamConfigBuilder }
 import beam.sim.population.DefaultPopulationAdjustment
 import beam.sim.population.PopulationAdjustment.EXCLUDED_MODES
-import beam.sim.{BeamHelper, BeamServices}
-import beam.utils.{FileUtils, NetworkHelper, NetworkHelperImpl}
+import beam.sim.{ BeamHelper, BeamServices }
+import beam.utils.{ FileUtils, NetworkHelper, NetworkHelperImpl }
 import beam.utils.TestConfigUtils.testConfig
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 import org.matsim.api.core.v01.Id
 import org.matsim.api.core.v01.events.Event
 import org.matsim.core.controler.AbstractModule
 import org.matsim.core.events.handler.BasicEventHandler
-import org.matsim.core.scenario.{MutableScenario, ScenarioUtils}
-import org.scalatest.{FlatSpec, Matchers}
+import org.matsim.core.scenario.{ MutableScenario, ScenarioUtils }
+import org.scalatest.{ FlatSpec, Matchers }
 
 class CarSharingSpec extends FlatSpec with Matchers with BeamHelper {
 
   private val sharedCarTypeId = Id.create("sharedCar", classOf[BeamVehicleType])
 
   "Running a car-sharing-only scenario with abundant cars" must "result in everybody driving" in {
-    val config = ConfigFactory
-      .parseString("""
+    val config = ConfigFactory.parseString("""
         |beam.outputs.events.fileOutputFormats = xml
         |beam.physsim.skipPhysSim = true
         |beam.agentsim.lastIteration = 0
@@ -36,15 +35,12 @@ class CarSharingSpec extends FlatSpec with Matchers with BeamHelper {
         |    }
         | }
         |]
-        """.stripMargin)
-      .withFallback(testConfig("test/input/beamville/beam.conf"))
-      .resolve()
+        """.stripMargin).withFallback(testConfig("test/input/beamville/beam.conf")).resolve()
     runCarSharingTest(config)
   }
 
   "Running a car-sharing-only scenario with one car per person at home" must "result in everybody driving" ignore {
-    val config = ConfigFactory
-      .parseString("""
+    val config = ConfigFactory.parseString("""
         |beam.outputs.events.fileOutputFormats = xml
         |beam.physsim.skipPhysSim = true
         |beam.agentsim.lastIteration = 0
@@ -57,9 +53,7 @@ class CarSharingSpec extends FlatSpec with Matchers with BeamHelper {
         |    }
         | }
         |]
-        """.stripMargin)
-      .withFallback(testConfig("test/input/beamville/beam.conf"))
-      .resolve()
+        """.stripMargin).withFallback(testConfig("test/input/beamville/beam.conf")).resolve()
     runCarSharingTest(config)
   }
 
@@ -78,9 +72,8 @@ class CarSharingSpec extends FlatSpec with Matchers with BeamHelper {
     var trips = 0
     var sharedCarTravelTime = 0
     var personCost = 0d
-    val injector = org.matsim.core.controler.Injector.createInjector(
-      scenario.getConfig,
-      new AbstractModule() {
+    val injector =
+      org.matsim.core.controler.Injector.createInjector(scenario.getConfig, new AbstractModule() {
         override def install(): Unit = {
           install(module(config, scenario, networkCoordinator, networkHelper))
           addEventHandlerBinding().toInstance(new BasicEventHandler {
@@ -100,15 +93,16 @@ class CarSharingSpec extends FlatSpec with Matchers with BeamHelper {
             }
           })
         }
-      }
-    )
+      })
     val services = injector.getInstance(classOf[BeamServices])
 
     // Only driving allowed
     val population = scenario.getPopulation
-    val nonCarModes = BeamMode.allModes flatMap { mode =>
-      if (mode == BeamMode.CAR) None else Some(mode.value.toLowerCase)
-    } mkString ","
+    val nonCarModes = BeamMode.allModes
+      .flatMap { mode =>
+        if (mode == BeamMode.CAR) None else Some(mode.value.toLowerCase)
+      }
+      .mkString(",")
     population.getPersons.keySet.forEach { personId =>
       population.getPersonAttributes.putAttribute(personId.toString, EXCLUDED_MODES, nonCarModes)
     }
@@ -131,8 +125,7 @@ class CarSharingSpec extends FlatSpec with Matchers with BeamHelper {
     assert(sharedCarTravelTime > 0, "Aggregate shared car travel time must not be zero.")
     assert(
       personCost >= sharedCarTravelTime * sharedCarType.monetaryCostPerSecond,
-      "People are paying less than my price."
-    )
+      "People are paying less than my price.")
     assert(nonCarTrips == 0, "Someone wasn't driving even though everybody wants to and cars abound.")
   }
 

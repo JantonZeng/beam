@@ -1,17 +1,17 @@
 package beam.analysis.physsim
 
-import java.io.{BufferedInputStream, File, FileInputStream}
+import java.io.{ BufferedInputStream, File, FileInputStream }
 import java.util.zip.GZIPInputStream
 
 import beam.utils.TestConfigUtils.testOutputDir
-import beam.utils.{BeamCalcLinkStats, VolumesAnalyzerFixed}
+import beam.utils.{ BeamCalcLinkStats, VolumesAnalyzerFixed }
 import org.matsim.core.config.ConfigUtils
-import org.matsim.core.controler.{Controler, OutputDirectoryHierarchy}
-import org.matsim.core.events.{EventsUtils, MatsimEventsReader}
+import org.matsim.core.controler.{ Controler, OutputDirectoryHierarchy }
+import org.matsim.core.events.{ EventsUtils, MatsimEventsReader }
 import org.matsim.core.network.io.MatsimNetworkReader
 import org.matsim.core.scenario.ScenarioUtils
 import org.matsim.core.trafficmonitoring.TravelTimeCalculator
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source

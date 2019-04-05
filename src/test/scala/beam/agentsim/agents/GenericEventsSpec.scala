@@ -2,15 +2,15 @@ package beam.agentsim.agents
 
 import beam.integration.IntegrationSpecCommon
 import beam.router.r5.DefaultNetworkCoordinator
-import beam.sim.config.{BeamConfig, MatSimBeamConfigBuilder}
+import beam.sim.config.{ BeamConfig, MatSimBeamConfigBuilder }
 import beam.sim.population.DefaultPopulationAdjustment
-import beam.sim.{BeamHelper, BeamServices}
-import beam.utils.{FileUtils, NetworkHelper, NetworkHelperImpl}
+import beam.sim.{ BeamHelper, BeamServices }
+import beam.utils.{ FileUtils, NetworkHelper, NetworkHelperImpl }
 import org.matsim.api.core.v01.Scenario
 import org.matsim.core.api.experimental.events.EventsManager
 import org.matsim.core.events.handler.BasicEventHandler
-import org.matsim.core.scenario.{MutableScenario, ScenarioUtils}
-import org.scalatest.{BeforeAndAfterAll, WordSpecLike}
+import org.matsim.core.scenario.{ MutableScenario, ScenarioUtils }
+import org.scalatest.{ BeforeAndAfterAll, WordSpecLike }
 
 trait GenericEventsSpec extends WordSpecLike with IntegrationSpecCommon with BeamHelper with BeforeAndAfterAll {
 
@@ -37,10 +37,8 @@ trait GenericEventsSpec extends WordSpecLike with IntegrationSpecCommon with Bea
 
     val networkHelper: NetworkHelper = new NetworkHelperImpl(networkCoordinator.network)
 
-    val injector = org.matsim.core.controler.Injector.createInjector(
-      scenario.getConfig,
-      module(baseConfig, scenario, networkCoordinator, networkHelper)
-    )
+    val injector = org.matsim.core.controler.Injector
+      .createInjector(scenario.getConfig, module(baseConfig, scenario, networkCoordinator, networkHelper))
 
     beamServices = injector.getInstance(classOf[BeamServices])
     val popAdjustment = DefaultPopulationAdjustment(beamServices)

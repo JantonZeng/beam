@@ -1,9 +1,9 @@
 package beam.integration.ridehail
 
-import beam.integration.{IntegrationSpecCommon, StartWithCustomConfig, TestConstants}
+import beam.integration.{ IntegrationSpecCommon, StartWithCustomConfig, TestConstants }
 import beam.sim.BeamHelper
 import com.typesafe.config.ConfigValueFactory
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{ Matchers, WordSpecLike }
 
 class RideHailNumDriversSpec extends WordSpecLike with Matchers with BeamHelper with IntegrationSpecCommon {
 
@@ -16,19 +16,12 @@ class RideHailNumDriversSpec extends WordSpecLike with Matchers with BeamHelper 
             baseConfig
               .withValue(
                 TestConstants.KEY_AGENT_MODAL_BEHAVIORS_MODE_CHOICE_CLASS,
-                ConfigValueFactory.fromAnyRef("ModeChoiceRideHailIfAvailable")
-              )
+                ConfigValueFactory.fromAnyRef("ModeChoiceRideHailIfAvailable"))
               .withValue(
                 "beam.agentsim.agents.rideHail.initialization.procedural.numDriversAsFractionOfPopulation",
-                ConfigValueFactory.fromAnyRef(tc)
-              )
-          ).groupedCount
-      )
+                ConfigValueFactory.fromAnyRef(tc))).groupedCount)
 
-      val tc = modeChoice
-        .map(_.get("ride_hail"))
-        .filter(_.isDefined)
-        .map(_.get)
+      val tc = modeChoice.map(_.get("ride_hail")).filter(_.isDefined).map(_.get)
 
       val modeChoiceWithLowFraction = tc.head
       val modeChoiceWithHighFraction = tc.last

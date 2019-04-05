@@ -3,15 +3,15 @@ package beam.agentsim.agents.ridehail
 import beam.agentsim.events.PathTraversalEvent
 import beam.integration.IntegrationSpecCommon
 import beam.router.r5.DefaultNetworkCoordinator
-import beam.sim.config.{BeamConfig, MatSimBeamConfigBuilder}
+import beam.sim.config.{ BeamConfig, MatSimBeamConfigBuilder }
 import beam.sim.population.DefaultPopulationAdjustment
-import beam.sim.{BeamHelper, BeamServices}
-import beam.utils.{FileUtils, NetworkHelper, NetworkHelperImpl}
-import org.matsim.api.core.v01.events.{Event, PersonEntersVehicleEvent, PersonLeavesVehicleEvent}
+import beam.sim.{ BeamHelper, BeamServices }
+import beam.utils.{ FileUtils, NetworkHelper, NetworkHelperImpl }
+import org.matsim.api.core.v01.events.{ Event, PersonEntersVehicleEvent, PersonLeavesVehicleEvent }
 import org.matsim.core.api.experimental.events.EventsManager
 import org.matsim.core.events.handler.BasicEventHandler
-import org.matsim.core.scenario.{MutableScenario, ScenarioUtils}
-import org.scalatest.{Matchers, WordSpecLike}
+import org.matsim.core.scenario.{ MutableScenario, ScenarioUtils }
+import org.scalatest.{ Matchers, WordSpecLike }
 
 import scala.collection.concurrent.TrieMap
 import scala.collection.mutable
@@ -37,10 +37,8 @@ class RideHailPassengersEventsSpec extends WordSpecLike with Matchers with BeamH
 
       val networkHelper: NetworkHelper = new NetworkHelperImpl(networkCoordinator.network)
 
-      val injector = org.matsim.core.controler.Injector.createInjector(
-        scenario.getConfig,
-        module(baseConfig, scenario, networkCoordinator, networkHelper)
-      )
+      val injector = org.matsim.core.controler.Injector
+        .createInjector(scenario.getConfig, module(baseConfig, scenario, networkCoordinator, networkHelper))
 
       val beamServices: BeamServices =
         injector.getInstance(classOf[BeamServices])
@@ -71,8 +69,8 @@ class RideHailPassengersEventsSpec extends WordSpecLike with Matchers with BeamH
               Set(numPass, 0) should contain(v._1 - v._2)
 
             case enterEvent: PersonEntersVehicleEvent
-                if enterEvent.getVehicleId.toString
-                  .startsWith("rideHail") && !enterEvent.getPersonId.toString.contains("Agent") =>
+                if enterEvent.getVehicleId.toString.startsWith("rideHail") && !enterEvent.getPersonId.toString.contains(
+                  "Agent") =>
               val id = enterEvent.getVehicleId.toString
               val v = events.getOrElse(id, Tuple3(0, 0, 0))
               events.put(id, v.copy(_1 = v._1 + 1))

@@ -7,16 +7,16 @@ import org.junit.Assert
 import org.matsim.api.core.v01.Id
 import org.matsim.api.core.v01.population._
 import org.matsim.core.config.ConfigUtils
-import org.matsim.core.population.routes.{NetworkRoute, RouteUtils}
+import org.matsim.core.population.routes.{ NetworkRoute, RouteUtils }
 import org.matsim.core.router.TripStructureUtils
 import org.matsim.core.scenario.ScenarioUtils
-import org.matsim.households.{Household, HouseholdImpl, HouseholdsImpl}
+import org.matsim.households.{ Household, HouseholdImpl, HouseholdsImpl }
 import org.matsim.utils.objectattributes.ObjectAttributes
-import org.matsim.vehicles.{Vehicle, VehicleType, VehicleUtils, Vehicles}
+import org.matsim.vehicles.{ Vehicle, VehicleType, VehicleUtils, Vehicles }
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{FlatSpec, GivenWhenThen, Matchers}
+import org.scalatest.{ FlatSpec, GivenWhenThen, Matchers }
 
-import scala.collection.{immutable, JavaConverters}
+import scala.collection.{ immutable, JavaConverters }
 import scala.util.Random
 
 class ChainBasedTourAllocatorSpec extends FlatSpec with Matchers with BeamHelper with MockitoSugar with GivenWhenThen {
@@ -35,9 +35,8 @@ class ChainBasedTourAllocatorSpec extends FlatSpec with Matchers with BeamHelper
 
     lazy val hhs = new HouseholdsImpl
 
-    lazy val hh: HouseholdImpl = hhs.getFactory
-      .createHousehold(Id.create("hh", classOf[Household]))
-      .asInstanceOf[HouseholdImpl]
+    lazy val hh: HouseholdImpl =
+      hhs.getFactory.createHousehold(Id.create("hh", classOf[Household])).asInstanceOf[HouseholdImpl]
     var chainBasedTourVehicleAllocator: ChainBasedTourVehicleAllocator = _
 
     def init() {
@@ -67,11 +66,8 @@ class ChainBasedTourAllocatorSpec extends FlatSpec with Matchers with BeamHelper
       hh.setVehicleIds(JavaConverters.seqAsJavaList(vehicleList.map(Id.createVehicleId(_))))
       hhs.addHousehold(hh)
 
-      chainBasedTourVehicleAllocator = ChainBasedTourVehicleAllocator(
-        vehs,
-        HouseholdMembershipAllocator(hhs, pop),
-        Set[String]("car")
-      )
+      chainBasedTourVehicleAllocator =
+        ChainBasedTourVehicleAllocator(vehs, HouseholdMembershipAllocator(hhs, pop), Set[String]("car"))
     }
 
     def createPlan(i: Int): Plan = {
@@ -103,10 +99,7 @@ class ChainBasedTourAllocatorSpec extends FlatSpec with Matchers with BeamHelper
           case leg: Leg if leg.getMode == MODE =>
             val r = leg.getRoute.asInstanceOf[NetworkRoute]
             Assert.assertNotNull("null vehicle id in route", r.getVehicleId)
-            Assert.assertTrue(
-              s"vehicle ${r.getVehicleId} not same as $v",
-              v.isEmpty || r.getVehicleId == v.get
-            )
+            Assert.assertTrue(s"vehicle ${r.getVehicleId} not same as $v", v.isEmpty || r.getVehicleId == v.get)
             v = Option(r.getVehicleId)
         })
 
@@ -128,7 +121,7 @@ class ChainBasedTourAllocatorSpec extends FlatSpec with Matchers with BeamHelper
     init()
   }
 
-  behavior of "A ChainBasedTourVehicleAllocator"
+  behavior.of("A ChainBasedTourVehicleAllocator")
 
   it should "allocate a chain-based vehicle to an agent if one is available in the household" in {
 
@@ -157,17 +150,11 @@ class ChainBasedTourAllocatorSpec extends FlatSpec with Matchers with BeamHelper
     val plan = f.pop.getPersons.get(personWithAnyRank).getPlans.get(0)
     val subtour = JavaConverters
       .collectionAsScalaIterable(
-        TripStructureUtils.getSubtours(plan, f.chainBasedTourVehicleAllocator.stageActivitytypes)
-      )
+        TripStructureUtils.getSubtours(plan, f.chainBasedTourVehicleAllocator.stageActivitytypes))
       .toIndexedSeq(0)
-    f.chainBasedTourVehicleAllocator.allocateChainBasedModesforHouseholdMember(
-      personWithAnyRank,
-      subtour,
-      plan
-    )
+    f.chainBasedTourVehicleAllocator.allocateChainBasedModesforHouseholdMember(personWithAnyRank, subtour, plan)
     val legs = JavaConverters.collectionAsScalaIterable(subtour.getTrips).flatMap { trip =>
-      JavaConverters
-        .collectionAsScalaIterable(trip.getLegsOnly)
+      JavaConverters.collectionAsScalaIterable(trip.getLegsOnly)
     }
 
     Then("it should be allocated to the person.")
@@ -199,10 +186,8 @@ class ChainBasedTourAllocatorSpec extends FlatSpec with Matchers with BeamHelper
     f.persAttr.getAttribute(personWithLowRank.toString, "rank") should be(1)
 
     And("the two members would like to know which chain-based modes are available")
-    val availableLowRankModes = f.chainBasedTourVehicleAllocator
-      .identifyChainBasedModesForAgent(personWithLowRank)
-    val availableHighRankModes = f.chainBasedTourVehicleAllocator
-      .identifyChainBasedModesForAgent(personWithHighRank)
+    val availableLowRankModes = f.chainBasedTourVehicleAllocator.identifyChainBasedModesForAgent(personWithLowRank)
+    val availableHighRankModes = f.chainBasedTourVehicleAllocator.identifyChainBasedModesForAgent(personWithHighRank)
 
     Then("a chain-based mode should not be available for a low-ranking individual")
     availableLowRankModes.size should be(0)
@@ -214,18 +199,14 @@ class ChainBasedTourAllocatorSpec extends FlatSpec with Matchers with BeamHelper
     val highRankPlan = f.pop.getPersons.get(personWithHighRank).getPlans.get(0)
     val highRankSubtour = JavaConverters
       .collectionAsScalaIterable(
-        TripStructureUtils
-          .getSubtours(highRankPlan, f.chainBasedTourVehicleAllocator.stageActivitytypes)
-      )
+        TripStructureUtils.getSubtours(highRankPlan, f.chainBasedTourVehicleAllocator.stageActivitytypes))
       .toIndexedSeq(0)
     f.chainBasedTourVehicleAllocator.allocateChainBasedModesforHouseholdMember(
       personWithHighRank,
       highRankSubtour,
-      highRankPlan
-    )
+      highRankPlan)
     val highRankLegs = JavaConverters.collectionAsScalaIterable(highRankSubtour.getTrips).flatMap { trip =>
-      JavaConverters
-        .collectionAsScalaIterable(trip.getLegsOnly)
+      JavaConverters.collectionAsScalaIterable(trip.getLegsOnly)
     }
     val highRankModes = highRankLegs.map(leg => leg.getMode)
 

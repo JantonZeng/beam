@@ -1,12 +1,12 @@
 package beam.integration
 
 import beam.sim.BeamHelper
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{ Matchers, WordSpecLike }
 
 /**
-  * Created by fdariasm on 29/08/2017
-  *
-  */
+ * Created by fdariasm on 29/08/2017
+ *
+ */
 class ModeChoiceSpec extends WordSpecLike with Matchers with BeamHelper with IntegrationSpecCommon {
 
 //  "Running beam with modeChoiceClass ModeChoiceDriveIfAvailable" must {

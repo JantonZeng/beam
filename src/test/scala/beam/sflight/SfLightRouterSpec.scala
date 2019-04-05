@@ -5,10 +5,10 @@ import beam.agentsim.agents.vehicles.BeamVehicleType
 import beam.agentsim.agents.vehicles.VehicleProtocol.StreetVehicle
 import beam.agentsim.events.SpaceTime
 import beam.router.BeamRouter._
-import beam.router.Modes.BeamMode.{CAR, RIDE_HAIL, WALK}
-import beam.router.model.{BeamLeg, BeamPath, BeamTrip}
-import beam.router.{BeamRouter, Modes}
-import org.matsim.api.core.v01.{Coord, Id}
+import beam.router.Modes.BeamMode.{ CAR, RIDE_HAIL, WALK }
+import beam.router.model.{ BeamLeg, BeamPath, BeamTrip }
+import beam.router.{ BeamRouter, Modes }
+import org.matsim.api.core.v01.{ Coord, Id }
 import org.scalatest._
 
 import scala.language.postfixOps
@@ -31,10 +31,7 @@ class SfLightRouterSpec extends AbstractSfLightSpec("SfLightRouterSpec") with In
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(new Coord(origin.getX, origin.getY), time),
             Modes.BeamMode.WALK,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       val response = expectMsgType[RoutingResponse]
       assert(response.itineraries.exists(_.tripClassifier == WALK))
     }
@@ -55,10 +52,7 @@ class SfLightRouterSpec extends AbstractSfLightSpec("SfLightRouterSpec") with In
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(new Coord(origin.getX, origin.getY), time),
             Modes.BeamMode.WALK,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       val response = expectMsgType[RoutingResponse]
       assert(response.itineraries.exists(_.tripClassifier == WALK))
     }
@@ -80,10 +74,7 @@ class SfLightRouterSpec extends AbstractSfLightSpec("SfLightRouterSpec") with In
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(new Coord(origin.getX, origin.getY), time),
             Modes.BeamMode.WALK,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       val response = expectMsgType[RoutingResponse]
       assert(response.itineraries.exists(_.tripClassifier == WALK))
     }
@@ -104,24 +95,19 @@ class SfLightRouterSpec extends AbstractSfLightSpec("SfLightRouterSpec") with In
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(new Coord(origin.getX, origin.getY), time),
             Modes.BeamMode.CAR,
-            asDriver = false
-          ),
+            asDriver = false),
           StreetVehicle(
             Id.createVehicleId("body-17673-0"),
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(new Coord(origin.getX, origin.getY), time),
             Modes.BeamMode.WALK,
-            asDriver = true
-          ),
+            asDriver = true),
           StreetVehicle(
             Id.createVehicleId("17673-0"),
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(new Coord(origin.getX, origin.getY), time),
             Modes.BeamMode.CAR,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       val response = expectMsgType[RoutingResponse]
       assert(response.itineraries.exists(_.tripClassifier == RIDE_HAIL))
       assert(response.itineraries.exists(_.tripClassifier == CAR))
@@ -129,7 +115,7 @@ class SfLightRouterSpec extends AbstractSfLightSpec("SfLightRouterSpec") with In
       val carOption = response.itineraries.find(_.tripClassifier == CAR).get
       //      assertMakesSense(carOption)
       val actualModesOfCarOption = carOption.toBeamTrip.legs.map(_.mode)
-      actualModesOfCarOption should contain theSameElementsInOrderAs List(WALK, CAR, WALK)
+      (actualModesOfCarOption should contain).theSameElementsInOrderAs(List(WALK, CAR, WALK))
     }
 
     "respond with a walk and a car route for going from downtown SF to Treasure Island" in {
@@ -147,24 +133,19 @@ class SfLightRouterSpec extends AbstractSfLightSpec("SfLightRouterSpec") with In
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(origin, 0),
             Modes.BeamMode.CAR,
-            asDriver = true
-          ),
+            asDriver = true),
           StreetVehicle(
             Id.createVehicleId("rideHailVehicle-person=116378-2"),
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(new Coord(origin.getX, origin.getY), time),
             Modes.BeamMode.CAR,
-            asDriver = false
-          ),
+            asDriver = false),
           StreetVehicle(
             Id.createVehicleId("body-116378-2"),
             BeamVehicleType.defaultCarBeamVehicleType.id,
             new SpaceTime(new Coord(origin.getX, origin.getY), time),
             Modes.BeamMode.WALK,
-            asDriver = true
-          )
-        )
-      )
+            asDriver = true)))
       val response = expectMsgType[RoutingResponse]
       assert(response.itineraries.exists(_.tripClassifier == WALK))
       assert(response.itineraries.exists(_.tripClassifier == CAR))
@@ -173,7 +154,7 @@ class SfLightRouterSpec extends AbstractSfLightSpec("SfLightRouterSpec") with In
         response.itineraries.find(_.tripClassifier == WALK).get.toBeamTrip
       inside(walkTrip) {
         case BeamTrip(legs) =>
-          legs.map(_.mode) should contain theSameElementsInOrderAs List(WALK)
+          (legs.map(_.mode) should contain).theSameElementsInOrderAs(List(WALK))
           inside(legs.loneElement) {
             case BeamLeg(_, mode, _, BeamPath(links, linkTravelTime, _, _, _, _)) =>
               mode should be(WALK)
@@ -206,27 +187,20 @@ class SfLightRouterSpec extends AbstractSfLightSpec("SfLightRouterSpec") with In
                     BeamVehicleType.defaultCarBeamVehicleType.id,
                     new SpaceTime(origin, 0),
                     Modes.BeamMode.CAR,
-                    asDriver = true
-                  ),
+                    asDriver = true),
                   StreetVehicle(
                     Id.createVehicleId("body-116378-2"),
                     BeamVehicleType.defaultCarBeamVehicleType.id,
                     new SpaceTime(new Coord(origin.getX, origin.getY), time),
                     Modes.BeamMode.WALK,
-                    asDriver = true
-                  )
-                )
-              )
+                    asDriver = true)))
               val response = expectMsgType[RoutingResponse]
               assert(response.itineraries.exists(_.tripClassifier == WALK))
 
-              val walkTrip = response.itineraries
-                .find(_.tripClassifier == WALK)
-                .get
-                .toBeamTrip
+              val walkTrip = response.itineraries.find(_.tripClassifier == WALK).get.toBeamTrip
               inside(walkTrip) {
                 case BeamTrip(legs) =>
-                  legs.map(_.mode) should contain theSameElementsInOrderAs List(WALK)
+                  (legs.map(_.mode) should contain).theSameElementsInOrderAs(List(WALK))
                   inside(legs.loneElement) {
                     case BeamLeg(_, mode, _, BeamPath(_, linkTravelTime, _, _, _, _)) =>
                       mode should be(WALK)
@@ -234,10 +208,7 @@ class SfLightRouterSpec extends AbstractSfLightSpec("SfLightRouterSpec") with In
               }
 
               if (response.itineraries.exists(_.tripClassifier == CAR)) {
-                val carTrip = response.itineraries
-                  .find(_.tripClassifier == CAR)
-                  .get
-                  .toBeamTrip
+                val carTrip = response.itineraries.find(_.tripClassifier == CAR).get.toBeamTrip
                 assertMakesSense(carTrip)
                 inside(carTrip) {
                   case BeamTrip(legs) =>

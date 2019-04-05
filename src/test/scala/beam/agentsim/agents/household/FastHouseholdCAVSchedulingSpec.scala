@@ -1,59 +1,53 @@
 package beam.agentsim.agents.household
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.actor.{ ActorRef, ActorSystem }
+import akka.testkit.{ ImplicitSender, TestKit }
 import akka.util.Timeout
 import beam.agentsim.agents.choice.mode.ModeIncentive.Incentive
-import beam.agentsim.agents.choice.mode.{ModeIncentive, PtFares}
+import beam.agentsim.agents.choice.mode.{ ModeIncentive, PtFares }
 import beam.agentsim.agents.modalbehaviors.ModeChoiceCalculator.ModeChoiceCalculatorFactory
 import beam.agentsim.agents.vehicles.EnergyEconomyAttributes.Powertrain
-import beam.agentsim.agents.vehicles.FuelType.{FuelType, Gasoline}
+import beam.agentsim.agents.vehicles.FuelType.{ FuelType, Gasoline }
 import beam.agentsim.agents.vehicles.VehicleCategory.Car
-import beam.agentsim.agents.vehicles.{BeamVehicle, BeamVehicleType, VehicleEnergy}
-import beam.agentsim.agents.{Dropoff, Pickup}
+import beam.agentsim.agents.vehicles.{ BeamVehicle, BeamVehicleType, VehicleEnergy }
+import beam.agentsim.agents.{ Dropoff, Pickup }
 import beam.agentsim.infrastructure.TAZTreeMap
 import beam.router.BeamSkimmer
 import beam.router.Modes.BeamMode
 import beam.sim.BeamServices
-import beam.sim.common.{GeoUtils, GeoUtilsImpl}
-import beam.sim.config.{BeamConfig, MatSimBeamConfigBuilder}
+import beam.sim.common.{ GeoUtils, GeoUtilsImpl }
+import beam.sim.config.{ BeamConfig, MatSimBeamConfigBuilder }
 import beam.utils.TestConfigUtils.testConfig
-import beam.utils.{BeamVehicleUtils, DateUtils, MatsimServicesMock, NetworkHelper}
+import beam.utils.{ BeamVehicleUtils, DateUtils, MatsimServicesMock, NetworkHelper }
 import com.typesafe.config.ConfigFactory
-import org.matsim.api.core.v01.population.{Activity, Person, Plan, Population}
-import org.matsim.api.core.v01.{Coord, Id, Scenario}
+import org.matsim.api.core.v01.population.{ Activity, Person, Plan, Population }
+import org.matsim.api.core.v01.{ Coord, Id, Scenario }
 import org.matsim.core.config.ConfigUtils
-import org.matsim.core.controler.{ControlerI, MatsimServices}
+import org.matsim.core.controler.{ ControlerI, MatsimServices }
 import org.matsim.core.population.PopulationUtils
 import org.matsim.core.population.io.PopulationReader
 import org.matsim.core.scenario.ScenarioUtils
-import org.matsim.households.{Household, HouseholdImpl, HouseholdsFactoryImpl, HouseholdsReaderV10}
+import org.matsim.households.{ Household, HouseholdImpl, HouseholdsFactoryImpl, HouseholdsReaderV10 }
 import org.matsim.vehicles.Vehicle
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, FunSpecLike, Matchers}
+import org.scalatest.{ BeforeAndAfterAll, FunSpecLike, Matchers }
 
 import scala.collection.concurrent.TrieMap
 import scala.collection.immutable.List
-import scala.collection.{mutable, JavaConverters}
+import scala.collection.{ mutable, JavaConverters }
 import scala.concurrent.ExecutionContext
 
 class FastHouseholdCAVSchedulingSpec
     extends TestKit(
       ActorSystem(
         name = "FastHouseholdCAVSchedulingTest",
-        config = ConfigFactory
-          .parseString(
-            """
+        config = ConfigFactory.parseString("""
         akka.log-dead-letters = 10
         akka.actor.debug.fsm = true
         akka.loglevel = debug
         akka.test.timefactor = 2
-        """
-          )
-          .withFallback(testConfig("test/input/beamville/beam.conf").resolve())
-      )
-    )
+        """).withFallback(testConfig("test/input/beamville/beam.conf").resolve())))
     with Matchers
     with FunSpecLike
     with BeforeAndAfterAll
@@ -81,8 +75,7 @@ class FastHouseholdCAVSchedulingSpec
     val vehicleTypes: Map[Id[BeamVehicleType], BeamVehicleType] =
       BeamVehicleUtils.readBeamVehicleTypeFile(
         beamConfig.beam.agentsim.agents.vehicles.vehicleTypesFilePath,
-        fuelTypePrices
-      )
+        fuelTypePrices)
 
     override val geo: GeoUtils = new GeoUtilsImpl(beamConfig)
     override lazy val controler: ControlerI = ???
@@ -108,14 +101,12 @@ class FastHouseholdCAVSchedulingSpec
         new BeamVehicle(
           Id.createVehicleId("id1"),
           new Powertrain(0.0),
-          FastHouseholdCAVSchedulingSpec.defaultCAVBeamVehicleType
-        )
-      )
+          FastHouseholdCAVSchedulingSpec.defaultCAVBeamVehicleType))
       val (pop: Population, household) = FastHouseholdCAVSchedulingSpec.scenario1(cavs)
       val alg = new FastHouseholdCAVScheduling(household, cavs, Map((Pickup, 2), (Dropoff, 2)), skimmer = skimmer)(pop)
       val schedules = alg.getAllFeasibleSchedules
-      schedules should have length 1
-      schedules foreach (_.schedulesMap(cavs.head).schedule should have length 6)
+      (schedules should have).length(1)
+      schedules.foreach((_.schedulesMap(cavs.head).schedule should have).length(6))
       println(s"*** scenario 1 *** ${schedules.size} combinations")
     }
 
@@ -124,25 +115,19 @@ class FastHouseholdCAVSchedulingSpec
         new BeamVehicle(
           Id.createVehicleId("id1"),
           new Powertrain(0.0),
-          FastHouseholdCAVSchedulingSpec.defaultCAVBeamVehicleType
-        ),
-        new BeamVehicle(
-          Id.createVehicleId("id2"),
-          new Powertrain(0.0),
-          BeamVehicleType.defaultCarBeamVehicleType
-        )
-      )
+          FastHouseholdCAVSchedulingSpec.defaultCAVBeamVehicleType),
+        new BeamVehicle(Id.createVehicleId("id2"), new Powertrain(0.0), BeamVehicleType.defaultCarBeamVehicleType))
       val (pop: Population, household) = FastHouseholdCAVSchedulingSpec.scenario2(cavs)
       val alg = new FastHouseholdCAVScheduling(
         household,
         cavs,
         Map((Pickup, 60 * 60), (Dropoff, 60 * 60)),
         stopSearchAfterXSolutions = 5000,
-        skimmer = skimmer
-      )(pop)
+        skimmer = skimmer)(pop)
       val schedules = alg.getAllFeasibleSchedules
-      schedules should have length 3
-      schedules foreach (_.schedulesMap(cavs.head).schedule should (have length 1 or (have length 6 or have length 10)))
+      (schedules should have).length(3)
+      schedules.foreach(
+        _.schedulesMap(cavs.head).schedule should (have.length(1).or(have.length(6).or(have).length(10))))
       println(s"*** scenario 2 *** ${schedules.size} combinations")
     }
 
@@ -151,26 +136,23 @@ class FastHouseholdCAVSchedulingSpec
         new BeamVehicle(
           Id.createVehicleId("id1"),
           new Powertrain(0.0),
-          FastHouseholdCAVSchedulingSpec.defaultCAVBeamVehicleType
-        ),
+          FastHouseholdCAVSchedulingSpec.defaultCAVBeamVehicleType),
         new BeamVehicle(
           Id.createVehicleId("id2"),
           new Powertrain(0.0),
-          FastHouseholdCAVSchedulingSpec.defaultCAVBeamVehicleType
-        )
-      )
+          FastHouseholdCAVSchedulingSpec.defaultCAVBeamVehicleType))
       val (pop: Population, household) = FastHouseholdCAVSchedulingSpec.scenario5(cavs)
       val alg = new FastHouseholdCAVScheduling(
         household,
         cavs,
         Map((Pickup, 60 * 60), (Dropoff, 60 * 60)),
         stopSearchAfterXSolutions = 5000,
-        skimmer = skimmer
-      )(pop)
+        skimmer = skimmer)(pop)
       // first check
       val schedules1 = alg.getAllFeasibleSchedules
-      schedules1 should have length 3
-      schedules1 foreach (_.schedulesMap(cavs.head).schedule should (have length 1 or (have length 6 or have length 10)))
+      (schedules1 should have).length(3)
+      schedules1.foreach(
+        _.schedulesMap(cavs.head).schedule should (have.length(1).or(have.length(6).or(have).length(10))))
       println(s"*** scenario 5 *** ${schedules1.size} combinations")
       // second check
       val schedules2 = alg.getBestProductiveSchedule
@@ -193,15 +175,14 @@ class FastHouseholdCAVSchedulingSpec
             Map((Pickup, 5 * 60), (Dropoff, 10 * 60)),
             stopSearchAfterXSolutions = 1000,
             limitCavToXPersons = Int.MaxValue,
-            skimmer = skimmer
-          )(pop)
+            skimmer = skimmer)(pop)
         val schedules = alg.getAllFeasibleSchedules
         sum += schedules.size
         count += 1
         //println(s"household [${household.getId}]: ${schedules.size}")
       }
       val t1 = System.nanoTime()
-      val elapsed = ((t1 - t0) / 1E9).toInt
+      val elapsed = ((t1 - t0) / 1e9).toInt
       //elapsed shouldBe <(60)
       println(s"*** scenario 6 *** ${sum / count} avg combinations per household, $elapsed sec elapsed ")
     }
@@ -219,8 +200,7 @@ object FastHouseholdCAVSchedulingSpec {
     3656.0,
     3655980000.0,
     vehicleCategory = Car,
-    automationLevel = 5
-  )
+    automationLevel = 5)
 
   def scenario1(vehicles: List[BeamVehicle]): (Population, Household) = {
     val sc: org.matsim.api.core.v01.Scenario = ScenarioUtils.createMutableScenario(ConfigUtils.createConfig())
@@ -302,14 +282,11 @@ object FastHouseholdCAVSchedulingSpec {
         new BeamVehicle(
           Id.createVehicleId(hh.getId.toString + "-veh1"),
           new Powertrain(0.0),
-          FastHouseholdCAVSchedulingSpec.defaultCAVBeamVehicleType
-        ),
+          FastHouseholdCAVSchedulingSpec.defaultCAVBeamVehicleType),
         new BeamVehicle(
           Id.createVehicleId(hh.getId.toString + "-veh2"),
           new Powertrain(0.0),
-          FastHouseholdCAVSchedulingSpec.defaultCAVBeamVehicleType
-        )
-      )
+          FastHouseholdCAVSchedulingSpec.defaultCAVBeamVehicleType))
       hh.asInstanceOf[HouseholdImpl]
         .setVehicleIds(JavaConverters.seqAsJavaList(vehicles.map(veh => veh.toStreetVehicle.id)))
       households.append((hh.asInstanceOf[HouseholdImpl], vehicles))

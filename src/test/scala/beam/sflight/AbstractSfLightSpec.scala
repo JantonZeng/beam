@@ -1,13 +1,13 @@
 package beam.sflight
 
-import akka.actor.{ActorIdentity, ActorRef, ActorSystem, Identify, PoisonPill}
-import akka.testkit.{ImplicitSender, TestKitBase}
+import akka.actor.{ ActorIdentity, ActorRef, ActorSystem, Identify, PoisonPill }
+import akka.testkit.{ ImplicitSender, TestKitBase }
 import beam.router.BeamRouter
-import beam.sim.{BeamServices, BeamServicesImpl}
+import beam.sim.{ BeamServices, BeamServicesImpl }
 import beam.utils.SimRunnerForTest
 import beam.utils.TestConfigUtils.testConfig
-import com.typesafe.config.{Config, ConfigFactory}
-import org.matsim.api.core.v01.population.{Activity, Plan}
+import com.typesafe.config.{ Config, ConfigFactory }
+import org.matsim.api.core.v01.population.{ Activity, Plan }
 import org.matsim.core.events.EventsManagerImpl
 import org.scalatest._
 import org.scalatest.mockito.MockitoSugar
@@ -24,7 +24,9 @@ class AbstractSfLightSpec(val name: String)
     with ImplicitSender
     with MockitoSugar
     with BeforeAndAfterAll {
-  lazy implicit val system = ActorSystem(name, ConfigFactory.parseString("""akka.loglevel="OFF"
+  lazy implicit val system = ActorSystem(
+    name,
+    ConfigFactory.parseString("""akka.loglevel="OFF"
       |akka.test.timefactor=10""".stripMargin))
 
   def outputDirPath: String = basePath + "/" + testOutputDir + name
@@ -43,9 +45,7 @@ class AbstractSfLightSpec(val name: String)
         new EventsManagerImpl(),
         scenario.getTransitVehicles,
         fareCalculator,
-        tollCalculator
-      )
-    )
+        tollCalculator))
 
     within(5 minute) { // Router can take a while to initialize
       router ! Identify(0)
@@ -59,9 +59,6 @@ class AbstractSfLightSpec(val name: String)
   }
 
   def planToVec(plan: Plan): Vector[Activity] = {
-    plan.getPlanElements.asScala
-      .filter(_.isInstanceOf[Activity])
-      .map(_.asInstanceOf[Activity])
-      .toVector
+    plan.getPlanElements.asScala.filter(_.isInstanceOf[Activity]).map(_.asInstanceOf[Activity]).toVector
   }
 }

@@ -5,26 +5,24 @@ import beam.router.gtfs.FareCalculator
 import beam.router.osm.TollCalculator
 import beam.router.r5.DefaultNetworkCoordinator
 import beam.sim.common.GeoUtilsImpl
-import beam.sim.config.{BeamConfig, MatSimBeamConfigBuilder}
+import beam.sim.config.{ BeamConfig, MatSimBeamConfigBuilder }
 import com.google.inject.util.Providers
-import com.google.inject.{AbstractModule, Guice, Injector, Provider}
-import org.matsim.analysis.{CalcLinkStats, IterationStopWatch, ScoreStats, VolumesAnalyzer}
+import com.google.inject.{ AbstractModule, Guice, Injector, Provider }
+import org.matsim.analysis.{ CalcLinkStats, IterationStopWatch, ScoreStats, VolumesAnalyzer }
 import org.matsim.api.core.v01.Scenario
 import org.matsim.core.api.experimental.events.EventsManager
 import org.matsim.core.config.Config
 import org.matsim.core.controler.listener.ControlerListener
-import org.matsim.core.controler.{ControlerI, MatsimServices, OutputDirectoryHierarchy}
+import org.matsim.core.controler.{ ControlerI, MatsimServices, OutputDirectoryHierarchy }
 import org.matsim.core.replanning.StrategyManager
 import org.matsim.core.router.TripRouter
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory
-import org.matsim.core.router.util.{LeastCostPathCalculatorFactory, TravelDisutility, TravelTime}
+import org.matsim.core.router.util.{ LeastCostPathCalculatorFactory, TravelDisutility, TravelTime }
 import org.matsim.core.scenario.ScenarioUtils
 import org.matsim.core.scoring.ScoringFunctionFactory
 
-class MatsimServicesMock(
-  override val getControlerIO: OutputDirectoryHierarchy,
-  override val getScenario: Scenario
-) extends MatsimServices {
+class MatsimServicesMock(override val getControlerIO: OutputDirectoryHierarchy, override val getScenario: Scenario)
+    extends MatsimServices {
   override def getStopwatch: IterationStopWatch = null
   override def getLinkTravelTimes: TravelTime = null
   override def getTripRouterProvider: Provider[TripRouter] = null

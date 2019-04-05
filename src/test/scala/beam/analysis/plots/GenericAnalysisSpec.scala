@@ -1,6 +1,6 @@
 package beam.analysis.plots
 
-import java.{lang, util}
+import java.{ lang, util }
 
 import beam.agentsim.agents.GenericEventsSpec
 import beam.analysis.IterationSummaryAnalysis

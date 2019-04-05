@@ -1,7 +1,7 @@
 package beam.agentsim.agents.ridehail.graph
 import java.util
-import beam.agentsim.agents.ridehail.graph.RealizedModeStatsGraphSpec.{RealizedModeStatsGraph, StatsValidationHandler}
-import beam.agentsim.events.{ModeChoiceEvent, ReplanningEvent}
+import beam.agentsim.agents.ridehail.graph.RealizedModeStatsGraphSpec.{ RealizedModeStatsGraph, StatsValidationHandler }
+import beam.agentsim.events.{ ModeChoiceEvent, ReplanningEvent }
 import beam.analysis.plots.RealizedModeAnalysis
 import beam.integration.IntegrationSpecCommon
 import beam.sim.config.BeamConfig
@@ -13,7 +13,7 @@ import org.matsim.core.controler.events.IterationEndsEvent
 import org.matsim.core.controler.listener.IterationEndsListener
 import org.matsim.core.events.handler.BasicEventHandler
 import org.matsim.core.utils.collections.Tuple
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{ Matchers, WordSpecLike }
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -22,9 +22,9 @@ import scala.concurrent.Promise
 object RealizedModeStatsGraphSpec {
 
   class RealizedModeStatsGraph(
-    computation: RealizedModeAnalysis.RealizedModesStatsComputation with EventAnalyzer,
-    beamConfig: BeamConfig
-  ) extends BasicEventHandler
+      computation: RealizedModeAnalysis.RealizedModesStatsComputation with EventAnalyzer,
+      beamConfig: BeamConfig)
+      extends BasicEventHandler
       with IterationEndsListener {
 
     private lazy val realizedModeStats =
@@ -106,12 +106,8 @@ class RealizedModeStatsGraphSpec extends WordSpecLike with Matchers with Integra
       val computation = new RealizedModeAnalysis.RealizedModesStatsComputation with EventAnalyzer {
         private val promise = Promise[java.util.Map[Integer, java.util.Map[String, java.lang.Double]]]()
 
-        override def compute(
-          stat: Tuple[util.Map[
-            Integer,
-            util.Map[String, java.lang.Double]
-          ], util.Set[String]]
-        ): Array[Array[Double]] = {
+        override def compute(stat: Tuple[util.Map[Integer, util.Map[String, java.lang.Double]], util.Set[String]])
+            : Array[Array[Double]] = {
           //this check handle to exit from current function recursion
           if (!promise.isCompleted)
             promise.success(stat.getFirst)
@@ -124,32 +120,26 @@ class RealizedModeStatsGraphSpec extends WordSpecLike with Matchers with Integra
           parseEventFile(iteration, handler)
           promise.future.foreach { a =>
             val modes = handler.counterValue
-            val all = a.asScala.values
-              .flatMap(_.asScala)
-              .groupBy(_._1)
-              .map { case (s, is) => s -> is.map(_._2).reduce((a, b) => a + b) }
+            val all = a.asScala.values.flatMap(_.asScala).groupBy(_._1).map {
+              case (s, is) => s -> is.map(_._2).reduce((a, b) => a + b)
+            }
 
             Map(modes.toSeq.sortBy(_._1): _*) shouldEqual Map(all.toSeq.sortBy(_._1): _*)
           }
         }
       }
 
-      GraphRunHelper(
-        new AbstractModule() {
-          override def install(): Unit = {
-            addControlerListenerBinding().to(classOf[RealizedModeStatsGraph])
-          }
+      GraphRunHelper(new AbstractModule() {
+        override def install(): Unit = {
+          addControlerListenerBinding().to(classOf[RealizedModeStatsGraph])
+        }
 
-          @Provides def provideGraph(
-            eventsManager: EventsManager
-          ): RealizedModeStatsGraph = {
-            val graph = new RealizedModeStatsGraph(computation, BeamConfig(baseConfig))
-            eventsManager.addHandler(graph)
-            graph
-          }
-        },
-        baseConfig
-      ).run()
+        @Provides def provideGraph(eventsManager: EventsManager): RealizedModeStatsGraph = {
+          val graph = new RealizedModeStatsGraph(computation, BeamConfig(baseConfig))
+          eventsManager.addHandler(graph)
+          graph
+        }
+      }, baseConfig).run()
     }
   }
 }

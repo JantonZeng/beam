@@ -6,18 +6,18 @@ import beam.agentsim.agents.planning.BeamPlan
 import beam.agentsim.events.PathTraversalEvent
 import beam.analysis.plots.TollRevenueAnalysis
 import beam.integration.EventReader._
-import beam.router.Modes.BeamMode.{BIKE, CAR}
+import beam.router.Modes.BeamMode.{ BIKE, CAR }
 import beam.router.r5.NetworkCoordinator
 import beam.sim.BeamHelper
-import com.typesafe.config.{Config, ConfigValueFactory}
+import com.typesafe.config.{ Config, ConfigValueFactory }
 import org.matsim.api.core.v01.Id
-import org.matsim.api.core.v01.population.{Activity, Leg, Person}
+import org.matsim.api.core.v01.population.{ Activity, Leg, Person }
 import org.matsim.core.config.ConfigUtils
 import org.matsim.core.population.io.PopulationReader
 import org.matsim.core.population.routes.NetworkRoute
-import org.matsim.core.scenario.{MutableScenario, ScenarioUtils}
+import org.matsim.core.scenario.{ MutableScenario, ScenarioUtils }
 import org.matsim.households.Household
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import org.scalatest.{ BeforeAndAfterAll, FlatSpec, Matchers }
 
 import scala.collection.JavaConverters._
 import scala.io.Source
@@ -38,11 +38,8 @@ class EventsFileSpec extends FlatSpec with BeforeAndAfterAll with Matchers with 
     scenario = stuff._1
     networkCoordinator = stuff._3
     runBeam(config, scenario, networkCoordinator)
-    personHouseholds = scenario.getHouseholds.getHouseholds
-      .values()
-      .asScala
-      .flatMap(h => h.getMemberIds.asScala.map(_ -> h))
-      .toMap
+    personHouseholds =
+      scenario.getHouseholds.getHouseholds.values().asScala.flatMap(h => h.getMemberIds.asScala.map(_ -> h)).toMap
   }
 
   it should "contain the same bus trips entries" in {
@@ -114,17 +111,15 @@ class EventsFileSpec extends FlatSpec with BeforeAndAfterAll with Matchers with 
 
   it should "yield positive toll revenue according to TollRevenueAnalysis" in {
     val analysis = new TollRevenueAnalysis
-    fromFile(getEventsFilePath(scenario.getConfig, "xml").getAbsolutePath)
-      .foreach(analysis.processStats)
+    fromFile(getEventsFilePath(scenario.getConfig, "xml").getAbsolutePath).foreach(analysis.processStats)
     val tollRevenue = analysis.getSummaryStats.get(TollRevenueAnalysis.ATTRIBUTE_TOLL_REVENUE)
-    tollRevenue should not equal 0.0
+    (tollRevenue should not).equal(0.0)
   }
 
   it should "also produce experienced plans which make sense" in {
     val experiencedScenario = ScenarioUtils.createScenario(ConfigUtils.createConfig())
-    new PopulationReader(experiencedScenario).readFile(
-      s"${scenario.getConfig.controler().getOutputDirectory}/ITERS/it.0/0.experiencedPlans.xml.gz"
-    )
+    new PopulationReader(experiencedScenario)
+      .readFile(s"${scenario.getConfig.controler().getOutputDirectory}/ITERS/it.0/0.experiencedPlans.xml.gz")
     assert(experiencedScenario.getPopulation.getPersons.size() == 50)
     var nCarTrips = 0
     var nBikeTrips = 0
@@ -151,8 +146,7 @@ class EventsFileSpec extends FlatSpec with BeforeAndAfterAll with Matchers with 
             if (tour.trips.head.leg.get.getMode == mode) {
               assert(
                 tour.trips.last.leg.get.getMode == mode,
-                s"If I leave home by $mode, I must get home by $mode: " + person.getId
-              )
+                s"If I leave home by $mode, I must get home by $mode: " + person.getId)
             }
           }
         }

@@ -4,23 +4,22 @@ import java.nio.file.Paths
 
 import beam.agentsim.events.ModeChoiceEvent
 import beam.router.r5.DefaultNetworkCoordinator
-import beam.sim.config.{BeamConfig, MatSimBeamConfigBuilder}
+import beam.sim.config.{ BeamConfig, MatSimBeamConfigBuilder }
 import beam.sim.population.DefaultPopulationAdjustment
-import beam.sim.{BeamHelper, BeamServices}
-import beam.tags.{ExcludeRegular, Periodic}
-import beam.utils.{FileUtils, NetworkHelper, NetworkHelperImpl}
+import beam.sim.{ BeamHelper, BeamServices }
+import beam.tags.{ ExcludeRegular, Periodic }
+import beam.utils.{ FileUtils, NetworkHelper, NetworkHelperImpl }
 import beam.utils.TestConfigUtils.testConfig
-import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
+import com.typesafe.config.{ ConfigFactory, ConfigValueFactory }
 import org.matsim.api.core.v01.events.Event
 import org.matsim.core.controler.AbstractModule
 import org.matsim.core.events.handler.BasicEventHandler
-import org.matsim.core.scenario.{MutableScenario, ScenarioUtils}
-import org.scalatest.{BeforeAndAfterAllConfigMap, ConfigMap, Matchers, WordSpecLike}
+import org.matsim.core.scenario.{ MutableScenario, ScenarioUtils }
+import org.scalatest.{ BeforeAndAfterAllConfigMap, ConfigMap, Matchers, WordSpecLike }
 
 /**
-  * Created by colinsheppard
-  */
-
+ * Created by colinsheppard
+ */
 class SfLightRunSpec extends WordSpecLike with Matchers with BeamHelper with BeforeAndAfterAllConfigMap {
 
   private val ITERS_DIR = "ITERS"
@@ -36,13 +35,10 @@ class SfLightRunSpec extends WordSpecLike with Matchers with BeamHelper with Bef
 
   "SF Light" must {
     "run 1k scenario for one iteration and at least one person chooses car mode" in {
-      val config = ConfigFactory
-        .parseString("""
+      val config = ConfigFactory.parseString("""
           |beam.outputs.events.fileOutputFormats = xml
           |beam.agentsim.lastIteration = 0
-        """.stripMargin)
-        .withFallback(testConfig("test/input/sf-light/sf-light-0.5k.conf"))
-        .resolve()
+        """.stripMargin).withFallback(testConfig("test/input/sf-light/sf-light-0.5k.conf")).resolve()
       val configBuilder = new MatSimBeamConfigBuilder(config)
       val matsimConfig = configBuilder.buildMatSimConf()
       matsimConfig.planCalcScore().setMemorizingExperiencedPlans(true)
@@ -57,25 +53,22 @@ class SfLightRunSpec extends WordSpecLike with Matchers with BeamHelper with Bef
       scenario.setNetwork(networkCoordinator.network)
 
       var nCarTrips = 0
-      val injector = org.matsim.core.controler.Injector.createInjector(
-        scenario.getConfig,
-        new AbstractModule() {
-          override def install(): Unit = {
-            install(module(config, scenario, networkCoordinator, networkHelper))
-            addEventHandlerBinding().toInstance(new BasicEventHandler {
-              override def handleEvent(event: Event): Unit = {
-                event match {
-                  case modeChoiceEvent: ModeChoiceEvent =>
-                    if (modeChoiceEvent.getAttributes.get("mode").equals("car")) {
-                      nCarTrips = nCarTrips + 1
-                    }
-                  case _ =>
-                }
+      val injector = org.matsim.core.controler.Injector.createInjector(scenario.getConfig, new AbstractModule() {
+        override def install(): Unit = {
+          install(module(config, scenario, networkCoordinator, networkHelper))
+          addEventHandlerBinding().toInstance(new BasicEventHandler {
+            override def handleEvent(event: Event): Unit = {
+              event match {
+                case modeChoiceEvent: ModeChoiceEvent =>
+                  if (modeChoiceEvent.getAttributes.get("mode").equals("car")) {
+                    nCarTrips = nCarTrips + 1
+                  }
+                case _ =>
               }
-            })
-          }
+            }
+          })
         }
-      )
+      })
       val services = injector.getInstance(classOf[BeamServices])
       DefaultPopulationAdjustment(services).update(scenario)
       val controler = services.controler
@@ -101,15 +94,13 @@ class SfLightRunSpec extends WordSpecLike with Matchers with BeamHelper with Bef
 
       val itrDir = Paths.get(output, ITERS_DIR).toFile
 
-      outDir should be a 'directory
+      (outDir should be).a('directory)
       outDir.list should not be empty
       outDir.list should contain(ITERS_DIR)
-      itrDir.list should have length totalIterations
+      (itrDir.list should have).length(totalIterations)
       itrDir
         .listFiles()
-        .foreach(
-          itr => exactly(1, itr.list) should endWith(".events.csv").or(endWith(".events.csv.gz"))
-        )
+        .foreach(itr => exactly(1, itr.list) should endWith(".events.csv").or(endWith(".events.csv.gz")))
     }
   }
 

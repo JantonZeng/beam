@@ -10,7 +10,7 @@ import org.matsim.core.controler.MatsimServices
 import org.matsim.core.utils.misc.Time
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{ Matchers, WordSpecLike }
 
 import scala.collection.JavaConverters._
 import scala.util.Random
@@ -45,7 +45,7 @@ class RideHailSurgePricingManagerSpec extends WordSpecLike with Matchers with Mo
     "correctly update SurgePriceLevels" in {
       //First iteration random returns true
       val mockRandom = mock[Random]
-      when(mockRandom.nextBoolean) thenReturn true
+      when(mockRandom.nextBoolean).thenReturn(true)
 
       var rhspm = new RideHailSurgePricingManager(beamServices) {
         override val rand: Random = mockRandom
@@ -78,15 +78,14 @@ class RideHailSurgePricingManagerSpec extends WordSpecLike with Matchers with Mo
               updatedPrevIterRevenue,
               currentIterationRevenue,
               updatedPreviousSurgePriceLevel,
-              updatedCurrentSurgePriceLevel
-            )
+              updatedCurrentSurgePriceLevel)
           })
       }
       rhspm.updateSurgePriceLevels()
       expectedValue2 shouldBe rhspm.surgePriceBins
 
       //First iteration random returns false
-      when(mockRandom.nextBoolean) thenReturn false
+      when(mockRandom.nextBoolean).thenReturn(false)
 //      random = new Random(){
 //        override def nextBoolean(): Boolean = false
 //      }
@@ -121,8 +120,7 @@ class RideHailSurgePricingManagerSpec extends WordSpecLike with Matchers with Mo
               updatedPrevIterRevenue,
               currentIterationRevenue,
               updatedPreviousSurgePriceLevel,
-              updatedCurrentSurgePriceLevel
-            )
+              updatedCurrentSurgePriceLevel)
           })
       }
       rhspm.updateSurgePriceLevels()
@@ -142,8 +140,8 @@ class RideHailSurgePricingManagerSpec extends WordSpecLike with Matchers with Mo
         rhspm.surgePriceBins.map(f => (f._1, f._2.map(s => s.previousIterationRevenue)))
 
       initialValueCurrent shouldBe finalValueRevenue
-      rhspm.surgePriceBins.values
-        .map(f => f.map(_.currentIterationRevenue shouldBe expectedResultCurrentIterationRevenue))
+      rhspm.surgePriceBins.values.map(f =>
+        f.map(_.currentIterationRevenue shouldBe expectedResultCurrentIterationRevenue))
     }
 
     "return fixed value of 1.0 when KEEP_PRICE_LEVEL_FIXED_AT_ONE used" in {

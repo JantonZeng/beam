@@ -1,12 +1,12 @@
 package beam.utils
 
 import beam.sim.population.PopulationAdjustment
-import beam.tags.{ExcludeRegular, Periodic}
+import beam.tags.{ ExcludeRegular, Periodic }
 import beam.utils.plan.sampling.PlansSampler
 import org.matsim.core.config.ConfigUtils
-import org.matsim.core.scenario.{MutableScenario, ScenarioUtils}
+import org.matsim.core.scenario.{ MutableScenario, ScenarioUtils }
 import org.matsim.utils.objectattributes.ObjectAttributes
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{ Matchers, WordSpecLike }
 
 class PlansSamplerAppSpec extends WordSpecLike with Matchers {
 
@@ -19,8 +19,7 @@ class PlansSamplerAppSpec extends WordSpecLike with Matchers {
     "10",
     "output/test/plansampler/",
     "epsg:4326",
-    "epsg:26910"
-  )
+    "epsg:26910")
 
   "PlanSamplerApp class" ignore {
     "assign available modes to agents " taggedAs (Periodic, ExcludeRegular) in {
@@ -30,9 +29,7 @@ class PlansSamplerAppSpec extends WordSpecLike with Matchers {
       sampler.run()
       val config = ConfigUtils.createConfig
       config.plans().setInputFile("output/test/plansampler/population.xml.gz")
-      config
-        .plans()
-        .setInputPersonAttributeFile("output/test/plansampler/populationAttributes.xml.gz")
+      config.plans().setInputPersonAttributeFile("output/test/plansampler/populationAttributes.xml.gz")
       val dummyScenario: MutableScenario = ScenarioUtils.createMutableScenario(config)
       dummyScenario.setLocked()
       ScenarioUtils.loadScenario(dummyScenario)
@@ -40,10 +37,7 @@ class PlansSamplerAppSpec extends WordSpecLike with Matchers {
 
       attributes.getAttribute(
         attributes.toString.split(";")(0).stripPrefix("key="),
-        PopulationAdjustment.EXCLUDED_MODES
-      ) should equal(
-        ""
-      )
+        PopulationAdjustment.EXCLUDED_MODES) should equal("")
     }
   }
 }

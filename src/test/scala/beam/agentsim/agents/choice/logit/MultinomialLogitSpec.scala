@@ -2,13 +2,13 @@ package beam.agentsim.agents.choice.logit
 
 import beam.agentsim.agents.choice.logit.MultinomialLogit.MnlData
 import beam.sim.BeamHelper
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{ Matchers, WordSpecLike }
 
 import scala.util.Random
 
 /**
-  * BEAM
-  */
+ * BEAM
+ */
 class MultinomialLogitSpec extends WordSpecLike with Matchers with BeamHelper {
 
   "An MNL Model" must {
@@ -16,14 +16,12 @@ class MultinomialLogitSpec extends WordSpecLike with Matchers with BeamHelper {
       new MnlData("COMMON", "cost", "multiplier", -0.01),
       new MnlData("COMMON", "time", "multiplier", -0.02),
       new MnlData("car", "intercept", "intercept", 3.0),
-      new MnlData("walk", "intercept", "intercept", 4.0)
-    )
+      new MnlData("walk", "intercept", "intercept", 4.0))
     val mnl = MultinomialLogit(mnlData)
     val rand = new Random()
     val alts = Vector(
-      AlternativeAttributes("car", Map("cost"  -> 30.0, "time" -> 50.0)),
-      AlternativeAttributes("walk", Map("cost" -> 0.0, "time"  -> 40.0))
-    )
+      AlternativeAttributes("car", Map("cost" -> 30.0, "time" -> 50.0)),
+      AlternativeAttributes("walk", Map("cost" -> 0.0, "time" -> 40.0)))
 
     "should evaluate utility functions as expected" in {
       val util = mnl.getUtilityOfAlternative(alts(0))

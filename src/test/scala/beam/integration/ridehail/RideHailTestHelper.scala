@@ -3,8 +3,8 @@ package beam.integration.ridehail
 import beam.integration.TestConstants
 import beam.sim.config.MatSimBeamConfigBuilder
 import beam.utils.TestConfigUtils.testConfig
-import com.typesafe.config.{Config, ConfigValueFactory}
-import org.matsim.core.config.{Config => MatSimConfig}
+import com.typesafe.config.{ Config, ConfigValueFactory }
+import org.matsim.core.config.{ Config => MatSimConfig }
 
 object RideHailTestHelper {
 
@@ -14,28 +14,22 @@ object RideHailTestHelper {
       .withValue("beam.outputs.events.fileOutputFormats", ConfigValueFactory.fromAnyRef("xml,csv"))
       .withValue(
         "beam.agentsim.agents.rideHail.allocationManager.name",
-        ConfigValueFactory.fromAnyRef(allocationManagerName)
-      )
+        ConfigValueFactory.fromAnyRef(allocationManagerName))
       .withValue(
         TestConstants.KEY_AGENT_MODAL_BEHAVIORS_MODE_CHOICE_CLASS,
-        ConfigValueFactory.fromAnyRef("ModeChoiceRideHailIfAvailable")
-      )
+        ConfigValueFactory.fromAnyRef("ModeChoiceRideHailIfAvailable"))
       .withValue(
         "beam.agentsim.agents.rideHail.initialization.procedural.numDriversAsFractionOfPopulation",
-        ConfigValueFactory.fromAnyRef(0.1)
-      )
+        ConfigValueFactory.fromAnyRef(0.1))
       .withValue(
         "beam.agentsim.agents.rideHail.allocationManager.repositionTimeoutInSeconds",
-        ConfigValueFactory.fromAnyRef(300)
-      )
+        ConfigValueFactory.fromAnyRef(300))
       .withValue(
         "beam.agentsim.agents.rideHail.allocationManager.requestBufferTimeoutInSeconds",
-        ConfigValueFactory.fromAnyRef(0)
-      )
+        ConfigValueFactory.fromAnyRef(0))
       .withValue(
         "beam.agentsim.agents.rideHail.allocationManager.randomRepositioning.repositioningShare",
-        ConfigValueFactory.fromAnyRef(0.2)
-      )
+        ConfigValueFactory.fromAnyRef(0.2))
       .withValue("beam.debug.stuckAgentDetection.enabled", ConfigValueFactory.fromAnyRef(true))
       .resolve()
 

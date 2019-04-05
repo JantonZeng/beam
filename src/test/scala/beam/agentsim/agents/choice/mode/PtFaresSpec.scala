@@ -1,7 +1,7 @@
 package beam.agentsim.agents.choice.mode
 
 import beam.agentsim.agents.choice.mode.PtFares.loadPtFares
-import org.scalatest.{BeforeAndAfterAll, FlatSpec}
+import org.scalatest.{ BeforeAndAfterAll, FlatSpec }
 
 class PtFaresSpec extends FlatSpec with BeforeAndAfterAll {
   var ptf: PtFares = _

@@ -1,5 +1,5 @@
 package beam.agentsim.agents.ridehail.graph
-import java.{lang, util}
+import java.{ lang, util }
 
 import beam.agentsim.agents.ridehail.graph.PersonTravelTimeStatsGraphSpec.{
   PersonTravelTimeStatsGraph,
@@ -9,14 +9,14 @@ import beam.analysis.plots.PersonTravelTimeAnalysis
 import beam.integration.IntegrationSpecCommon
 import beam.utils.MathUtils
 import com.google.inject.Provides
-import org.matsim.api.core.v01.events.{Event, PersonArrivalEvent, PersonDepartureEvent}
+import org.matsim.api.core.v01.events.{ Event, PersonArrivalEvent, PersonDepartureEvent }
 import org.matsim.core.api.experimental.events.EventsManager
 import org.matsim.core.controler.AbstractModule
 import org.matsim.core.controler.events.IterationEndsEvent
 import org.matsim.core.controler.listener.IterationEndsListener
 import org.matsim.core.events.handler.BasicEventHandler
 import org.matsim.core.utils.collections.Tuple
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{ Matchers, WordSpecLike }
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -24,9 +24,8 @@ import scala.concurrent.Promise
 
 object PersonTravelTimeStatsGraphSpec {
 
-  class PersonTravelTimeStatsGraph(
-    computation: PersonTravelTimeAnalysis.PersonTravelTimeComputation with EventAnalyzer
-  ) extends BasicEventHandler
+  class PersonTravelTimeStatsGraph(computation: PersonTravelTimeAnalysis.PersonTravelTimeComputation with EventAnalyzer)
+      extends BasicEventHandler
       with IterationEndsListener {
 
     private lazy val personTravelTimeStats =
@@ -82,12 +81,10 @@ object PersonTravelTimeStatsGraphSpec {
     private def updateCounterTime(evn: PersonArrivalEvent): Seq[(String, Double)] = {
       val mode = evn.getLegMode
       val personId = evn.getPersonId.toString
-      val modeTime = personTravelTime
-        .get(mode -> personId)
-        .map { time =>
-          val travelTime = (evn.getTime - time) / 60
-          mode -> travelTime
-        }
+      val modeTime = personTravelTime.get(mode -> personId).map { time =>
+        val travelTime = (evn.getTime - time) / 60
+        mode -> travelTime
+      }
       personTravelTime = personTravelTime - (mode -> personId)
       modeTime.fold(counter)(items => counter :+ items)
     }
@@ -107,12 +104,8 @@ class PersonTravelTimeStatsGraphSpec extends WordSpecLike with Matchers with Int
 
         private val promise = Promise[util.Map[String, util.Map[Integer, util.List[lang.Double]]]]()
 
-        override def compute(
-          stat: util.Map[
-            String,
-            util.Map[Integer, util.List[lang.Double]]
-          ]
-        ): Tuple[util.List[String], Tuple[Array[Array[Double]], java.lang.Double]] = {
+        override def compute(stat: util.Map[String, util.Map[Integer, util.List[lang.Double]]])
+            : Tuple[util.List[String], Tuple[Array[Array[Double]], java.lang.Double]] = {
           promise.success(stat)
           super.compute(stat)
         }
@@ -121,12 +114,10 @@ class PersonTravelTimeStatsGraphSpec extends WordSpecLike with Matchers with Int
           val handler = new StatsValidationHandler
           parseEventFile(iteration, handler)
           promise.future.foreach { a =>
-            val modes = handler.counterValue
-              .groupBy(_._1)
-              .map {
-                case (mode, ms) =>
-                  mode -> MathUtils.roundDouble(ms.map(_._2).sum)
-              }
+            val modes = handler.counterValue.groupBy(_._1).map {
+              case (mode, ms) =>
+                mode -> MathUtils.roundDouble(ms.map(_._2).sum)
+            }
 
             val all = a.asScala.map {
               case (mode, times) =>
@@ -138,22 +129,17 @@ class PersonTravelTimeStatsGraphSpec extends WordSpecLike with Matchers with Int
         }
       }
 
-      GraphRunHelper(
-        new AbstractModule() {
-          override def install(): Unit = {
-            addControlerListenerBinding().to(classOf[PersonTravelTimeStatsGraph])
-          }
+      GraphRunHelper(new AbstractModule() {
+        override def install(): Unit = {
+          addControlerListenerBinding().to(classOf[PersonTravelTimeStatsGraph])
+        }
 
-          @Provides def provideGraph(
-            eventsManager: EventsManager
-          ): PersonTravelTimeStatsGraph = {
-            val graph = new PersonTravelTimeStatsGraph(travelTimeComputation)
-            eventsManager.addHandler(graph)
-            graph
-          }
-        },
-        baseConfig
-      ).run()
+        @Provides def provideGraph(eventsManager: EventsManager): PersonTravelTimeStatsGraph = {
+          val graph = new PersonTravelTimeStatsGraph(travelTimeComputation)
+          eventsManager.addHandler(graph)
+          graph
+        }
+      }, baseConfig).run()
     }
   }
 }

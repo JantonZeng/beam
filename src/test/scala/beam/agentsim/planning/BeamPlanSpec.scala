@@ -5,15 +5,15 @@ import beam.agentsim.agents.planning.Strategy.ModeChoiceStrategy
 import beam.router.Modes.BeamMode.CAR
 import beam.sim.BeamHelper
 import org.matsim.api.core.v01.Coord
-import org.matsim.api.core.v01.population.{Activity, Plan}
+import org.matsim.api.core.v01.population.{ Activity, Plan }
 import org.matsim.core.population.PopulationUtils
 import org.scalatest._
 
 import scala.collection.JavaConverters._
 
 /**
-  * BeamPlanSpec
-  */
+ * BeamPlanSpec
+ */
 class BeamPlanSpec extends WordSpecLike with Matchers with BeamHelper {
 
   "A BeamPlan" must {
@@ -110,8 +110,7 @@ class BeamPlanSpec extends WordSpecLike with Matchers with BeamHelper {
         matsimPlanOfActivities,
         newLeg,
         matsimPlanOfActivities.getPlanElements.get(1).asInstanceOf[Activity],
-        matsimPlanOfActivities.getPlanElements.get(2).asInstanceOf[Activity]
-      )
+        matsimPlanOfActivities.getPlanElements.get(2).asInstanceOf[Activity])
       newPlan.getPlanElements.get(2) should be(newLeg)
     }
     "should successfully replace a leg between activities of an existing matsim plan" in {
@@ -120,8 +119,7 @@ class BeamPlanSpec extends WordSpecLike with Matchers with BeamHelper {
         matsimPlan,
         newLeg,
         matsimPlan.getPlanElements.get(2).asInstanceOf[Activity],
-        matsimPlan.getPlanElements.get(4).asInstanceOf[Activity]
-      )
+        matsimPlan.getPlanElements.get(4).asInstanceOf[Activity])
       newPlan.getPlanElements.get(3) should be(newLeg)
     }
   }
