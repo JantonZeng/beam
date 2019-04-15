@@ -20,7 +20,9 @@ import beam.router.model.RoutingModel.TransitStopsInfo
 import beam.router.model.{BeamLeg, BeamPath, EmbodiedBeamLeg, EmbodiedBeamTrip}
 import beam.router.r5.R5RoutingWorker
 import beam.sim.BeamHelper
+import beam.sim.config.BeamConfig
 import beam.sim.population.{AttributesOfIndividual, HouseholdAttributes}
+import beam.utils.{GpxPoint, GpxWriter}
 import com.typesafe.scalalogging.LazyLogging
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Decoder.Result
@@ -29,12 +31,15 @@ import io.circe.generic.encoding.DerivedObjectEncoder
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, HCursor, Json}
-import org.matsim.api.core.v01.Id
+import org.matsim.api.core.v01.network.Link
+import org.matsim.api.core.v01.{BasicLocation, Id}
+import org.matsim.core.network.NetworkUtils
+import org.matsim.core.network.io.MatsimNetworkReader
 import org.matsim.vehicles.Vehicle
 import shapeless.Lazy
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 import scala.reflect.ClassTag
 
 class IdFormat[T](implicit val ct: ClassTag[T]) extends Encoder[Id[T]] with Decoder[Id[T]] {
@@ -96,15 +101,36 @@ object AllNeededFormats {
   implicit val routingResponseFormat = new Format[RoutingResponse]
 }
 
-class RoutingHandler(val workerRouter: ActorRef) extends FailFastCirceSupport {
+class RoutingHandler(val workerRouter: ActorRef, val links: Map[Id[Link], Link])(implicit ex: ExecutionContext) extends FailFastCirceSupport {
   implicit val timeout: Timeout = new Timeout(10, TimeUnit.SECONDS)
   import AllNeededFormats._
+
+  val geoUtils = new beam.sim.common.GeoUtils {
+    override def localCRS: String = "epsg:26910"
+  }
 
   val route: Route = {
     path("find-route") {
       post {
         entity(as[RoutingRequest]) { request =>
-          complete(workerRouter.ask(request).mapTo[RoutingResponse])
+          val routingResponse = workerRouter.ask(request).mapTo[RoutingResponse]
+          routingResponse.foreach { r =>
+            val carLegs = r.itineraries.flatMap(_.legs).filter(leg => leg.beamLeg.mode == BeamMode.CAR)
+            carLegs.foreach { leg =>
+              val linksWithCoord = leg.beamLeg.travelPath.linkIds.flatMap { id =>
+                val linkId = Id.create(id, classOf[Link])
+                links.get(linkId).map { link =>
+                  val loc = link.asInstanceOf[BasicLocation[Link]]
+                  val utmCoord = loc.getCoord
+                  val wgsCoord = geoUtils.utm2Wgs.transform(utmCoord)
+                  id -> wgsCoord
+                }
+              }
+              val gpxPoints = linksWithCoord.map { case (linkId, wgsCoord) => GpxPoint(linkId.toString, wgsCoord) }.toIterable
+              GpxWriter.write(s"${request.requestId}_.gpx", gpxPoints)
+            }
+          }
+          complete(routingResponse)
         }
       }
     }
@@ -125,6 +151,9 @@ object CustomExceptionHandling extends LazyLogging {
   }
 }
 
+import scala.collection.JavaConverters._
+
+
 object R5RoutingApp extends BeamHelper {
   import AllNeededFormats._
 
@@ -138,9 +167,14 @@ object R5RoutingApp extends BeamHelper {
     val f = Await.result(workerRouter ? Identify(0), Duration.Inf)
     logger.info("R5RoutingWorker is initialized!")
 
+    val network = NetworkUtils.createNetwork()
+    new MatsimNetworkReader(network)
+      .readFile(BeamConfig(cfg).matsim.modules.network.inputNetworkFile)
+    val links: Map[Id[Link], Link] = network.getLinks.asScala.toMap
+
     val interface = "0.0.0.0"
     val port = 9000
-    val routingHandler = new RoutingHandler(workerRouter)
+    val routingHandler = new RoutingHandler(workerRouter, links)(scala.concurrent.ExecutionContext.Implicits.global)
     val boostedRoute = handleExceptions(CustomExceptionHandling.handler)(routingHandler.route)
     Http().bindAndHandle(boostedRoute, interface, port)
     logger.info(s"Http server is ready and bound to $interface:$port")
