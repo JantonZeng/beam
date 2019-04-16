@@ -41,9 +41,9 @@ import com.conveyal.r5.transit.{RouteInfo, TransportNetwork}
 import com.google.common.cache.{CacheBuilder, CacheLoader}
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.typesafe.config.Config
-import org.matsim.api.core.v01.network.Network
+import org.matsim.api.core.v01.network.{Link, Network}
 import org.matsim.api.core.v01.population.Person
-import org.matsim.api.core.v01.{Coord, Id, Scenario}
+import org.matsim.api.core.v01.{BasicLocation, Coord, Id, Scenario}
 import org.matsim.core.controler.ControlerI
 import org.matsim.core.router.util.TravelTime
 import org.matsim.core.scenario.{MutableScenario, ScenarioUtils}
@@ -300,12 +300,13 @@ class R5RoutingWorker(workerParams: WorkerParameters) extends Actor with ActorLo
 
           var attempt: Int = 1
           val maxAttempt: Int = 5
-          var isWrong: Boolean = hasDiscrepancy(request, resp, attempt)
+          var isWrong: Boolean = hasDiscrepancy(beamServices.geo, beamServices.networkHelper, request, resp, attempt)
+
           while (attempt < maxAttempt && isWrong) {
             attempt += 1
             cache.invalidateAll()
             val newResp = calcRoute(request).copy(requestId = request.requestId)
-            isWrong = hasDiscrepancy(request, newResp, attempt)
+            isWrong = hasDiscrepancy(beamServices.geo, beamServices.networkHelper, request, newResp, attempt)
             if (!isWrong) {
               log.error(
                 s"""
@@ -381,7 +382,8 @@ class R5RoutingWorker(workerParams: WorkerParameters) extends Actor with ActorLo
       askForMoreWork()
   }
 
-  private def hasDiscrepancy(request: RoutingRequest, resp: RoutingResponse, attempt: Int):Boolean = {
+  private def hasDiscrepancy(geoUtils: GeoUtils, networkHelper: NetworkHelper,
+                             request: RoutingRequest, resp: RoutingResponse, attempt: Int):Boolean = {
     import AllNeededFormats._
 
     val exceedThreshold = resp.itineraries.exists { p =>
@@ -402,6 +404,18 @@ class R5RoutingWorker(workerParams: WorkerParameters) extends Actor with ActorLo
              |Google Map: ${gmapLink}
              |Leg: ${leg.asJson.toString()}'""".stripMargin
         )
+
+        if (attempt == 1) {
+          val linkId2WgsCoord = leg.beamLeg.travelPath.linkIds.map { linkId =>
+            val link = networkHelper.getLinkUnsafe(linkId)
+            val loc = link.asInstanceOf[BasicLocation[Link]]
+            val utmCoord = loc.getCoord
+            val wgsCoord = geoUtils.utm2Wgs.transform(utmCoord)
+            linkId -> wgsCoord
+          }
+          val gpxPoints = linkId2WgsCoord.map { case (linkId, wgsCoord) => GpxPoint(linkId.toString, wgsCoord) }
+          GpxWriter.write(s"${request.requestId}_${leg.beamLeg.duration}_${leg.beamLeg.startTime}.gpx", gpxPoints)
+        }
       }
       longLeg.isDefined
     }
