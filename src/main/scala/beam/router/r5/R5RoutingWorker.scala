@@ -292,29 +292,9 @@ class R5RoutingWorker(workerParams: WorkerParameters) extends Actor with ActorLo
       if (firstMsgTime.isEmpty) firstMsgTime = Some(ZonedDateTime.now(ZoneOffset.UTC))
       val eventualResponse = Future {
         latency("request-router-time", Metrics.RegularLevel) {
-
           val resp = calcRoute(request)
             .copy(requestId = request.requestId)
-
-          import AllNeededFormats._
-
-          var attempt: Int = 1
-          val maxAttempt: Int = 5
-          var isWrong: Boolean = hasDiscrepancy(beamServices.geo, beamServices.networkHelper, request, resp, attempt)
-
-          while (attempt < maxAttempt && isWrong) {
-            attempt += 1
-            cache.invalidateAll()
-            val newResp = calcRoute(request).copy(requestId = request.requestId)
-            isWrong = hasDiscrepancy(beamServices.geo, beamServices.networkHelper, request, newResp, attempt)
-            if (!isWrong) {
-              log.error(
-                s"""
-                   |Request[${request.requestId}] has been fixed on attempt $attempt
-                   |New Response: ${newResp.asJson.toString()}
-                 """.stripMargin)
-            }
-          }
+          checkTravelTimeDuration(beamServices.geo, beamServices.networkHelper, request, resp)
           resp
         }
       }
@@ -382,13 +362,13 @@ class R5RoutingWorker(workerParams: WorkerParameters) extends Actor with ActorLo
       askForMoreWork()
   }
 
-  private def hasDiscrepancy(geoUtils: GeoUtils, networkHelper: NetworkHelper,
-                             request: RoutingRequest, resp: RoutingResponse, attempt: Int):Boolean = {
+  private def checkTravelTimeDuration(geoUtils: GeoUtils, networkHelper: NetworkHelper,
+                             request: RoutingRequest, resp: RoutingResponse):Boolean = {
     import AllNeededFormats._
 
     val exceedThreshold = resp.itineraries.exists { p =>
       val longLeg = p.legs.find { leg =>
-        leg.beamLeg.duration >= 7000 && leg.beamLeg.mode == BeamMode.CAR
+        leg.beamLeg.duration >= 11000 && leg.beamLeg.mode == BeamMode.CAR
       }
       longLeg.foreach { leg =>
         val startPoint = leg.beamLeg.travelPath.startPoint.loc
@@ -396,16 +376,16 @@ class R5RoutingWorker(workerParams: WorkerParameters) extends Actor with ActorLo
         // https://www.google.co.th/maps/dir/37.7256764%09-122.4844705/37.6997249%09-122.4529704
         val gmapLink = s"https://www.google.co.th/maps/dir/${startPoint.getY}%09${startPoint.getX}/${endPoint.getY}%09${endPoint.getX}"
         log.error(
-          s"""Long leg(Attempt $attempt):
+          s"""Long leg:
              |Request: '${request.asJson.toString()}'
              |startPoint: $startPoint. For GoogleMap: ${startPoint.getY} ${startPoint.getX}
              |endPoint: $endPoint. For GoogleMap: ${endPoint.getY} ${endPoint.getX}
              |duration: ${leg.beamLeg.duration}
-             |Google Map: ${gmapLink}
-             |Leg: ${leg.asJson.toString()}'""".stripMargin
+             |Google Map: $gmapLink
+             |Leg: ${leg.asJson.toString()}'
+             |Full response: ${resp.asJson.toString()}""".stripMargin
         )
 
-        if (attempt == 1) {
           val linkId2WgsCoord = leg.beamLeg.travelPath.linkIds.map { linkId =>
             val link = networkHelper.getLinkUnsafe(linkId)
             val loc = link.asInstanceOf[BasicLocation[Link]]
@@ -415,7 +395,7 @@ class R5RoutingWorker(workerParams: WorkerParameters) extends Actor with ActorLo
           }
           val gpxPoints = linkId2WgsCoord.map { case (linkId, wgsCoord) => GpxPoint(linkId.toString, wgsCoord) }
           GpxWriter.write(s"${request.requestId}_${leg.beamLeg.duration}_${leg.beamLeg.startTime}.gpx", gpxPoints)
-        }
+
       }
       longLeg.isDefined
     }
