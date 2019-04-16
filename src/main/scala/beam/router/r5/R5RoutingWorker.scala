@@ -296,18 +296,15 @@ class R5RoutingWorker(workerParams: WorkerParameters) extends Actor with ActorLo
           val resp = calcRoute(request)
             .copy(requestId = request.requestId)
 
-          if(hasDiscrepancy(request, resp, 1)) {
+          var attempt: Int = 1
+          val maxAttempt: Int = 5
+          var isWrong: Boolean = hasDiscrepancy(request, resp, attempt)
+          while (attempt < maxAttempt || !isWrong) {
+            attempt += 1
             cache.invalidateAll()
-            if (hasDiscrepancy(request, calcRoute(request).copy(requestId = request.requestId), 2)){
-              cache.invalidateAll()
-
-              if (hasDiscrepancy(request, calcRoute(request).copy(requestId = request.requestId), 3)){
-                cache.invalidateAll()
-
-                if (hasDiscrepancy(request, calcRoute(request).copy(requestId = request.requestId), 4)){
-                  cache.invalidateAll()
-                }
-              }
+            isWrong = hasDiscrepancy(request, calcRoute(request).copy(requestId = request.requestId), attempt)
+            if (!isWrong) {
+              log.error(s"Request[${request.requestId}] has been fixed on attempt $attempt")
             }
           }
           resp
