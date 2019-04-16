@@ -292,36 +292,23 @@ class R5RoutingWorker(workerParams: WorkerParameters) extends Actor with ActorLo
       if (firstMsgTime.isEmpty) firstMsgTime = Some(ZonedDateTime.now(ZoneOffset.UTC))
       val eventualResponse = Future {
         latency("request-router-time", Metrics.RegularLevel) {
-          import AllNeededFormats._
 
           val resp = calcRoute(request)
             .copy(requestId = request.requestId)
-          val exceedThreshold = resp.itineraries.exists { p =>
-            val longLeg = p.legs.find { leg =>
-              leg.beamLeg.duration >= 7000 && leg.beamLeg.mode == BeamMode.CAR
+
+          if(hasDiscrepancy(request, resp, 1)) {
+            cache.invalidateAll()
+            if (hasDiscrepancy(request, calcRoute(request).copy(requestId = request.requestId), 2)){
+              cache.invalidateAll()
+
+              if (hasDiscrepancy(request, calcRoute(request).copy(requestId = request.requestId), 3)){
+                cache.invalidateAll()
+
+                if (hasDiscrepancy(request, calcRoute(request).copy(requestId = request.requestId), 4)){
+                  cache.invalidateAll()
+                }
+              }
             }
-            longLeg.foreach { leg =>
-              val startPoint = leg.beamLeg.travelPath.startPoint.loc
-              val endPoint = leg.beamLeg.travelPath.endPoint.loc
-              // https://www.google.co.th/maps/dir/37.7256764%09-122.4844705/37.6997249%09-122.4529704
-              val gmapLink = s"https://www.google.co.th/maps/dir/${startPoint.getY}%09${startPoint.getX}/${endPoint.getY}%09${endPoint.getX}"
-              log.error(
-                s"""Long leg:
-                   |Request: '${request.asJson.toString()}'
-                   |wgsStartPoint: $startPoint. For GoogleMap: ${startPoint.getY} ${startPoint.getX}
-                   |wgsEndPoint: $endPoint. For GoogleMap: ${endPoint.getY} ${endPoint.getX}
-                   |Google Map: ${gmapLink}
-                   |Leg: ${leg.asJson.toString()}'
-                """.stripMargin)
-            }
-            longLeg.isDefined
-          }
-          if (exceedThreshold) {
-            log.error(
-              s"""
-                 |Request: '${request.asJson.toString()}'
-                 |Response: '${resp.asJson.toString()}'
-               """.stripMargin)
           }
           resp
         }
@@ -388,6 +375,33 @@ class R5RoutingWorker(workerParams: WorkerParameters) extends Actor with ActorLo
         embodyRequestId
       )
       askForMoreWork()
+  }
+
+  private def hasDiscrepancy(request: RoutingRequest, resp: RoutingResponse, attempt: Int):Boolean = {
+    import AllNeededFormats._
+
+    val exceedThreshold = resp.itineraries.exists { p =>
+      val longLeg = p.legs.find { leg =>
+        leg.beamLeg.duration >= 7000 && leg.beamLeg.mode == BeamMode.CAR
+      }
+      longLeg.foreach { leg =>
+        val startPoint = leg.beamLeg.travelPath.startPoint.loc
+        val endPoint = leg.beamLeg.travelPath.endPoint.loc
+        // https://www.google.co.th/maps/dir/37.7256764%09-122.4844705/37.6997249%09-122.4529704
+        val gmapLink = s"https://www.google.co.th/maps/dir/${startPoint.getY}%09${startPoint.getX}/${endPoint.getY}%09${endPoint.getX}"
+        log.error(
+          s"""Long leg(Attempt $attempt):
+             |Request: '${request.asJson.toString()}'
+             |startPoint: $startPoint. For GoogleMap: ${startPoint.getY} ${startPoint.getX}
+             |endPoint: $endPoint. For GoogleMap: ${endPoint.getY} ${endPoint.getX}
+             |duration: ${leg.beamLeg.duration}
+             |Google Map: ${gmapLink}
+             |Leg: ${leg.asJson.toString()}'""".stripMargin
+        )
+      }
+      longLeg.isDefined
+    }
+    exceedThreshold
   }
 
   private def askForMoreWork(): Unit =

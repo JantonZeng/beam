@@ -18,11 +18,12 @@ import beam.router.Modes.BeamMode
 import beam.router.Modes.BeamMode.CAR
 import beam.router.model.RoutingModel.TransitStopsInfo
 import beam.router.model.{BeamLeg, BeamPath, EmbodiedBeamLeg, EmbodiedBeamTrip}
-import beam.router.r5.R5RoutingWorker
+import beam.router.r5.{DefaultNetworkCoordinator, R5RoutingWorker}
 import beam.sim.BeamHelper
 import beam.sim.config.BeamConfig
 import beam.sim.population.{AttributesOfIndividual, HouseholdAttributes}
 import beam.utils.{GpxPoint, GpxWriter}
+import com.conveyal.r5.streets.StreetLayer
 import com.typesafe.scalalogging.LazyLogging
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Decoder.Result
@@ -32,7 +33,7 @@ import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import org.matsim.api.core.v01.network.Link
-import org.matsim.api.core.v01.{BasicLocation, Id}
+import org.matsim.api.core.v01.{BasicLocation, Coord, Id}
 import org.matsim.core.network.NetworkUtils
 import org.matsim.core.network.io.MatsimNetworkReader
 import org.matsim.vehicles.Vehicle
@@ -101,7 +102,7 @@ object AllNeededFormats {
   implicit val routingResponseFormat = new Format[RoutingResponse]
 }
 
-class RoutingHandler(val workerRouter: ActorRef, val links: Map[Id[Link], Link])(implicit ex: ExecutionContext) extends FailFastCirceSupport {
+class RoutingHandler(val workerRouter: ActorRef, val links: Map[Id[Link], Link], val streetLayer: StreetLayer)(implicit ex: ExecutionContext) extends FailFastCirceSupport {
   implicit val timeout: Timeout = new Timeout(10, TimeUnit.SECONDS)
   import AllNeededFormats._
 
@@ -117,17 +118,31 @@ class RoutingHandler(val workerRouter: ActorRef, val links: Map[Id[Link], Link])
           routingResponse.foreach { r =>
             val carLegs = r.itineraries.flatMap(_.legs).filter(leg => leg.beamLeg.mode == BeamMode.CAR)
             carLegs.foreach { leg =>
-              val linksWithCoord = leg.beamLeg.travelPath.linkIds.flatMap { id =>
+            {
+              val linksWithCoordMatsim = leg.beamLeg.travelPath.linkIds.flatMap { id =>
                 val linkId = Id.create(id, classOf[Link])
                 links.get(linkId).map { link =>
+                  link.getToNode().getOutLinks
+
                   val loc = link.asInstanceOf[BasicLocation[Link]]
                   val utmCoord = loc.getCoord
                   val wgsCoord = geoUtils.utm2Wgs.transform(utmCoord)
                   id -> wgsCoord
                 }
               }
-              val gpxPoints = linksWithCoord.map { case (linkId, wgsCoord) => GpxPoint(linkId.toString, wgsCoord) }.toIterable
-              GpxWriter.write(s"${request.requestId}_.gpx", gpxPoints)
+              val matsimGpxPoints = linksWithCoordMatsim.map { case (linkId, wgsCoord) => GpxPoint(linkId.toString, wgsCoord) }
+              GpxWriter.write(s"${request.requestId}_matsim.gpx", matsimGpxPoints)
+            }
+
+            {
+              val linksWithCoordR5 = leg.beamLeg.travelPath.linkIds.map { id =>
+                val edge = streetLayer.edgeStore.getCursor(id)
+                val coord = edge.getGeometry.getCoordinate
+                id -> new Coord(coord.x, coord.y)
+              }
+              val r5GpxPoints = linksWithCoordR5.map { case (linkId, wgsCoord) => GpxPoint(linkId.toString, wgsCoord) }
+              GpxWriter.write(s"${request.requestId}_r5.gpx", r5GpxPoints)
+            }
             }
           }
           complete(routingResponse)
@@ -167,14 +182,20 @@ object R5RoutingApp extends BeamHelper {
     val f = Await.result(workerRouter ? Identify(0), Duration.Inf)
     logger.info("R5RoutingWorker is initialized!")
 
+    val beamCfg = BeamConfig(cfg)
+    val networkCoordinator = DefaultNetworkCoordinator(beamCfg)
+    networkCoordinator.init()
+
     val network = NetworkUtils.createNetwork()
     new MatsimNetworkReader(network)
-      .readFile(BeamConfig(cfg).matsim.modules.network.inputNetworkFile)
+      .readFile(beamCfg.matsim.modules.network.inputNetworkFile)
+    println(s"MATSim network file: ${beamCfg.matsim.modules.network.inputNetworkFile}")
+
     val links: Map[Id[Link], Link] = network.getLinks.asScala.toMap
 
     val interface = "0.0.0.0"
     val port = 9000
-    val routingHandler = new RoutingHandler(workerRouter, links)(scala.concurrent.ExecutionContext.Implicits.global)
+    val routingHandler = new RoutingHandler(workerRouter, links, networkCoordinator.transportNetwork.streetLayer)(scala.concurrent.ExecutionContext.Implicits.global)
     val boostedRoute = handleExceptions(CustomExceptionHandling.handler)(routingHandler.route)
     Http().bindAndHandle(boostedRoute, interface, port)
     logger.info(s"Http server is ready and bound to $interface:$port")

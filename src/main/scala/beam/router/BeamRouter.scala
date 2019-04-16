@@ -5,18 +5,7 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import akka.actor.Status.{Status, Success}
-import akka.actor.{
-  Actor,
-  ActorLogging,
-  ActorRef,
-  Address,
-  Cancellable,
-  ExtendedActorSystem,
-  Props,
-  RelativeActorPath,
-  RootActorPath,
-  Stash
-}
+import akka.actor.{Actor, ActorLogging, ActorRef, Address, Cancellable, ExtendedActorSystem, Props, RelativeActorPath, RootActorPath, Stash}
 import akka.cluster.ClusterEvent._
 import akka.cluster.{Cluster, Member, MemberStatus}
 import akka.pattern._
@@ -34,11 +23,11 @@ import beam.router.osm.TollCalculator
 import beam.router.r5.R5RoutingWorker
 import beam.sim.BeamServices
 import beam.sim.population.AttributesOfIndividual
-import beam.utils.IdGeneratorImpl
+import beam.utils.{IdGeneratorImpl, NetworkHelper}
 import com.conveyal.r5.profile.StreetMode
 import com.conveyal.r5.transit.{RouteInfo, TransportNetwork}
 import com.romix.akka.serialization.kryo.KryoSerializer
-import org.matsim.api.core.v01.network.Network
+import org.matsim.api.core.v01.network.{Link, Network}
 import org.matsim.api.core.v01.{Coord, Id, Scenario}
 import org.matsim.core.api.experimental.events.EventsManager
 import org.matsim.core.population.routes.{NetworkRoute, RouteUtils}
@@ -157,6 +146,11 @@ class BeamRouter(
 
   private val updateTravelTimeTimeout: Timeout = Timeout(3, TimeUnit.MINUTES)
 
+  private var totalNumberOfRoutingResponses: Int = 0
+  private var totalNumberOfLegs: Int = 0
+  private var totalNumberOfRoutingResponsesWithBadLeg: Int = 0
+  private var totalNumberOfBadLegs: Int = 0
+
   override def receive: PartialFunction[Any, Unit] = {
     case `tick` =>
       if (isWorkAndNoAvailableWorkers) notifyWorkersOfAvailableWork()
@@ -166,6 +160,18 @@ class BeamRouter(
         val byteArray = kryoSerializer.toBinary(t)
         log.debug("TryToSerialize size in bytes: {}, MBytes: {}", byteArray.size, byteArray.size.toDouble / 1024 / 1024)
       }
+
+    case IterationFinished(iteration) =>
+      val badRoutingResponseRatio: Double = totalNumberOfRoutingResponsesWithBadLeg.toDouble / totalNumberOfRoutingResponses
+      log.info(s"totalNumberOfRoutingResponses: $totalNumberOfRoutingResponses, totalNumberOfRoutingResponsesWithBadLeg: $totalNumberOfRoutingResponsesWithBadLeg. Ratio: $badRoutingResponseRatio")
+      totalNumberOfRoutingResponses = 0
+      totalNumberOfRoutingResponsesWithBadLeg = 0
+
+      val badLegsRatio: Double = totalNumberOfBadLegs.toDouble / totalNumberOfLegs
+      log.info(s"totalNumberOfLegs: $totalNumberOfLegs, totalNumberOfBadLegs: $totalNumberOfBadLegs. Ratio: $badLegsRatio")
+      totalNumberOfLegs = 0
+      totalNumberOfBadLegs = 0
+
     case msg: UpdateTravelTimeLocal =>
       traveTimeOpt = Some(msg.travelTime)
       localNodes.foreach(_.forward(msg))
@@ -235,6 +241,19 @@ class BeamRouter(
         sendWorkTo(worker, work, originalSender, receivePath = "GimmeWork")
       }
     case routingResp: RoutingResponse =>
+      totalNumberOfRoutingResponses += 1
+      totalNumberOfLegs += routingResp.itineraries.flatMap(r => r.legs).size
+
+      val badLegs = routingResp.itineraries.flatMap { p =>
+        val carLegs = p.legs.find { leg => leg.beamLeg.mode == BeamMode.CAR }
+        carLegs.filter(leg => checkForDiscrepancy(services.networkHelper, leg.beamLeg.travelPath.linkIds))
+      }
+      if (badLegs.nonEmpty){
+        totalNumberOfRoutingResponsesWithBadLeg += 1
+        totalNumberOfBadLegs += badLegs.length
+
+        badLegs.map { l => l.beamLeg.travelPath.distanceInM}
+      }
       pipeResponseToOriginalSender(routingResp)
       logIfResponseTookExcessiveTime(routingResp)
     case ClearRoutedWorkerTracker(workIdToClear) =>
@@ -254,7 +273,11 @@ class BeamRouter(
         if (!isWorkerAvailable) notifyWorkersOfAvailableWork() //Shouldn't need this but it should be relatively idempotent
         availableWorkWithOriginalSender.enqueue((work, originalSender))
       }
+
+
   }
+
+
 
   private def isWorkAvailable: Boolean = availableWorkWithOriginalSender.nonEmpty
 
@@ -437,6 +460,7 @@ class BeamRouter(
 object BeamRouter {
   type Location = Coord
 
+  case class IterationFinished(iteration: Int)
   case class ClearRoutedWorkerTracker(workIdToClear: Int)
   case class InitTransit(scheduler: ActorRef, parkingManager: ActorRef, id: UUID = UUID.randomUUID())
   case class TransitInited(transitSchedule: Map[Id[BeamVehicle], (RouteInfo, Seq[BeamLeg])])
@@ -631,4 +655,27 @@ object BeamRouter {
   case object WorkAvailable extends WorkMessage
 
   def oneSecondTravelTime(a: Int, b: Int, c: StreetMode) = 1
+
+  def checkForDiscrepancy(networkHelper: NetworkHelper, linkIds: IndexedSeq[Int]): Boolean = {
+    if (linkIds.nonEmpty) {
+      var matsimLink = networkHelper.getLinkUnsafe(linkIds.head)
+      var i: Int = 1
+      while (matsimLink != null && i < linkIds.length) {
+        val matsimLinkIds = matsimLink.getToNode.getOutLinks.values().asScala
+        val r5LinkId = linkIds(i)
+        val nextMatsimLink: Option[Link] = matsimLinkIds.find(l => l.getId.toString.toInt == r5LinkId)
+        if (nextMatsimLink.isEmpty) {
+          // log.error(s"matsimLinkIds do not contain R5 link id = $r5LinkId. matsimLinkId: ${matsimLink.getId}, i = $i, linkIds.length: ${linkIds.length}")
+        }
+        else {
+          i += 1
+        }
+        matsimLink = nextMatsimLink.orNull
+      }
+      i != linkIds.length
+    }
+    else {
+      false
+    }
+  }
 }
