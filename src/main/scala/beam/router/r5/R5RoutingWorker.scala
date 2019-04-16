@@ -301,7 +301,7 @@ class R5RoutingWorker(workerParams: WorkerParameters) extends Actor with ActorLo
           var attempt: Int = 1
           val maxAttempt: Int = 5
           var isWrong: Boolean = hasDiscrepancy(request, resp, attempt)
-          while (attempt < maxAttempt || !isWrong) {
+          while (attempt < maxAttempt && isWrong) {
             attempt += 1
             cache.invalidateAll()
             val newResp = calcRoute(request).copy(requestId = request.requestId)
