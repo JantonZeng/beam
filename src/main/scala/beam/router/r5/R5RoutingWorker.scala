@@ -383,6 +383,7 @@ class R5RoutingWorker(workerParams: WorkerParameters) extends Actor with ActorLo
              |duration: ${leg.beamLeg.duration}
              |Google Map: $gmapLink
              |Leg: ${leg.asJson.toString()}'
+             |isInSyncWithMATSim: ${BeamRouter.checkForDiscrepancy(networkHelper, leg.beamLeg.travelPath.linkIds)}
              |Full response: ${resp.asJson.toString()}""".stripMargin
         )
 
