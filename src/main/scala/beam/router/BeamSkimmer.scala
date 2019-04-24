@@ -8,18 +8,7 @@ import beam.agentsim.agents.vehicles.BeamVehicleType
 import beam.agentsim.infrastructure.TAZTreeMap.TAZ
 import beam.router.BeamRouter.Location
 import beam.router.Modes.BeamMode
-import beam.router.Modes.BeamMode.{
-  BIKE,
-  CAR,
-  CAV,
-  DRIVE_TRANSIT,
-  RIDE_HAIL,
-  RIDE_HAIL_POOLED,
-  RIDE_HAIL_TRANSIT,
-  TRANSIT,
-  WALK,
-  WALK_TRANSIT
-}
+import beam.router.Modes.BeamMode.{BIKE, CAR, CAV, DRIVE_TRANSIT, RIDE_HAIL, RIDE_HAIL_POOLED, RIDE_HAIL_TRANSIT, TRANSIT, WALK, WALK_TRANSIT}
 import beam.router.model.{BeamLeg, BeamPath, EmbodiedBeamTrip}
 import beam.sim.common.GeoUtils
 import beam.sim.config.BeamConfig
@@ -36,7 +25,6 @@ import org.supercsv.prefs.CsvPreference
 
 import scala.collection.concurrent.TrieMap
 import scala.language.implicitConversions
-import scala.util.control.NonFatal
 
 //TODO to be validated against google api
 class BeamSkimmer @Inject()(val beamConfig: BeamConfig, val beamServices: BeamServices) extends LazyLogging {
@@ -70,7 +58,7 @@ class BeamSkimmer @Inject()(val beamConfig: BeamConfig, val beamServices: BeamSe
     } else {
       TrieMap.empty
     }
-    */
+     */
     TrieMap.empty
   }
 
