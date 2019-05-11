@@ -54,8 +54,6 @@ class BeamSkimmer @Inject()(val beamConfig: BeamConfig, val beamServices: BeamSe
   }
 
   private def initialPreviousSkims(): TrieMap[(Int, BeamMode, Id[TAZ], Id[TAZ]), SkimInternal] = {
-    // DEBUG following code and then enable it again!!!
-    /*
     if (beamConfig.beam.warmStart.enabled) {
       try {
         val previousSkims = skimsFilePath
@@ -71,8 +69,6 @@ class BeamSkimmer @Inject()(val beamConfig: BeamConfig, val beamServices: BeamSe
     } else {
       TrieMap.empty
     }
-    */
-    TrieMap.empty
   }
 
   def getSkimDefaultValue(
@@ -394,7 +390,7 @@ class BeamSkimmer @Inject()(val beamConfig: BeamConfig, val beamServices: BeamSe
     }
     logger.info(s"weightedSkims size: ${weightedSkims.size}")
 
-    weightedSkims.foreach { ws =>
+    weightedSkims.seq.foreach { ws: ExcerptData =>
       writer.write(
         s"${ws.timePeriodString},${ws.mode},${ws.originTazId},${ws.destinationTazId},${ws.weightedTime},${ws.weightedGeneralizedTime},${ws.weightedCost},${ws.weightedGeneralizedCost},${ws.weightedDistance},${ws.sumWeights},${ws.weightedEnergy}\n"
       )
