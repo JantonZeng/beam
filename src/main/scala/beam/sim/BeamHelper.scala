@@ -538,6 +538,7 @@ trait BeamHelper extends LazyLogging {
     val maxHour = TimeUnit.SECONDS.toHours(matsimConfig.travelTimeCalculator().getMaxTime).toInt
     val beamWarmStart = BeamWarmStart(beamConfig, maxHour)
     beamWarmStart.warmStartPopulation(matsimConfig)
+    beamWarmStart.warmStartVehicles(matsimConfig)
   }
 
   private def prepareDirectories(config: TypesafeConfig, beamConfig: BeamConfig, outputDirectory: String): Unit = {

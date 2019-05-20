@@ -90,6 +90,26 @@ class BeamWarmStart private (beamConfig: BeamConfig, maxHour: Int) extends LazyL
     }
   }
 
+  def warmStartVehicles(matsimConfig: Config): Unit = {
+    if(isWarmMode) {
+        getWarmStartFilePath("vehicles.csv") match {
+          case Some(filePath) =>
+            if(Files.exists(Paths.get(filePath))) {
+              val vehiclesPath = loadVehicles(parentRunPath, filePath)
+              matsimConfig.vehicles().setVehiclesFile(vehiclesPath)
+              logger.info("Vehicles successfully warm started from {}, filePath")
+            } else {
+              logger.warn("Vehicles failed to warm start, file not found at '{}'", filePath)
+            }
+          case None => logger.warn("Vehicles failed to warm start, file not found at root source '{}'", srcPath)
+        }
+    }
+  }
+
+  private def loadVehicles(path: String, vehiclesFile: String): String = {
+    Paths.get(path, "warmstart_vehicles.csv").toString
+  }
+
   private def loadPopulation(runPath: String, populationFile: String): String = {
     val plansPath = Paths.get(runPath, "warmstart_plans.xml")
     unGunzipFile(populationFile, plansPath.toString, false)
