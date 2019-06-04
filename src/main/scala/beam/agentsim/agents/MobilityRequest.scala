@@ -1,26 +1,31 @@
 package beam.agentsim.agents
-import beam.agentsim.agents.planning.Trip
+import beam.agentsim.agents.planning.{Tour, Trip}
 import beam.agentsim.agents.vehicles.VehiclePersonId
 import beam.router.Modes.BeamMode
+import beam.router.model.{BeamLeg, EmbodiedBeamLeg}
+import org.matsim.api.core.v01.Coord
 import org.matsim.api.core.v01.population.Activity
+import org.matsim.core.population.PopulationUtils
 
-sealed trait MobilityRequestTrait
-case object Pickup extends MobilityRequestTrait { override def toString: String = "pickup" }
-case object Dropoff extends MobilityRequestTrait { override def toString: String = "dropoff" }
-case object Relocation extends MobilityRequestTrait { override def toString: String = "relocation" }
-case object Init extends MobilityRequestTrait { override def toString: String = "init" }
+sealed trait MobilityRequestType
+case object Pickup extends MobilityRequestType { override def toString: String = "pickup" }
+case object Dropoff extends MobilityRequestType { override def toString: String = "dropoff" }
+case object Relocation extends MobilityRequestType { override def toString: String = "relocation" }
+case object EnRoute extends MobilityRequestType { override def toString: String = "enroute" }
+case object Init extends MobilityRequestType { override def toString: String = "init" }
 
 case class MobilityRequest(
-  person: Option[VehiclePersonId],
-  activity: Activity,
-  time: Int,
-  trip: Trip,
-  defaultMode: BeamMode,
-  tag: MobilityRequestTrait,
-  serviceTime: Int,
-  pickupRequest: Option[MobilityRequest] = None,
-  routingRequestId: Option[Int] = None,
-  vehicleOccupancy: Option[Int] = None
+                            person: Option[VehiclePersonId],
+                            activity: Activity,
+                            baselineNonPooledTime: Int,
+                            trip: Trip,
+                            defaultMode: BeamMode,
+                            tag: MobilityRequestType,
+                            serviceTime: Int,
+                            pickupRequest: Option[MobilityRequest] = None,
+                            routingRequestId: Option[Int] = None,
+                            vehicleOccupancy: Option[Int] = None,
+                            beamLegAfterTag: Option[EmbodiedBeamLeg] = None // In other words, this leg is traversed **after** the action described in "tag" so if tag is a dropoff, we do the dropoff first then complete the beamLeg
 ) {
   val nextActivity = Some(trip.activity)
 
@@ -35,6 +40,14 @@ case class MobilityRequest(
       case Some(p) => p.personId.toString
       case None    => "None"
     }
-    s"${formatTime(time)}|$tag|${personid}|${activity.getType}| => ${formatTime(serviceTime)}"
+//    s"${formatTime(baselineNonPooledTime)}|$tag|${personid}|${activity.getType}| => ${formatTime(serviceTime)}"
+    s"${baselineNonPooledTime}|$tag|${personid}|${activity.getType}| => ${serviceTime}"
+  }
+}
+
+object MobilityRequest{
+  def simpleRequest(requestType: MobilityRequestType, person: Option[VehiclePersonId], leg: Option[EmbodiedBeamLeg]) = {
+    val act = PopulationUtils.createActivityFromCoord("",new Coord(-1,-1))
+    MobilityRequest(person, act, -1, new Trip(act, None, new Tour()), BeamMode.CAR, requestType, -1, None, None, None, leg )
   }
 }

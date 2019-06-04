@@ -1,6 +1,6 @@
 package beam.agentsim.agents.ridehail
 
-import beam.agentsim.agents.{MobilityRequestTrait, Pickup}
+import beam.agentsim.agents.{MobilityRequestType, Pickup}
 import beam.agentsim.agents.ridehail.AlonsoMoraPoolingAlgForRideHail._
 import beam.router.BeamSkimmer
 import beam.router.Modes.BeamMode
@@ -16,19 +16,22 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class AsyncAlonsoMoraAlgForRideHail(
-  spatialDemand: QuadTree[CustomerRequest],
-  supply: List[VehicleAndSchedule],
-  timeWindow: Map[MobilityRequestTrait, Int],
-  maxRequestsPerVehicle: Int,
-  beamServices: BeamServices
+                                     spatialDemand: QuadTree[CustomerRequest],
+                                     supply: List[VehicleAndSchedule],
+                                     timeWindow: Map[MobilityRequestType, Int],
+                                     maxRequestsPerVehicle: Int,
+                                     beamServices: BeamServices
 )(implicit val skimmer: BeamSkimmer) {
 
   private def vehicle2Requests(v: VehicleAndSchedule): (List[RTVGraphNode], List[(RTVGraphNode, RTVGraphNode)]) = {
     import scala.collection.mutable.{ListBuffer => MListBuffer}
+    if(v.getFreeSeats <4){
+      val i = 0
+    }
     val vertices = MListBuffer.empty[RTVGraphNode]
     val edges = MListBuffer.empty[(RTVGraphNode, RTVGraphNode)]
     val finalRequestsList = MListBuffer.empty[RideHailTrip]
-    val center = v.getLastDropoff.activity.getCoord
+    val center = v.getRequestWithCurrentVehiclePosition.activity.getCoord
     val searchRadius = timeWindow(Pickup) * BeamSkimmer.speedMeterPerSec(BeamMode.CAV)
     val requests = v.geofence match {
       case Some(gf) =>
